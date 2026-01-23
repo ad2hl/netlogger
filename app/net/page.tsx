@@ -14,6 +14,8 @@ import {
   saveStation,
   updateStationNickname,
   updateStationNote,
+  getActiveSession,
+  getStations,
 } from '@/lib/firestore';
 import { NetSession, CheckIn, Station } from '@/types';
 import SessionSetup from '@/components/SessionSetup';
@@ -35,6 +37,27 @@ export default function NetPage() {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  // Check for active session on load
+  useEffect(() => {
+    const loadActiveSession = async () => {
+      if (!user || loading || session) return;
+
+      const activeSession = await getActiveSession(user.uid);
+      if (activeSession) {
+        setSession(activeSession);
+
+        // Load stations for all checked-in callsigns
+        const callsigns = activeSession.checkIns.map((c) => c.callsign);
+        if (callsigns.length > 0) {
+          const stationMap = await getStations(user.uid, callsigns);
+          setStations(stationMap);
+        }
+      }
+    };
+
+    loadActiveSession();
+  }, [user, loading, session]);
 
   const handleCreateSession = async (newSession: Omit<NetSession, 'id'>) => {
     if (!user) return;
