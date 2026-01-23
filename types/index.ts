@@ -55,6 +55,12 @@ export interface CheckIn {
   timestamp: Date;
 }
 
+export interface NetReport {
+  netName: string;
+  startDateTime: Timestamp;
+  radiogram: string;
+}
+
 export interface NetSession {
   id?: string;
   netName: string;
@@ -64,6 +70,7 @@ export interface NetSession {
   trafficReported: number;
   trafficCleared: number;
   checkIns: CheckIn[];
+  report?: NetReport;
 }
 
 export interface QRZLookupResult {
