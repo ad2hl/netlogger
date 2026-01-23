@@ -28,17 +28,21 @@ export default function SessionSetup({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Parse date as local time (not UTC) to avoid off-by-one day errors
+    const [year, month, day] = date.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+
     if (existingSession && onUpdateSession) {
       onUpdateSession({
         netName,
-        date: Timestamp.fromDate(new Date(date)),
+        date: Timestamp.fromDate(localDate),
         startTime,
         endTime: endTime || null,
       });
     } else {
       onCreateSession({
         netName,
-        date: Timestamp.fromDate(new Date(date)),
+        date: Timestamp.fromDate(localDate),
         startTime,
         endTime: endTime || null,
         trafficReported: 0,

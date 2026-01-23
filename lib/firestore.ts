@@ -194,3 +194,38 @@ export async function deleteSession(
     return false;
   }
 }
+
+export async function getActiveSession(
+  uid: string
+): Promise<NetSession | null> {
+  try {
+    const sessions = await getRecentSessions(uid, 5);
+    // Find the most recent session without an endTime
+    const activeSession = sessions.find((s) => !s.endTime);
+    return activeSession || null;
+  } catch (error) {
+    console.error('Error getting active session:', error);
+    return null;
+  }
+}
+
+export async function getStations(
+  uid: string,
+  callsigns: string[]
+): Promise<Map<string, Station>> {
+  const stationMap = new Map<string, Station>();
+  try {
+    await Promise.all(
+      callsigns.map(async (callsign) => {
+        const station = await getStation(uid, callsign);
+        if (station) {
+          stationMap.set(callsign.toUpperCase(), station);
+        }
+      })
+    );
+    return stationMap;
+  } catch (error) {
+    console.error('Error getting stations:', error);
+    return stationMap;
+  }
+}
