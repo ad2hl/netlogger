@@ -16,8 +16,11 @@ import {
   updateStationNote,
   getActiveSession,
   getStations,
+  saveReport,
 } from '@/lib/firestore';
-import { NetSession, CheckIn, Station } from '@/types';
+import { NetSession, CheckIn, Station, NetReport } from '@/types';
+import { Timestamp } from 'firebase/firestore';
+import { generateRadiogram } from '@/lib/radiogram';
 import SessionSetup from '@/components/SessionSetup';
 import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
@@ -73,8 +76,45 @@ export default function NetPage() {
 
     const success = await updateSession(user.uid, session.id, updates);
     if (success) {
-      setSession((prev) => (prev ? { ...prev, ...updates } : null));
+      const updatedSession = { ...session, ...updates };
+      setSession(updatedSession);
+
+      // Auto-save report when net ends
+      if (updates.endTime && !session.endTime && profile) {
+        handleSaveReport(updatedSession);
+      }
     }
+  };
+
+  const handleSaveReport = async (currentSession?: NetSession) => {
+    const sess = currentSession || session;
+    if (!user || !sess?.id || !profile?.callsign) return;
+
+    const radiogram = generateRadiogram({
+      session: sess,
+      stations,
+      userCallsign: profile.callsign,
+      userName: profile.name,
+      userLocation: profile.location,
+      addresseeCallsign: profile.netManagerCall || '',
+    });
+
+    // Combine date and startTime into a single timestamp
+    const sessionDate = sess.date.toDate();
+    const [hours, minutes] = sess.startTime.split(':').map(Number);
+    sessionDate.setHours(hours, minutes, 0, 0);
+
+    const report: NetReport = {
+      netName: sess.netName,
+      startDateTime: Timestamp.fromDate(sessionDate),
+      radiogram: radiogram.text,
+    };
+
+    const success = await saveReport(user.uid, sess.id, report);
+    if (success) {
+      setSession((prev) => (prev ? { ...prev, report } : null));
+    }
+    return success;
   };
 
   const lookupCallsign = useCallback(
@@ -373,6 +413,7 @@ export default function NetPage() {
               session={session}
               stations={stations}
               profile={profile}
+              onSaveReport={handleSaveReport}
             />
           </div>
         </div>
