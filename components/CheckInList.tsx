@@ -9,7 +9,9 @@ interface CheckInListProps {
   stations: Map<string, Station>;
   onRemove: (callsign: string) => void;
   onUpdateNickname: (callsign: string, nickname: string | null) => void;
-  onUpdateNote: (callsign: string, intro: string | null) => void;
+  onUpdateNote: (callsign: string, note: string | null) => void;
+  lastAcknowledged?: string | null;
+  onSetLastAcknowledged?: (callsign: string) => void;
 }
 
 export default function CheckInList({
@@ -18,6 +20,8 @@ export default function CheckInList({
   onRemove,
   onUpdateNickname,
   onUpdateNote,
+  lastAcknowledged,
+  onSetLastAcknowledged,
 }: CheckInListProps) {
 
   if (checkIns.length === 0) {
@@ -45,6 +49,8 @@ export default function CheckInList({
             onRemove={onRemove}
             onUpdateNickname={onUpdateNickname}
             onUpdateNote={onUpdateNote}
+            isBookmarked={lastAcknowledged?.toUpperCase() === checkIn.callsign.toUpperCase()}
+            onSetBookmark={onSetLastAcknowledged ? () => onSetLastAcknowledged(checkIn.callsign) : undefined}
           />
         ))}
       </div>
