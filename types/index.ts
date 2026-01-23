@@ -71,6 +71,7 @@ export interface NetSession {
   trafficCleared: number;
   checkIns: CheckIn[];
   report?: NetReport;
+  lastAcknowledged?: string | null; // Callsign of last acknowledged station
 }
 
 export interface QRZLookupResult {
