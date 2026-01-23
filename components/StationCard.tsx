@@ -9,6 +9,8 @@ interface StationCardProps {
   onRemove: (callsign: string) => void;
   onUpdateNickname: (callsign: string, nickname: string | null) => void;
   onUpdateNote: (callsign: string, note: string | null) => void;
+  isBookmarked?: boolean;
+  onSetBookmark?: () => void;
 }
 
 export default function StationCard({
@@ -17,6 +19,8 @@ export default function StationCard({
   onRemove,
   onUpdateNickname,
   onUpdateNote,
+  isBookmarked,
+  onSetBookmark,
 }: StationCardProps) {
   const [editingField, setEditingField] = useState<'name' | 'note' | null>(null);
   const [nickname, setNickname] = useState(station?.nickname || '');
@@ -71,7 +75,20 @@ export default function StationCard({
   const hasUrgentTag = tags.some(t => ['T', 'A', 'S', 'IO'].includes(t));
 
   return (
-    <div className={`flex items-center gap-2 py-1.5 px-2 rounded ${hasUrgentTag ? 'bg-yellow-50' : 'hover:bg-gray-50'}`}>
+    <div className={`flex items-center gap-2 py-1.5 px-2 rounded group ${hasUrgentTag ? 'bg-yellow-50' : 'hover:bg-gray-50'}`}>
+      {onSetBookmark && (
+        <button
+          onClick={onSetBookmark}
+          className={`w-4 flex-shrink-0 text-center transition-opacity ${
+            isBookmarked
+              ? 'text-blue-600 opacity-100'
+              : 'text-gray-300 opacity-0 group-hover:opacity-100 hover:text-blue-400'
+          }`}
+          title={isBookmarked ? 'Last acknowledged' : 'Mark as last acknowledged'}
+        >
+          ▶
+        </button>
+      )}
       <span className="font-mono font-semibold text-sm w-20 flex-shrink-0">
         {checkIn.callsign}
       </span>

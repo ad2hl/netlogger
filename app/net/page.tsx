@@ -206,9 +206,22 @@ export default function NetPage() {
     );
 
     if (success) {
+      const isFirstCheckIn = session.checkIns.length === 0;
       setSession((prev) =>
-        prev ? { ...prev, checkIns: [...prev.checkIns, checkIn] } : null
+        prev ? {
+          ...prev,
+          checkIns: [...prev.checkIns, checkIn],
+          // Auto-set bookmark on first check-in
+          lastAcknowledged: isFirstCheckIn ? checkIn.callsign.toUpperCase() : prev.lastAcknowledged,
+        } : null
       );
+
+      // Persist bookmark for first check-in
+      if (isFirstCheckIn) {
+        await updateSession(user.uid, session.id, {
+          lastAcknowledged: checkIn.callsign.toUpperCase(),
+        });
+      }
     }
 
     setIsLookingUp(false);
@@ -225,6 +238,34 @@ export default function NetPage() {
     );
 
     if (success) {
+      // Check if we're removing the bookmarked station
+      const isRemovingBookmarked =
+        session.lastAcknowledged?.toUpperCase() === callsign.toUpperCase();
+
+      let newLastAcknowledged = session.lastAcknowledged;
+
+      if (isRemovingBookmarked) {
+        // Find the index of the station being removed
+        const removedIndex = session.checkIns.findIndex(
+          (c) => c.callsign.toUpperCase() === callsign.toUpperCase()
+        );
+
+        // Move bookmark to previous station, or null if none
+        if (removedIndex > 0) {
+          newLastAcknowledged = session.checkIns[removedIndex - 1].callsign.toUpperCase();
+        } else if (session.checkIns.length > 1) {
+          // If removing first station and there are others, move to the new first
+          newLastAcknowledged = session.checkIns[1].callsign.toUpperCase();
+        } else {
+          newLastAcknowledged = null;
+        }
+
+        // Persist the bookmark change
+        await updateSession(user.uid, session.id, {
+          lastAcknowledged: newLastAcknowledged,
+        });
+      }
+
       setSession((prev) =>
         prev
           ? {
@@ -232,6 +273,7 @@ export default function NetPage() {
               checkIns: prev.checkIns.filter(
                 (c) => c.callsign.toUpperCase() !== callsign.toUpperCase()
               ),
+              lastAcknowledged: newLastAcknowledged,
             }
           : null
       );
@@ -275,6 +317,20 @@ export default function NetPage() {
         }
         return newMap;
       });
+    }
+  };
+
+  const handleSetLastAcknowledged = async (callsign: string) => {
+    if (!user || !session?.id) return;
+
+    const success = await updateSession(user.uid, session.id, {
+      lastAcknowledged: callsign.toUpperCase(),
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, lastAcknowledged: callsign.toUpperCase() } : null
+      );
     }
   };
 
@@ -394,6 +450,8 @@ export default function NetPage() {
                   onRemove={handleRemoveCheckIn}
                   onUpdateNickname={handleUpdateNickname}
                   onUpdateNote={handleUpdateNote}
+                  lastAcknowledged={session.lastAcknowledged}
+                  onSetLastAcknowledged={handleSetLastAcknowledged}
                 />
               </>
             )}
