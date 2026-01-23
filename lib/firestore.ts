@@ -13,7 +13,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Station, NetSession, CheckIn } from '@/types';
+import { Station, NetSession, CheckIn, NetReport } from '@/types';
 
 export async function getStation(
   uid: string,
@@ -227,5 +227,20 @@ export async function getStations(
   } catch (error) {
     console.error('Error getting stations:', error);
     return stationMap;
+  }
+}
+
+export async function saveReport(
+  uid: string,
+  sessionId: string,
+  report: NetReport
+): Promise<boolean> {
+  try {
+    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    await updateDoc(sessionRef, { report });
+    return true;
+  } catch (error) {
+    console.error('Error saving report:', error);
+    return false;
   }
 }
