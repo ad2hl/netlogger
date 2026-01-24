@@ -28,6 +28,7 @@ export default function StationCard({
 
   const displayName = station?.nickname || station?.firstName || '';
   const lastSeenText = station?.lastSeen ? formatLastSeen(station.lastSeen) : null;
+  const location = [station?.city, station?.state].filter(Boolean).join(', ');
 
   const handleSaveNickname = () => {
     const trimmed = nickname.trim();
@@ -117,6 +118,12 @@ export default function StationCard({
         </span>
       )}
 
+      {location && (
+        <span className="text-sm text-gray-400 w-32 truncate flex-shrink-0" title={location}>
+          {location}
+        </span>
+      )}
+
       {editingField === 'note' ? (
         <input
           type="text"
@@ -135,7 +142,7 @@ export default function StationCard({
         <span
           onClick={() => setEditingField('note')}
           className={`text-sm italic flex-1 min-w-0 truncate cursor-pointer hover:text-blue-600 ${station?.note ? 'text-gray-500' : 'text-gray-300'}`}
-          title={station?.note ? `Click to edit: ${station.note}` : 'Click to add noteduction'}
+          title={station?.note ? `Click to edit: ${station.note}` : 'Click to add note'}
         >
           {station?.note || '(note)'}
         </span>

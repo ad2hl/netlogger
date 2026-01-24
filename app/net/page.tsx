@@ -122,7 +122,9 @@ export default function NetPage() {
       if (!user || !profile) return null;
 
       const cachedStation = await getStation(user.uid, callsign);
-      if (cachedStation) {
+
+      // Return cached station if it has location data, or if no QRZ credentials
+      if (cachedStation && (cachedStation.city || !profile.qrzUsername || !profile.qrzPassword)) {
         return cachedStation;
       }
 
@@ -131,6 +133,8 @@ export default function NetPage() {
           callsign: callsign.toUpperCase(),
           firstName: 'Unknown',
           nickname: null,
+          city: null,
+          state: null,
           note: null,
           lastSeen: null as any,
         };
@@ -157,6 +161,8 @@ export default function NetPage() {
             callsign: callsign.toUpperCase(),
             firstName: 'Unknown',
             nickname: null,
+            city: null,
+            state: null,
             note: null,
             lastSeen: null as any,
           };
@@ -167,8 +173,10 @@ export default function NetPage() {
         const station: Station = {
           callsign: data.callsign,
           firstName: data.nickname || data.firstName || 'Unknown',
-          nickname: null,
-          note: null,
+          nickname: cachedStation?.nickname || null,
+          city: data.city || null,
+          state: data.state || null,
+          note: cachedStation?.note || null,
           lastSeen: null as any,
         };
         await saveStation(user.uid, station);
