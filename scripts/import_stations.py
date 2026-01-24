@@ -83,6 +83,8 @@ def main():
                     "callsign": callsign,
                     "firstName": "Unknown",
                     "nickname": nickname,
+                    "city": None,
+                    "state": None,
                     "note": None,
                     "lastSeen": firestore.SERVER_TIMESTAMP,
                 })
