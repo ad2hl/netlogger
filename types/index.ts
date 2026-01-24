@@ -13,7 +13,9 @@ export interface Station {
   callsign: string;
   firstName: string;
   nickname: string | null;
-  note: string | null;  // Persistent noteduction text (e.g., "Assistant Net Manager")
+  city: string | null;
+  state: string | null;
+  note: string | null;  // Persistent note text (e.g., "Assistant Net Manager")
   lastSeen: Timestamp;
 }
 
