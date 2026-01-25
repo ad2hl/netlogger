@@ -38,8 +38,8 @@ export default function CheckInForm({ onCheckIn, disabled }: CheckInFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-4">
-      <h2 className="text-lg font-semibold mb-3">Check In Station</h2>
+    <div className="bg-white rounded-lg shadow p-3">
+      <h2 className="text-lg font-semibold mb-2">Check In Station</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
@@ -64,10 +64,6 @@ export default function CheckInForm({ onCheckIn, disabled }: CheckInFormProps) {
             {isSubmitting ? '...' : 'Add'}
           </button>
         </div>
-
-        <p className="text-sm text-gray-500">
-          /NC /ANC /T /A /M /P /S /IO /xxx (liaison)
-        </p>
       </form>
     </div>
   );

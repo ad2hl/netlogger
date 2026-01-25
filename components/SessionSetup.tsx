@@ -62,11 +62,11 @@ export default function SessionSetup({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-4">
-      <h2 className="text-lg font-semibold mb-3">
+    <div className="bg-white rounded-lg shadow p-3">
+      <h2 className="text-lg font-semibold mb-2">
         {existingSession ? 'Net Session' : 'Start New Net Session'}
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-2">
         <div className="grid grid-cols-4 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

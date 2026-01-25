@@ -412,7 +412,7 @@ export default function NetPage() {
   return (
     <div className="min-h-screen">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">NetLogger</h1>
           <div className="flex items-center gap-4">
             {profile?.callsign && (
@@ -444,7 +444,7 @@ export default function NetPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-3">
         {!profile?.callsign && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
             <p className="text-yellow-800">
@@ -457,8 +457,8 @@ export default function NetPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-2">
             <SessionSetup
               onCreateSession={handleCreateSession}
               existingSession={session}
