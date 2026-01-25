@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { CheckIn, Station } from '@/types';
 import StationCard from './StationCard';
 
@@ -23,6 +23,14 @@ export default function CheckInList({
   lastAcknowledged,
   onSetLastAcknowledged,
 }: CheckInListProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new stations are added
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [checkIns.length]);
 
   if (checkIns.length === 0) {
     return (
@@ -40,7 +48,10 @@ export default function CheckInList({
         </h2>
       </div>
 
-      <div className="divide-y divide-gray-100">
+      <div
+        ref={scrollRef}
+        className="divide-y divide-gray-100 max-h-96 overflow-y-auto"
+      >
         {checkIns.map((checkIn) => (
           <StationCard
             key={checkIn.callsign}
