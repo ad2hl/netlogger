@@ -10,6 +10,7 @@ import {
   updateSession,
   addCheckIn,
   removeCheckIn,
+  updateCheckInTags,
   getStation,
   saveStation,
   updateStationNickname,
@@ -195,7 +196,25 @@ export default function NetPage() {
     const existingCheckIn = session.checkIns.find(
       (c) => c.callsign.toUpperCase() === checkIn.callsign.toUpperCase()
     );
+
+    // If station already checked in, merge new tags and move to end
     if (existingCheckIn) {
+      // Only update if there are new tags to add
+      if (checkIn.tags.length === 0) return;
+
+      const updatedCheckIns = await updateCheckInTags(
+        user.uid,
+        session.id,
+        checkIn.callsign,
+        checkIn.tags,
+        session.checkIns
+      );
+
+      if (updatedCheckIns) {
+        setSession((prev) =>
+          prev ? { ...prev, checkIns: updatedCheckIns } : null
+        );
+      }
       return;
     }
 

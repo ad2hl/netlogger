@@ -144,6 +144,46 @@ export async function addCheckIn(
   }
 }
 
+export async function updateCheckInTags(
+  uid: string,
+  sessionId: string,
+  callsign: string,
+  newTags: string[],
+  currentCheckIns: CheckIn[]
+): Promise<CheckIn[] | null> {
+  try {
+    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const upperCallsign = callsign.toUpperCase();
+
+    // Find existing check-in and merge tags
+    const existingCheckIn = currentCheckIns.find(
+      (c) => c.callsign.toUpperCase() === upperCallsign
+    );
+
+    if (!existingCheckIn) return null;
+
+    // Merge tags (avoid duplicates)
+    const mergedTags = [...new Set([...existingCheckIn.tags, ...newTags])];
+
+    // Remove from current position and add to end with merged tags
+    const updatedCheckIns = currentCheckIns.filter(
+      (c) => c.callsign.toUpperCase() !== upperCallsign
+    );
+    const updatedCheckIn: CheckIn = {
+      ...existingCheckIn,
+      tags: mergedTags,
+      timestamp: new Date(),
+    };
+    updatedCheckIns.push(updatedCheckIn);
+
+    await updateDoc(sessionRef, { checkIns: updatedCheckIns });
+    return updatedCheckIns;
+  } catch (error) {
+    console.error('Error updating check-in tags:', error);
+    return null;
+  }
+}
+
 export async function removeCheckIn(
   uid: string,
   sessionId: string,
