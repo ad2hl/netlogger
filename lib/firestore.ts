@@ -163,7 +163,7 @@ export async function updateCheckInTags(
     if (!existingCheckIn) return null;
 
     // Merge tags (avoid duplicates)
-    const mergedTags = [...new Set([...existingCheckIn.tags, ...newTags])];
+    const mergedTags = Array.from(new Set([...existingCheckIn.tags, ...newTags]));
 
     // Remove from current position and add to end with merged tags
     const updatedCheckIns = currentCheckIns.filter(
