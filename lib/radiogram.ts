@@ -1,4 +1,4 @@
-import { CheckIn, NetSession, Station, STATUS_TAGS } from '@/types';
+import { CheckIn, NetSession, Station, isStatusTag } from '@/types';
 
 interface RadiogramData {
   session: NetSession;
@@ -42,8 +42,8 @@ export function compressCallsigns(callsigns: string[]): string[] {
 }
 
 function formatCallsignWithTags(callsign: string, tags: string[]): string {
-  // Include all tags except status tags (T, A, M, P, S, IO)
-  const reportTags = tags.filter(t => !STATUS_TAGS.includes(t));
+  // Include all tags except status tags (single letters like T, A, M, P, S, E, D, etc. and IO)
+  const reportTags = tags.filter(t => !isStatusTag(t));
   if (reportTags.length === 0) {
     return callsign;
   }
@@ -64,15 +64,15 @@ function formatCheckInsForReport(
     const tags = checkIn.tags || [];
     const callsignWithTags = formatCallsignWithTags(callsign, tags);
 
-    // Tags that don't indicate a liaison role
-    const nonLiaisonTags = ['NC', 'ANC', ...STATUS_TAGS];
+    // A tag is a liaison tag if it's multi-letter (except NC, ANC)
+    const isLiaisonTag = (t: string) => t.length > 1 && t !== 'NC' && t !== 'ANC' && t !== 'IO';
 
     if (tags.includes('NC')) {
       ncStations.push(callsignWithTags);
     } else if (tags.includes('ANC')) {
       ancStations.push(callsignWithTags);
-    } else if (tags.some(t => !nonLiaisonTags.includes(t))) {
-      // Has a liaison tag (anything other than NC, ANC, or status tags)
+    } else if (tags.some(isLiaisonTag)) {
+      // Has a liaison tag (multi-letter, not NC/ANC/IO)
       liaisonStations.push(callsignWithTags);
     } else {
       regularStations.push(callsign); // No tags for regular stations

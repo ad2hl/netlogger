@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckIn, Station, getTagLabel, formatLastSeen } from '@/types';
+import { CheckIn, Station, getTagLabel, formatLastSeen, URGENT_TAGS } from '@/types';
 
 interface StationCardProps {
   checkIn: CheckIn;
@@ -63,17 +63,18 @@ export default function StationCard({
       case 'S':
       case 'IO':
         return 'bg-amber-500 text-white font-bold animate-pulse';
-      case 'M':
-        return 'bg-sky-100 text-sky-800 border border-sky-300';
-      case 'P':
-        return 'bg-lime-100 text-lime-800 border border-lime-300';
       default:
+        // Single letters are status tags (like M, P, E, D)
+        if (tag.length === 1) {
+          return 'bg-sky-100 text-sky-800 border border-sky-300';
+        }
+        // Multi-letter tags are liaison tags
         return 'bg-teal-100 text-teal-800 border border-teal-300';
     }
   };
 
   const tags = checkIn.tags || [];
-  const hasUrgentTag = tags.some(t => ['T', 'A', 'S', 'IO'].includes(t));
+  const hasUrgentTag = tags.some(t => URGENT_TAGS.includes(t));
 
   return (
     <div className={`flex items-center gap-2 py-1.5 px-2 rounded group ${hasUrgentTag ? 'bg-yellow-50' : 'hover:bg-gray-50'}`}>

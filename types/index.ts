@@ -93,23 +93,33 @@ export interface QRZSessionResponse {
 }
 
 // Special tags with defined meanings
-export const SPECIAL_TAGS = {
+export const SPECIAL_TAGS: Record<string, string> = {
   NC: 'Net Control',
   ANC: 'Alternate NC',
   T: 'Traffic',
   A: 'Announcement',
-  M: 'Mobile',
-  P: 'Portable',
   S: 'Secure',
   IO: 'In & Out',
-} as const;
+};
 
-// Tags that are excluded from the report callsign (status tags, not role tags)
-export const STATUS_TAGS = ['T', 'A', 'M', 'P', 'S', 'IO'];
+// Urgent status tags that get pulsing animation
+export const URGENT_TAGS = ['T', 'A', 'S', 'IO'];
+
+// Check if a tag is a status tag (excluded from report callsign)
+// Status tags are: T, A, S, IO, or any single letter (M, P, E, D, etc.)
+export function isStatusTag(tag: string): boolean {
+  if (URGENT_TAGS.includes(tag)) return true;
+  // Single letters (except those in role tags) are status tags
+  return tag.length === 1 && tag !== 'NC' && tag !== 'ANC';
+}
 
 export function getTagLabel(tag: string): string {
   if (tag in SPECIAL_TAGS) {
-    return SPECIAL_TAGS[tag as keyof typeof SPECIAL_TAGS];
+    return SPECIAL_TAGS[tag];
   }
-  return `${tag} Liaison`;  // Anything else is a liaison
+  // Single letters are status indicators
+  if (tag.length === 1) {
+    return tag;  // Just show the letter
+  }
+  return `${tag} Liaison`;  // Multi-letter tags are liaisons
 }
