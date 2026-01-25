@@ -67,21 +67,21 @@ export default function SessionSetup({
         {existingSession ? 'Net Session' : 'Start New Net Session'}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Net Name
-          </label>
-          <input
-            type="text"
-            value={netName}
-            onChange={(e) => setNetName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="e.g., MDARC Net"
-            required
-          />
-        </div>
+        <div className="grid grid-cols-4 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Net Name
+            </label>
+            <input
+              type="text"
+              value={netName}
+              onChange={(e) => setNetName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g., SDN"
+              required
+            />
+          </div>
 
-        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Date
@@ -97,7 +97,7 @@ export default function SessionSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Start Time
+              Start
             </label>
             <input
               type="time"
@@ -110,7 +110,7 @@ export default function SessionSetup({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              End Time
+              End
             </label>
             <input
               type="time"
