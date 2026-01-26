@@ -24,20 +24,23 @@ export function formatLastSeen(lastSeen: Timestamp | null): string | null {
 
   const now = new Date();
   const then = lastSeen.toDate();
-  const diffMs = now.getTime() - then.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-  if (diffDays < 1) {
+  // Calculate calendar days difference (not 24-hour periods)
+  const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const thenDate = new Date(then.getFullYear(), then.getMonth(), then.getDate());
+  const diffDays = Math.floor((nowDate.getTime() - thenDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
     return null; // Don't show for today
-  } else if (diffDays < 1.5) {
+  } else if (diffDays === 1) {
     return '1 day';
   } else if (diffDays < 7) {
-    return `${Math.round(diffDays)} days`;
-  } else if (diffDays < 10) {
+    return `${diffDays} days`;
+  } else if (diffDays < 14) {
     return '1 week';
   } else if (diffDays < 30) {
     const weeks = Math.round(diffDays / 7);
-    return `${weeks} week${weeks === 1 ? '' : 's'}`;
+    return `${weeks} weeks`;
   } else if (diffDays < 45) {
     return '1 month';
   } else if (diffDays < 330) {

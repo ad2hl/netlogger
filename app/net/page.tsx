@@ -347,6 +347,58 @@ export default function NetPage() {
     }
   };
 
+  const handleUpdateCallsign = async (oldCallsign: string, newCallsign: string) => {
+    if (!user || !session?.id) return;
+
+    const normalizedOld = oldCallsign.toUpperCase();
+    const normalizedNew = newCallsign.toUpperCase();
+
+    // Update the checkIn in the session
+    const updatedCheckIns = session.checkIns.map((c) =>
+      c.callsign.toUpperCase() === normalizedOld
+        ? { ...c, callsign: normalizedNew }
+        : c
+    );
+
+    const success = await updateSession(user.uid, session.id, {
+      checkIns: updatedCheckIns,
+      // Update bookmark if it was pointing to the old callsign
+      lastAcknowledged:
+        session.lastAcknowledged?.toUpperCase() === normalizedOld
+          ? normalizedNew
+          : session.lastAcknowledged,
+    });
+
+    if (success) {
+      // Look up the new callsign
+      const station = await lookupCallsign(normalizedNew);
+
+      setStations((prev) => {
+        const newMap = new Map(prev);
+        // Remove old station entry
+        newMap.delete(normalizedOld);
+        // Add new station entry
+        if (station) {
+          newMap.set(normalizedNew, station);
+        }
+        return newMap;
+      });
+
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              checkIns: updatedCheckIns,
+              lastAcknowledged:
+                prev.lastAcknowledged?.toUpperCase() === normalizedOld
+                  ? normalizedNew
+                  : prev.lastAcknowledged,
+            }
+          : null
+      );
+    }
+  };
+
   const handleSetLastAcknowledged = async (callsign: string) => {
     if (!user || !session?.id) return;
 
@@ -475,6 +527,7 @@ export default function NetPage() {
                   checkIns={session.checkIns}
                   stations={stations}
                   onRemove={handleRemoveCheckIn}
+                  onUpdateCallsign={handleUpdateCallsign}
                   onUpdateNickname={handleUpdateNickname}
                   onUpdateNote={handleUpdateNote}
                   lastAcknowledged={session.lastAcknowledged}
