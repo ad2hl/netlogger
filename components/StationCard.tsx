@@ -6,7 +6,9 @@ import { CheckIn, Station, getTagLabel, formatLastSeen, URGENT_TAGS } from '@/ty
 interface StationCardProps {
   checkIn: CheckIn;
   station?: Station | null;
+  number: number;
   onRemove: (callsign: string) => void;
+  onUpdateCallsign: (oldCallsign: string, newCallsign: string) => void;
   onUpdateNickname: (callsign: string, nickname: string | null) => void;
   onUpdateNote: (callsign: string, note: string | null) => void;
   isBookmarked?: boolean;
@@ -16,19 +18,30 @@ interface StationCardProps {
 export default function StationCard({
   checkIn,
   station,
+  number,
   onRemove,
+  onUpdateCallsign,
   onUpdateNickname,
   onUpdateNote,
   isBookmarked,
   onSetBookmark,
 }: StationCardProps) {
-  const [editingField, setEditingField] = useState<'name' | 'note' | null>(null);
+  const [editingField, setEditingField] = useState<'callsign' | 'name' | 'note' | null>(null);
+  const [callsign, setCallsign] = useState(checkIn.callsign);
   const [nickname, setNickname] = useState(station?.nickname || '');
   const [note, setNote] = useState(station?.note || '');
 
   const displayName = station?.nickname || station?.firstName || '';
   const lastSeenText = station?.lastSeen ? formatLastSeen(station.lastSeen) : null;
   const location = [station?.city, station?.state].filter(Boolean).join(', ');
+
+  const handleSaveCallsign = () => {
+    const trimmed = callsign.trim().toUpperCase();
+    if (trimmed && trimmed !== checkIn.callsign.toUpperCase()) {
+      onUpdateCallsign(checkIn.callsign, trimmed);
+    }
+    setEditingField(null);
+  };
 
   const handleSaveNickname = () => {
     const trimmed = nickname.trim();
@@ -91,9 +104,31 @@ export default function StationCard({
           ▶
         </button>
       )}
-      <span className="font-mono font-semibold text-sm w-20 flex-shrink-0">
-        {checkIn.callsign}
+      <span className="text-sm text-gray-400 w-6 flex-shrink-0 text-right">
+        {number}
       </span>
+      {editingField === 'callsign' ? (
+        <input
+          type="text"
+          value={callsign}
+          onChange={(e) => setCallsign(e.target.value.toUpperCase())}
+          onBlur={handleSaveCallsign}
+          onKeyDown={(e) => handleKeyDown(e, handleSaveCallsign, () => {
+            setCallsign(checkIn.callsign);
+            setEditingField(null);
+          })}
+          className="font-mono font-semibold text-sm w-20 flex-shrink-0 px-1 border-b border-blue-400 focus:outline-none bg-transparent"
+          autoFocus
+        />
+      ) : (
+        <span
+          onClick={() => setEditingField('callsign')}
+          className={`font-mono font-semibold text-sm w-20 flex-shrink-0 cursor-pointer hover:text-blue-600 ${station?.firstName === 'Unknown' ? 'text-red-600' : ''}`}
+          title="Click to edit callsign"
+        >
+          {checkIn.callsign}
+        </span>
+      )}
 
       {editingField === 'name' ? (
         <input
