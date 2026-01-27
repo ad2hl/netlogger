@@ -35,6 +35,7 @@ export default function NetPage() {
   const [session, setSession] = useState<NetSession | null>(null);
   const [stations, setStations] = useState<Map<string, Station>>(new Map());
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -515,6 +516,7 @@ export default function NetPage() {
               onCreateSession={handleCreateSession}
               existingSession={session}
               onUpdateSession={handleUpdateSession}
+              onShowReport={() => setShowReport(true)}
             />
 
             {session && (
@@ -537,25 +539,27 @@ export default function NetPage() {
             )}
           </div>
 
-          <div className="space-y-4">
-            {session && (
+          {session && (
+            <div className="space-y-4">
               <TrafficCounter
                 reported={session.trafficReported}
                 cleared={session.trafficCleared}
                 onReportedChange={handleTrafficReportedChange}
                 onClearedChange={handleTrafficClearedChange}
               />
-            )}
-
-            <ReportGenerator
-              session={session}
-              stations={stations}
-              profile={profile}
-              onSaveReport={handleSaveReport}
-            />
-          </div>
+            </div>
+          )}
         </div>
       </main>
+
+      <ReportGenerator
+        session={session}
+        stations={stations}
+        profile={profile}
+        onSaveReport={handleSaveReport}
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+      />
     </div>
   );
 }
