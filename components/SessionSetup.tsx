@@ -8,12 +8,14 @@ interface SessionSetupProps {
   onCreateSession: (session: Omit<NetSession, 'id'>) => void;
   existingSession?: NetSession | null;
   onUpdateSession?: (updates: Partial<NetSession>) => void;
+  onShowReport?: () => void;
 }
 
 export default function SessionSetup({
   onCreateSession,
   existingSession,
   onUpdateSession,
+  onShowReport,
 }: SessionSetupProps) {
   const [netName, setNetName] = useState(existingSession?.netName || '');
   const [date, setDate] = useState(() => {
@@ -121,22 +123,35 @@ export default function SessionSetup({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className={`grid gap-2 ${existingSession ? 'grid-cols-3' : 'grid-cols-1'}`}>
           <button
             type="submit"
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {existingSession ? 'Update Session' : 'Start Session'}
           </button>
 
-          {existingSession && !existingSession.endTime && (
-            <button
-              type="button"
-              onClick={handleEndNet}
-              className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              End Net
-            </button>
+          {existingSession && (
+            <>
+              {!existingSession.endTime ? (
+                <button
+                  type="button"
+                  onClick={handleEndNet}
+                  className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  End Net
+                </button>
+              ) : (
+                <div></div>
+              )}
+              <button
+                type="button"
+                onClick={onShowReport}
+                className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              >
+                Show Report
+              </button>
+            </>
           )}
         </div>
       </form>
