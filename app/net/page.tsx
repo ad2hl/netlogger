@@ -19,13 +19,14 @@ import {
   getStations,
   saveReport,
 } from '@/lib/firestore';
-import { NetSession, CheckIn, Station, NetReport } from '@/types';
+import { NetSession, CheckIn, Station, NetReport, Radiogram } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
 import SessionSetup from '@/components/SessionSetup';
 import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
 import TrafficCounter from '@/components/TrafficCounter';
+import RadiogramList from '@/components/RadiogramList';
 import ReportGenerator from '@/components/ReportGenerator';
 
 export default function NetPage() {
@@ -440,6 +441,50 @@ export default function NetPage() {
     }
   };
 
+  const handleSaveRadiogram = async (radiogram: Radiogram) => {
+    if (!user || !session?.id) return;
+
+    const currentRadiograms = session.radiograms || [];
+    const existingIndex = currentRadiograms.findIndex(r => r.id === radiogram.id);
+    let updatedRadiograms: Radiogram[];
+
+    if (existingIndex >= 0) {
+      // Update existing radiogram
+      updatedRadiograms = [...currentRadiograms];
+      updatedRadiograms[existingIndex] = radiogram;
+    } else {
+      // Add new radiogram
+      updatedRadiograms = [...currentRadiograms, radiogram];
+    }
+
+    const success = await updateSession(user.uid, session.id, {
+      radiograms: updatedRadiograms,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, radiograms: updatedRadiograms } : null
+      );
+    }
+  };
+
+  const handleDeleteRadiogram = async (id: string) => {
+    if (!user || !session?.id) return;
+
+    const currentRadiograms = session.radiograms || [];
+    const updatedRadiograms = currentRadiograms.filter(r => r.id !== id);
+
+    const success = await updateSession(user.uid, session.id, {
+      radiograms: updatedRadiograms,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, radiograms: updatedRadiograms } : null
+      );
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
@@ -546,6 +591,11 @@ export default function NetPage() {
                 cleared={session.trafficCleared}
                 onReportedChange={handleTrafficReportedChange}
                 onClearedChange={handleTrafficClearedChange}
+              />
+              <RadiogramList
+                radiograms={session.radiograms || []}
+                onSave={handleSaveRadiogram}
+                onDelete={handleDeleteRadiogram}
               />
             </div>
           )}
