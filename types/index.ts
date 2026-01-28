@@ -66,6 +66,28 @@ export interface NetReport {
   radiogram: string;
 }
 
+// ARRL Standard Radiogram
+export interface Radiogram {
+  id: string;
+  // Preamble
+  number: string;
+  precedence: string;
+  handlingInstructions: string;
+  stationOfOrigin: string;
+  check: string;
+  placeOfOrigin: string;
+  timeFiled: string;
+  date: string;
+  // Address (5 lines)
+  address: string;
+  addressOpNote: string;
+  // Text (array of words, displayed 5 per line)
+  textWords: string[];
+  // Signature
+  signature: string;
+  signatureOpNote: string;
+}
+
 export interface NetSession {
   id?: string;
   netName: string;
@@ -75,6 +97,7 @@ export interface NetSession {
   trafficReported: number;
   trafficCleared: number;
   checkIns: CheckIn[];
+  radiograms: Radiogram[];
   report?: NetReport;
   lastAcknowledged?: string | null; // Callsign of last acknowledged station
 }
