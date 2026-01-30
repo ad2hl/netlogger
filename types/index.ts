@@ -88,6 +88,14 @@ export interface Radiogram {
   signatureOpNote: string;
 }
 
+// Traffic item for the checklist (e.g., KM2I -> WM2C)
+export interface TrafficItem {
+  id: string;
+  fromCallsign: string;
+  toDestination: string;
+  checked: boolean;
+}
+
 export interface NetSession {
   id?: string;
   netName: string;
@@ -100,6 +108,9 @@ export interface NetSession {
   radiograms: Radiogram[];
   report?: NetReport;
   lastAcknowledged?: string | null; // Callsign of last acknowledged station
+  // Checklist data
+  trafficItems?: TrafficItem[];
+  checkedAnnouncements?: string[]; // Callsigns that have been checked off
 }
 
 export interface QRZLookupResult {
