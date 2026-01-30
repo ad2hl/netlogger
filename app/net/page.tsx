@@ -19,13 +19,14 @@ import {
   getStations,
   saveReport,
 } from '@/lib/firestore';
-import { NetSession, CheckIn, Station, NetReport } from '@/types';
+import { NetSession, CheckIn, Station, NetReport, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
 import SessionSetup from '@/components/SessionSetup';
 import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
 import TrafficCounter from '@/components/TrafficCounter';
+import Checklist from '@/components/Checklist';
 import ReportGenerator from '@/components/ReportGenerator';
 
 export default function NetPage() {
@@ -387,6 +388,86 @@ export default function NetPage() {
     }
   };
 
+  const handleAddTrafficItem = async (fromCallsign: string, toDestination: string) => {
+    if (!user || !session?.id) return;
+
+    const newItem: TrafficItem = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+      fromCallsign: fromCallsign.toUpperCase(),
+      toDestination: toDestination.toUpperCase(),
+      checked: false,
+    };
+
+    const currentItems = session.trafficItems || [];
+    const updatedItems = [...currentItems, newItem];
+
+    const success = await updateSession(user.uid, session.id, {
+      trafficItems: updatedItems,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, trafficItems: updatedItems } : null
+      );
+    }
+  };
+
+  const handleToggleTrafficItem = async (id: string) => {
+    if (!user || !session?.id) return;
+
+    const currentItems = session.trafficItems || [];
+    const updatedItems = currentItems.map((item) =>
+      item.id === id ? { ...item, checked: !item.checked } : item
+    );
+
+    const success = await updateSession(user.uid, session.id, {
+      trafficItems: updatedItems,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, trafficItems: updatedItems } : null
+      );
+    }
+  };
+
+  const handleDeleteTrafficItem = async (id: string) => {
+    if (!user || !session?.id) return;
+
+    const currentItems = session.trafficItems || [];
+    const updatedItems = currentItems.filter((item) => item.id !== id);
+
+    const success = await updateSession(user.uid, session.id, {
+      trafficItems: updatedItems,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, trafficItems: updatedItems } : null
+      );
+    }
+  };
+
+  const handleToggleAnnouncement = async (callsign: string) => {
+    if (!user || !session?.id) return;
+
+    const currentChecked = session.checkedAnnouncements || [];
+    const isCurrentlyChecked = currentChecked.includes(callsign);
+    const updatedChecked = isCurrentlyChecked
+      ? currentChecked.filter((c) => c !== callsign)
+      : [...currentChecked, callsign];
+
+    const success = await updateSession(user.uid, session.id, {
+      checkedAnnouncements: updatedChecked,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, checkedAnnouncements: updatedChecked } : null
+      );
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
@@ -486,12 +567,23 @@ export default function NetPage() {
 
           <div className="space-y-4">
             {session && (
-              <TrafficCounter
-                reported={session.trafficReported}
-                cleared={session.trafficCleared}
-                onReportedChange={handleTrafficReportedChange}
-                onClearedChange={handleTrafficClearedChange}
-              />
+              <>
+                <TrafficCounter
+                  reported={session.trafficReported}
+                  cleared={session.trafficCleared}
+                  onReportedChange={handleTrafficReportedChange}
+                  onClearedChange={handleTrafficClearedChange}
+                />
+                <Checklist
+                  checkIns={session.checkIns}
+                  trafficItems={session.trafficItems || []}
+                  checkedAnnouncements={session.checkedAnnouncements || []}
+                  onAddTrafficItem={handleAddTrafficItem}
+                  onToggleTrafficItem={handleToggleTrafficItem}
+                  onDeleteTrafficItem={handleDeleteTrafficItem}
+                  onToggleAnnouncement={handleToggleAnnouncement}
+                />
+              </>
             )}
 
             <ReportGenerator
