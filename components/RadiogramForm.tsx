@@ -176,15 +176,19 @@ export default function RadiogramForm({
       for (let col = 0; col < WORDS_PER_LINE; col++) {
         const index = line * WORDS_PER_LINE + col;
         cols.push(
-          <input
-            key={index}
-            type="text"
-            value={formData.textWords[index] || ''}
-            onChange={(e) => handleWordChange(index, e.target.value)}
-            onKeyDown={(e) => handleWordKeyDown(index, e)}
-            ref={(el) => { wordInputRefs.current[index] = el; }}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
-          />
+          <div key={index} className="relative">
+            <span className="absolute top-0 left-0.5 text-[10px] text-gray-400 leading-none">
+              {index + 1}
+            </span>
+            <input
+              type="text"
+              value={formData.textWords[index] || ''}
+              onChange={(e) => handleWordChange(index, e.target.value)}
+              onKeyDown={(e) => handleWordKeyDown(index, e)}
+              ref={(el) => { wordInputRefs.current[index] = el; }}
+              className="w-full px-2 pt-3 pb-1 border border-gray-300 rounded text-sm uppercase"
+            />
+          </div>
         );
       }
       rows.push(
