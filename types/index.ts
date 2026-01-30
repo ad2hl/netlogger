@@ -24,20 +24,23 @@ export function formatLastSeen(lastSeen: Timestamp | null): string | null {
 
   const now = new Date();
   const then = lastSeen.toDate();
-  const diffMs = now.getTime() - then.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-  if (diffDays < 1) {
+  // Calculate calendar days difference (not 24-hour periods)
+  const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const thenDate = new Date(then.getFullYear(), then.getMonth(), then.getDate());
+  const diffDays = Math.floor((nowDate.getTime() - thenDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
     return null; // Don't show for today
-  } else if (diffDays < 1.5) {
+  } else if (diffDays === 1) {
     return '1 day';
   } else if (diffDays < 7) {
-    return `${Math.round(diffDays)} days`;
-  } else if (diffDays < 10) {
+    return `${diffDays} days`;
+  } else if (diffDays < 14) {
     return '1 week';
   } else if (diffDays < 30) {
     const weeks = Math.round(diffDays / 7);
-    return `${weeks} week${weeks === 1 ? '' : 's'}`;
+    return `${weeks} weeks`;
   } else if (diffDays < 45) {
     return '1 month';
   } else if (diffDays < 330) {
@@ -63,6 +66,28 @@ export interface NetReport {
   radiogram: string;
 }
 
+// ARRL Standard Radiogram
+export interface Radiogram {
+  id: string;
+  // Preamble
+  number: string;
+  precedence: string;
+  handlingInstructions: string;
+  stationOfOrigin: string;
+  check: string;
+  placeOfOrigin: string;
+  timeFiled: string;
+  date: string;
+  // Address (5 lines)
+  address: string;
+  addressOpNote: string;
+  // Text (array of words, displayed 5 per line)
+  textWords: string[];
+  // Signature
+  signature: string;
+  signatureOpNote: string;
+}
+
 // Traffic item for the checklist (e.g., KM2I -> WM2C)
 export interface TrafficItem {
   id: string;
@@ -80,6 +105,7 @@ export interface NetSession {
   trafficReported: number;
   trafficCleared: number;
   checkIns: CheckIn[];
+  radiograms: Radiogram[];
   report?: NetReport;
   lastAcknowledged?: string | null; // Callsign of last acknowledged station
   // Checklist data

@@ -19,7 +19,7 @@ import {
   getStations,
   saveReport,
 } from '@/lib/firestore';
-import { NetSession, CheckIn, Station, NetReport, TrafficItem } from '@/types';
+import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
 import SessionSetup from '@/components/SessionSetup';
@@ -27,6 +27,7 @@ import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
 import TrafficCounter from '@/components/TrafficCounter';
 import Checklist from '@/components/Checklist';
+import RadiogramList from '@/components/RadiogramList';
 import ReportGenerator from '@/components/ReportGenerator';
 
 export default function NetPage() {
@@ -36,6 +37,7 @@ export default function NetPage() {
   const [session, setSession] = useState<NetSession | null>(null);
   const [stations, setStations] = useState<Map<string, Station>>(new Map());
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -348,6 +350,58 @@ export default function NetPage() {
     }
   };
 
+  const handleUpdateCallsign = async (oldCallsign: string, newCallsign: string) => {
+    if (!user || !session?.id) return;
+
+    const normalizedOld = oldCallsign.toUpperCase();
+    const normalizedNew = newCallsign.toUpperCase();
+
+    // Update the checkIn in the session
+    const updatedCheckIns = session.checkIns.map((c) =>
+      c.callsign.toUpperCase() === normalizedOld
+        ? { ...c, callsign: normalizedNew }
+        : c
+    );
+
+    const success = await updateSession(user.uid, session.id, {
+      checkIns: updatedCheckIns,
+      // Update bookmark if it was pointing to the old callsign
+      lastAcknowledged:
+        session.lastAcknowledged?.toUpperCase() === normalizedOld
+          ? normalizedNew
+          : session.lastAcknowledged,
+    });
+
+    if (success) {
+      // Look up the new callsign
+      const station = await lookupCallsign(normalizedNew);
+
+      setStations((prev) => {
+        const newMap = new Map(prev);
+        // Remove old station entry
+        newMap.delete(normalizedOld);
+        // Add new station entry
+        if (station) {
+          newMap.set(normalizedNew, station);
+        }
+        return newMap;
+      });
+
+      setSession((prev) =>
+        prev
+          ? {
+              ...prev,
+              checkIns: updatedCheckIns,
+              lastAcknowledged:
+                prev.lastAcknowledged?.toUpperCase() === normalizedOld
+                  ? normalizedNew
+                  : prev.lastAcknowledged,
+            }
+          : null
+      );
+    }
+  };
+
   const handleSetLastAcknowledged = async (callsign: string) => {
     if (!user || !session?.id) return;
 
@@ -385,6 +439,50 @@ export default function NetPage() {
 
     if (success) {
       setSession((prev) => (prev ? { ...prev, trafficCleared: value } : null));
+    }
+  };
+
+  const handleSaveRadiogram = async (radiogram: Radiogram) => {
+    if (!user || !session?.id) return;
+
+    const currentRadiograms = session.radiograms || [];
+    const existingIndex = currentRadiograms.findIndex(r => r.id === radiogram.id);
+    let updatedRadiograms: Radiogram[];
+
+    if (existingIndex >= 0) {
+      // Update existing radiogram
+      updatedRadiograms = [...currentRadiograms];
+      updatedRadiograms[existingIndex] = radiogram;
+    } else {
+      // Add new radiogram
+      updatedRadiograms = [...currentRadiograms, radiogram];
+    }
+
+    const success = await updateSession(user.uid, session.id, {
+      radiograms: updatedRadiograms,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, radiograms: updatedRadiograms } : null
+      );
+    }
+  };
+
+  const handleDeleteRadiogram = async (id: string) => {
+    if (!user || !session?.id) return;
+
+    const currentRadiograms = session.radiograms || [];
+    const updatedRadiograms = currentRadiograms.filter(r => r.id !== id);
+
+    const success = await updateSession(user.uid, session.id, {
+      radiograms: updatedRadiograms,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, radiograms: updatedRadiograms } : null
+      );
     }
   };
 
@@ -493,7 +591,7 @@ export default function NetPage() {
   return (
     <div className="min-h-screen">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">NetLogger</h1>
           <div className="flex items-center gap-4">
             {profile?.callsign && (
@@ -525,7 +623,7 @@ export default function NetPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-3">
         {!profile?.callsign && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
             <p className="text-yellow-800">
@@ -538,12 +636,13 @@ export default function NetPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-2">
             <SessionSetup
               onCreateSession={handleCreateSession}
               existingSession={session}
               onUpdateSession={handleUpdateSession}
+              onShowReport={() => setShowReport(true)}
             />
 
             {session && (
@@ -556,6 +655,7 @@ export default function NetPage() {
                   checkIns={session.checkIns}
                   stations={stations}
                   onRemove={handleRemoveCheckIn}
+                  onUpdateCallsign={handleUpdateCallsign}
                   onUpdateNickname={handleUpdateNickname}
                   onUpdateNote={handleUpdateNote}
                   lastAcknowledged={session.lastAcknowledged}
@@ -565,36 +665,41 @@ export default function NetPage() {
             )}
           </div>
 
-          <div className="space-y-4">
-            {session && (
-              <>
-                <TrafficCounter
-                  reported={session.trafficReported}
-                  cleared={session.trafficCleared}
-                  onReportedChange={handleTrafficReportedChange}
-                  onClearedChange={handleTrafficClearedChange}
-                />
-                <Checklist
-                  checkIns={session.checkIns}
-                  trafficItems={session.trafficItems || []}
-                  checkedAnnouncements={session.checkedAnnouncements || []}
-                  onAddTrafficItem={handleAddTrafficItem}
-                  onToggleTrafficItem={handleToggleTrafficItem}
-                  onDeleteTrafficItem={handleDeleteTrafficItem}
-                  onToggleAnnouncement={handleToggleAnnouncement}
-                />
-              </>
-            )}
-
-            <ReportGenerator
-              session={session}
-              stations={stations}
-              profile={profile}
-              onSaveReport={handleSaveReport}
-            />
-          </div>
+          {session && (
+            <div className="space-y-4">
+              <TrafficCounter
+                reported={session.trafficReported}
+                cleared={session.trafficCleared}
+                onReportedChange={handleTrafficReportedChange}
+                onClearedChange={handleTrafficClearedChange}
+              />
+              <Checklist
+                checkIns={session.checkIns}
+                trafficItems={session.trafficItems || []}
+                checkedAnnouncements={session.checkedAnnouncements || []}
+                onAddTrafficItem={handleAddTrafficItem}
+                onToggleTrafficItem={handleToggleTrafficItem}
+                onDeleteTrafficItem={handleDeleteTrafficItem}
+                onToggleAnnouncement={handleToggleAnnouncement}
+              />
+              <RadiogramList
+                radiograms={session.radiograms || []}
+                onSave={handleSaveRadiogram}
+                onDelete={handleDeleteRadiogram}
+              />
+            </div>
+          )}
         </div>
       </main>
+
+      <ReportGenerator
+        session={session}
+        stations={stations}
+        profile={profile}
+        onSaveReport={handleSaveReport}
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+      />
     </div>
   );
 }
