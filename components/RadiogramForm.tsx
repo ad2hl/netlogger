@@ -203,7 +203,7 @@ export default function RadiogramForm({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-4 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">
             {existingRadiogram ? 'Edit Radiogram' : 'New Radiogram'}
           </h2>
@@ -215,9 +215,9 @@ export default function RadiogramForm({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Preamble Section */}
-          <div className="border-b pb-4">
+          <div className="border-b pb-3">
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -285,7 +285,7 @@ export default function RadiogramForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-12 gap-3 mt-3">
+            <div className="grid grid-cols-12 gap-3 mt-2">
               <div className="col-span-4">
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   Place of Origin
@@ -328,26 +328,26 @@ export default function RadiogramForm({
           </div>
 
           {/* Address Section */}
-          <div className="border-b pb-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="border-b pb-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Addressee</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-1">Addressee</h3>
                 <textarea
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  rows={5}
+                  rows={3}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Op Note</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-1">Op Note</h3>
                 <textarea
                   name="addressOpNote"
                   value={formData.addressOpNote}
                   onChange={handleChange}
-                  rows={5}
+                  rows={3}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
                 />
               </div>
@@ -355,8 +355,8 @@ export default function RadiogramForm({
           </div>
 
           {/* Text Section */}
-          <div className="border-b pb-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Text</h3>
+          <div className="border-b pb-3">
+            <h3 className="text-sm font-semibold text-gray-700 mb-1">Text</h3>
             <div className="space-y-2">
               {renderWordGrid()}
             </div>
@@ -368,26 +368,26 @@ export default function RadiogramForm({
 
           {/* Signature Section */}
           <div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Signature</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-1">Signature</h3>
                 <textarea
                   ref={signatureRef}
                   name="signature"
                   value={formData.signature}
                   onChange={handleChange}
-                  rows={3}
+                  rows={2}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Op Note</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-1">Op Note</h3>
                 <textarea
                   name="signatureOpNote"
                   value={formData.signatureOpNote}
                   onChange={handleChange}
-                  rows={3}
+                  rows={2}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
                 />
               </div>
@@ -395,7 +395,7 @@ export default function RadiogramForm({
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-between pt-4">
+          <div className="flex justify-between pt-3">
             <div>
               {existingRadiogram && onDelete && (
                 <button
