@@ -58,7 +58,7 @@ export default function RadiogramList({
               <span className="font-mono text-gray-600 flex-shrink-0">
                 {radiogram.stationOfOrigin}
               </span>
-              <span className="text-gray-600 truncate">
+              <span className="font-mono text-gray-600 truncate">
                 {radiogram.address.split('\n')[0]}
               </span>
             </button>
