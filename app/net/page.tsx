@@ -17,6 +17,7 @@ import {
   updateStationNote,
   getActiveSession,
   getStations,
+  getAllStations,
   saveReport,
 } from '@/lib/firestore';
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
@@ -36,6 +37,7 @@ export default function NetPage() {
 
   const [session, setSession] = useState<NetSession | null>(null);
   const [stations, setStations] = useState<Map<string, Station>>(new Map());
+  const [allStations, setAllStations] = useState<Station[]>([]);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [showReport, setShowReport] = useState(false);
 
@@ -44,6 +46,16 @@ export default function NetPage() {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  // Load all stations for lookup on mount
+  useEffect(() => {
+    const loadAllStations = async () => {
+      if (!user || loading) return;
+      const stations = await getAllStations(user.uid);
+      setAllStations(stations);
+    };
+    loadAllStations();
+  }, [user, loading]);
 
   // Check for active session on load
   useEffect(() => {
@@ -226,6 +238,20 @@ export default function NetPage() {
     const station = await lookupCallsign(checkIn.callsign);
     if (station) {
       setStations((prev) => new Map(prev).set(station.callsign, station));
+      // Update allStations for search lookup
+      setAllStations((prev) => {
+        const existingIndex = prev.findIndex(
+          (s) => s.callsign.toUpperCase() === station.callsign.toUpperCase()
+        );
+        if (existingIndex >= 0) {
+          // Update existing station (move to front since it's most recent)
+          const updated = [...prev];
+          updated.splice(existingIndex, 1);
+          return [station, ...updated];
+        }
+        // Add new station at the front (most recent)
+        return [station, ...prev];
+      });
     }
 
     const success = await addCheckIn(
@@ -650,6 +676,7 @@ export default function NetPage() {
                 <CheckInForm
                   onCheckIn={handleCheckIn}
                   disabled={isLookingUp}
+                  allStations={allStations}
                 />
                 <CheckInList
                   checkIns={session.checkIns}

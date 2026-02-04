@@ -1,22 +1,89 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { CheckIn } from '@/types';
+import React, { useState, useRef, useEffect } from 'react';
+import { CheckIn, Station } from '@/types';
 import { parseCallsignInput } from '@/lib/radiogram';
+import { searchStations } from '@/lib/stationSearch';
+import StationLookupDropdown from './StationLookupDropdown';
 
 interface CheckInFormProps {
   onCheckIn: (checkIn: CheckIn) => void;
   disabled?: boolean;
+  allStations?: Station[];
 }
 
-export default function CheckInForm({ onCheckIn, disabled }: CheckInFormProps) {
+export default function CheckInForm({ onCheckIn, disabled, allStations = [] }: CheckInFormProps) {
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const isSearchMode = input.startsWith('?');
+  const searchQuery = isSearchMode ? input.slice(1) : '';
+  const searchResults = isSearchMode ? searchStations(allStations, searchQuery) : [];
+
+  // Reset selection when search results change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchQuery]);
+
+  // Handle click outside to cancel search mode
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (formRef.current && !formRef.current.contains(event.target as Node)) {
+        if (isSearchMode) {
+          setInput('');
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSearchMode]);
+
+  const handleSelectStation = (station: Station) => {
+    setInput(station.callsign);
+    setSelectedIndex(0);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isSearchMode) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev < searchResults.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (searchResults.length > 0 && selectedIndex >= 0) {
+          handleSelectStation(searchResults[selectedIndex]);
+        }
+        break;
+      case 'Tab':
+        if (searchResults.length > 0 && selectedIndex >= 0) {
+          e.preventDefault();
+          handleSelectStation(searchResults[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setInput('');
+        break;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isSubmitting) return;
+    if (!input.trim() || isSubmitting || isSearchMode) return;
 
     setIsSubmitting(true);
 
@@ -38,27 +105,36 @@ export default function CheckInForm({ onCheckIn, disabled }: CheckInFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-3">
+    <div ref={formRef} className="bg-white rounded-lg shadow p-3">
       <h2 className="text-lg font-semibold mb-2">Check In Station</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex gap-2">
-          <div className="flex-1">
+          <div className="flex-1 relative">
             <input
               ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value.toUpperCase())}
+              onKeyDown={handleKeyDown}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-              placeholder="e.g., W1AW/NC/T or K3ABC/OC/HVN"
+              placeholder="e.g., W1AW/NC/T or ?vct to search"
               disabled={disabled || isSubmitting}
               autoComplete="off"
               autoCapitalize="characters"
             />
+            {isSearchMode && (
+              <StationLookupDropdown
+                stations={searchResults}
+                selectedIndex={selectedIndex}
+                onSelect={handleSelectStation}
+                query={searchQuery}
+              />
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={disabled || isSubmitting || !input.trim()}
+            disabled={disabled || isSubmitting || !input.trim() || isSearchMode}
             className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? '...' : 'Add'}

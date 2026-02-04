@@ -249,6 +249,18 @@ export async function getActiveSession(
   }
 }
 
+export async function getAllStations(uid: string): Promise<Station[]> {
+  try {
+    const stationsRef = collection(db, 'users', uid, 'stations');
+    const q = query(stationsRef, orderBy('lastSeen', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => doc.data() as Station);
+  } catch (error) {
+    console.error('Error getting all stations:', error);
+    return [];
+  }
+}
+
 export async function getStations(
   uid: string,
   callsigns: string[]
