@@ -35,3 +35,7 @@ next-env.d.ts
 
 # Credentials
 service-account.json
+
+# Privacy policy (site-specific)
+.privacy-policy.md
+.privacy-policy-summary.md
