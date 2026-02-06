@@ -30,6 +30,7 @@ import TrafficCounter from '@/components/TrafficCounter';
 import RadiogramList from '@/components/RadiogramList';
 import Checklist from '@/components/Checklist';
 import ReportGenerator from '@/components/ReportGenerator';
+import PrivacyPolicySummary from '@/components/PrivacyPolicySummary';
 
 export default function NetPage() {
   const { user, profile, loading } = useAuth();
@@ -40,12 +41,26 @@ export default function NetPage() {
   const [allStations, setAllStations] = useState<Station[]>([]);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [summaryContent, setSummaryContent] = useState<string | null>(null);
+  const [fullPolicyContent, setFullPolicyContent] = useState<string | null>(null);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    fetch('/api/privacy-policy-summary')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.content) setSummaryContent(data.content); })
+      .catch(() => {});
+    fetch('/api/privacy-policy')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.content) setFullPolicyContent(data.content); })
+      .catch(() => {});
+  }, []);
 
   // Load all stations for lookup on mount
   useEffect(() => {
@@ -659,6 +674,14 @@ export default function NetPage() {
                 New Session
               </button>
             )}
+            {summaryContent && (
+              <button
+                onClick={() => setShowPrivacy(true)}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                Privacy Policy
+              </button>
+            )}
             <button
               onClick={handleSignOut}
               className="text-gray-600 hover:text-gray-800 text-sm"
@@ -749,6 +772,9 @@ export default function NetPage() {
         isOpen={showReport}
         onClose={() => setShowReport(false)}
       />
+      {showPrivacy && summaryContent && (
+        <PrivacyPolicySummary content={summaryContent} fullPolicyContent={fullPolicyContent ?? undefined} onClose={() => setShowPrivacy(false)} />
+      )}
     </div>
   );
 }
