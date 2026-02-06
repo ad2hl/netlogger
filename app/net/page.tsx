@@ -566,6 +566,26 @@ export default function NetPage() {
     }
   };
 
+  const handleToggleSecure = async (callsign: string) => {
+    if (!user || !session?.id) return;
+
+    const currentChecked = session.checkedSecure || [];
+    const isCurrentlyChecked = currentChecked.includes(callsign);
+    const updatedChecked = isCurrentlyChecked
+      ? currentChecked.filter((c) => c !== callsign)
+      : [...currentChecked, callsign];
+
+    const success = await updateSession(user.uid, session.id, {
+      checkedSecure: updatedChecked,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, checkedSecure: updatedChecked } : null
+      );
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
@@ -677,10 +697,12 @@ export default function NetPage() {
                 checkIns={session.checkIns}
                 trafficItems={session.trafficItems || []}
                 checkedAnnouncements={session.checkedAnnouncements || []}
+                checkedSecure={session.checkedSecure || []}
                 onAddTrafficItem={handleAddTrafficItem}
                 onToggleTrafficItem={handleToggleTrafficItem}
                 onDeleteTrafficItem={handleDeleteTrafficItem}
                 onToggleAnnouncement={handleToggleAnnouncement}
+                onToggleSecure={handleToggleSecure}
               />
               <RadiogramList
                 radiograms={session.radiograms || []}

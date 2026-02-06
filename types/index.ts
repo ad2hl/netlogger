@@ -111,6 +111,7 @@ export interface NetSession {
   // Checklist data
   trafficItems?: TrafficItem[];
   checkedAnnouncements?: string[]; // Callsigns that have been checked off
+  checkedSecure?: string[]; // Callsigns requesting to secure that have been checked off
 }
 
 export interface QRZLookupResult {
