@@ -6,17 +6,17 @@ import {
   User,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { getFirebaseAuth, getFirebaseDb } from './firebase';
 import { UserProfile } from '@/types';
 
 const googleProvider = new GoogleAuthProvider();
 
 export async function signInWithGoogle(): Promise<User | null> {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
     const user = result.user;
 
-    const userDocRef = doc(db, 'users', user.uid);
+    const userDocRef = doc(getFirebaseDb(), 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
 
     if (!userDoc.exists()) {
@@ -40,19 +40,19 @@ export async function signInWithGoogle(): Promise<User | null> {
 
 export async function signOut(): Promise<void> {
   try {
-    await firebaseSignOut(auth);
+    await firebaseSignOut(getFirebaseAuth());
   } catch (error) {
     console.error('Error signing out:', error);
   }
 }
 
 export function onAuthChange(callback: (user: User | null) => void): () => void {
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(getFirebaseAuth(), callback);
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   try {
-    const userDocRef = doc(db, 'users', uid);
+    const userDocRef = doc(getFirebaseDb(), 'users', uid);
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
       return userDoc.data() as UserProfile;
@@ -69,7 +69,7 @@ export async function updateUserProfile(
   profile: Partial<UserProfile>
 ): Promise<boolean> {
   try {
-    const userDocRef = doc(db, 'users', uid);
+    const userDocRef = doc(getFirebaseDb(), 'users', uid);
     await setDoc(userDocRef, profile, { merge: true });
     return true;
   } catch (error) {

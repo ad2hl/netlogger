@@ -12,7 +12,7 @@ import {
   Timestamp,
   limit,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { getFirebaseDb } from './firebase';
 import { Station, NetSession, CheckIn, NetReport } from '@/types';
 
 export async function getStation(
@@ -20,7 +20,7 @@ export async function getStation(
   callsign: string
 ): Promise<Station | null> {
   try {
-    const stationRef = doc(db, 'users', uid, 'stations', callsign.toUpperCase());
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
     const stationDoc = await getDoc(stationRef);
     if (stationDoc.exists()) {
       return stationDoc.data() as Station;
@@ -37,7 +37,7 @@ export async function saveStation(
   station: Station
 ): Promise<boolean> {
   try {
-    const stationRef = doc(db, 'users', uid, 'stations', station.callsign.toUpperCase());
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', station.callsign.toUpperCase());
     await setDoc(stationRef, {
       ...station,
       callsign: station.callsign.toUpperCase(),
@@ -56,7 +56,7 @@ export async function updateStationNickname(
   nickname: string | null
 ): Promise<boolean> {
   try {
-    const stationRef = doc(db, 'users', uid, 'stations', callsign.toUpperCase());
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
     await updateDoc(stationRef, { nickname });
     return true;
   } catch (error) {
@@ -71,7 +71,7 @@ export async function updateStationNote(
   note: string | null
 ): Promise<boolean> {
   try {
-    const stationRef = doc(db, 'users', uid, 'stations', callsign.toUpperCase());
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
     await updateDoc(stationRef, { note });
     return true;
   } catch (error) {
@@ -85,7 +85,7 @@ export async function createSession(
   session: Omit<NetSession, 'id'>
 ): Promise<string | null> {
   try {
-    const sessionsRef = collection(db, 'users', uid, 'sessions');
+    const sessionsRef = collection(getFirebaseDb(), 'users', uid, 'sessions');
     const docRef = await addDoc(sessionsRef, session);
     return docRef.id;
   } catch (error) {
@@ -99,7 +99,7 @@ export async function getSession(
   sessionId: string
 ): Promise<NetSession | null> {
   try {
-    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
     const sessionDoc = await getDoc(sessionRef);
     if (sessionDoc.exists()) {
       return { id: sessionDoc.id, ...sessionDoc.data() } as NetSession;
@@ -117,7 +117,7 @@ export async function updateSession(
   updates: Partial<NetSession>
 ): Promise<boolean> {
   try {
-    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
     await updateDoc(sessionRef, updates);
     return true;
   } catch (error) {
@@ -133,7 +133,7 @@ export async function addCheckIn(
   currentCheckIns: CheckIn[]
 ): Promise<boolean> {
   try {
-    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
     await updateDoc(sessionRef, {
       checkIns: [...currentCheckIns, checkIn],
     });
@@ -152,7 +152,7 @@ export async function updateCheckInTags(
   currentCheckIns: CheckIn[]
 ): Promise<CheckIn[] | null> {
   try {
-    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
     const upperCallsign = callsign.toUpperCase();
 
     // Find existing check-in and merge tags
@@ -191,7 +191,7 @@ export async function removeCheckIn(
   currentCheckIns: CheckIn[]
 ): Promise<boolean> {
   try {
-    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
     const updatedCheckIns = currentCheckIns.filter(
       (c) => c.callsign.toUpperCase() !== callsign.toUpperCase()
     );
@@ -208,7 +208,7 @@ export async function getRecentSessions(
   count: number = 10
 ): Promise<NetSession[]> {
   try {
-    const sessionsRef = collection(db, 'users', uid, 'sessions');
+    const sessionsRef = collection(getFirebaseDb(), 'users', uid, 'sessions');
     const q = query(sessionsRef, orderBy('date', 'desc'), limit(count));
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
@@ -226,7 +226,7 @@ export async function deleteSession(
   sessionId: string
 ): Promise<boolean> {
   try {
-    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
     await deleteDoc(sessionRef);
     return true;
   } catch (error) {
@@ -251,7 +251,7 @@ export async function getActiveSession(
 
 export async function getAllStations(uid: string): Promise<Station[]> {
   try {
-    const stationsRef = collection(db, 'users', uid, 'stations');
+    const stationsRef = collection(getFirebaseDb(), 'users', uid, 'stations');
     const q = query(stationsRef, orderBy('lastSeen', 'desc'));
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => doc.data() as Station);
@@ -288,7 +288,7 @@ export async function saveReport(
   report: NetReport
 ): Promise<boolean> {
   try {
-    const sessionRef = doc(db, 'users', uid, 'sessions', sessionId);
+    const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
     await updateDoc(sessionRef, { report });
     return true;
   } catch (error) {

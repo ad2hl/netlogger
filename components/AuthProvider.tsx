@@ -37,14 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthChange(async (authUser) => {
-      setUser(authUser);
-      if (authUser) {
-        const userProfile = await getUserProfile(authUser.uid);
-        setProfile(userProfile);
-      } else {
-        setProfile(null);
+      try {
+        setUser(authUser);
+        if (authUser) {
+          const userProfile = await getUserProfile(authUser.uid);
+          setProfile(userProfile);
+        } else {
+          setProfile(null);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
