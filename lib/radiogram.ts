@@ -7,6 +7,7 @@ interface RadiogramData {
   userName: string;
   userLocation: string;
   addresseeCallsign: string;
+  messageNumber?: string;
 }
 
 function getCallsignPrefix(callsign: string): string {
@@ -116,8 +117,24 @@ function calculateElapsedTime(startTime: string, endTime: string): string {
   return totalMinutes.toString();
 }
 
-export function generateRadiogram(data: RadiogramData): { text: string; wordCount: number } {
-  const { session, userCallsign, userName, userLocation, addresseeCallsign } = data;
+export interface RadiogramResult {
+  text: string;
+  wordCount: number;
+  parts: {
+    number: string;
+    precedence: string;
+    stationOfOrigin: string;
+    check: string;
+    placeOfOrigin: string;
+    date: string;
+    addressee: string;
+    bodyWords: string[];
+    signature: string;
+  };
+}
+
+export function generateRadiogram(data: RadiogramData): RadiogramResult {
+  const { session, userCallsign, userName, userLocation, addresseeCallsign, messageNumber } = data;
 
   const sessionDate = session.date.toDate();
   const dayOfMonth = sessionDate.getDate();
@@ -143,9 +160,10 @@ export function generateRadiogram(data: RadiogramData): { text: string; wordCoun
   ];
 
   const wordCount = bodyWords.length;
+  const number = messageNumber || 'XXX';
 
-  // Preamble: XXX R CALLSIGN CHECK LOCATION DATE
-  const preamble = `XXX R ${userCallsign.toUpperCase()} ${wordCount} ${userLocation.toUpperCase()} ${month} ${dayOfMonth}`;
+  // Preamble: NUMBER R CALLSIGN CHECK LOCATION DATE
+  const preamble = `${number} R ${userCallsign.toUpperCase()} ${wordCount} ${userLocation.toUpperCase()} ${month} ${dayOfMonth}`;
 
   // Addressee
   const addressee = addresseeCallsign.toUpperCase();
@@ -166,7 +184,21 @@ export function generateRadiogram(data: RadiogramData): { text: string; wordCoun
     signature,
   ].join('\n');
 
-  return { text: fullRadiogram, wordCount };
+  return {
+    text: fullRadiogram,
+    wordCount,
+    parts: {
+      number,
+      precedence: 'R',
+      stationOfOrigin: userCallsign.toUpperCase(),
+      check: wordCount.toString(),
+      placeOfOrigin: userLocation.toUpperCase(),
+      date: `${month} ${dayOfMonth}`,
+      addressee,
+      bodyWords,
+      signature,
+    },
+  };
 }
 
 export function parseCallsignInput(input: string): {

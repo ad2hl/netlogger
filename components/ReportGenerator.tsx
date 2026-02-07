@@ -2,15 +2,110 @@
 
 import React, { useState, useMemo } from 'react';
 import { NetSession, Station, UserProfile } from '@/types';
-import { generateRadiogram } from '@/lib/radiogram';
+import { generateRadiogram, RadiogramResult } from '@/lib/radiogram';
 
 interface ReportGeneratorProps {
   session: NetSession | null;
   stations: Map<string, Station>;
   profile: UserProfile | null;
-  onSaveReport?: () => Promise<boolean | undefined>;
+  onSaveReport?: (messageNumber?: string) => Promise<boolean | undefined>;
   isOpen: boolean;
   onClose: () => void;
+}
+
+const WORDS_PER_LINE = 5;
+
+function ReadOnlyField({ label, value, className }: { label: string; value: string; className?: string }) {
+  return (
+    <div className={className}>
+      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+        {value || '\u00A0'}
+      </div>
+    </div>
+  );
+}
+
+function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange }: {
+  radiogram: RadiogramResult;
+  messageNumber: string;
+  onMessageNumberChange: (value: string) => void;
+}) {
+  const { parts } = radiogram;
+  const numLines = Math.ceil(parts.bodyWords.length / WORDS_PER_LINE);
+
+  return (
+    <div className="space-y-3">
+      {/* Preamble */}
+      <div className="border-b pb-3">
+        <div className="grid grid-cols-12 gap-3">
+          <div className="col-span-2">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Number</label>
+            <input
+              type="text"
+              value={messageNumber}
+              onChange={(e) => onMessageNumberChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+              placeholder="XXX"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+            />
+          </div>
+          <ReadOnlyField label="Precedence" value={parts.precedence} className="col-span-2" />
+          <div className="col-span-2" /> {/* HX - empty for net reports */}
+          <ReadOnlyField label="Station of Origin" value={parts.stationOfOrigin} className="col-span-3" />
+          <ReadOnlyField label="Check" value={parts.check} className="col-span-2" />
+        </div>
+        <div className="grid grid-cols-12 gap-3 mt-2">
+          <ReadOnlyField label="Place of Origin" value={parts.placeOfOrigin} className="col-span-4" />
+          <div className="col-span-2" /> {/* Time - not used for net reports */}
+          <ReadOnlyField label="Date" value={parts.date} className="col-span-6" />
+        </div>
+      </div>
+
+      {/* Addressee */}
+      <div className="border-b pb-3">
+        <h3 className="text-sm font-semibold text-gray-700 mb-1">Addressee</h3>
+        <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+          {parts.addressee || '\u00A0'}
+        </div>
+      </div>
+
+      {/* Text - word grid */}
+      <div className="border-b pb-3">
+        <h3 className="text-sm font-semibold text-gray-700 mb-1">Text</h3>
+        <div className="space-y-2">
+          {Array.from({ length: numLines }, (_, line) => (
+            <div key={line} className="grid grid-cols-5 gap-2">
+              {Array.from({ length: WORDS_PER_LINE }, (_, col) => {
+                const index = line * WORDS_PER_LINE + col;
+                const word = parts.bodyWords[index] || '';
+                return (
+                  <div key={index} className="relative">
+                    <span className="absolute top-0 left-0.5 text-[10px] text-gray-400 leading-none">
+                      {index + 1}
+                    </span>
+                    <div className="w-full px-2 pt-3 pb-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+                      {word || '\u00A0'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <p className="text-xs mt-2 text-gray-500">
+          Word count: {radiogram.wordCount}
+        </p>
+      </div>
+
+      {/* Signature */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-1">Signature</h3>
+        <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+          {parts.signature || '\u00A0'}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function ReportGenerator({
@@ -23,6 +118,7 @@ export default function ReportGenerator({
 }: ReportGeneratorProps) {
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [messageNumber, setMessageNumber] = useState('');
 
   const radiogram = useMemo(() => {
     if (!session || !profile?.callsign) return null;
@@ -34,8 +130,9 @@ export default function ReportGenerator({
       userName: profile.name,
       userLocation: profile.location,
       addresseeCallsign: profile.netManagerCall || '',
+      messageNumber: messageNumber || undefined,
     });
-  }, [session, stations, profile]);
+  }, [session, stations, profile, messageNumber]);
 
   // Check if report has changed from saved version
   const reportChanged = useMemo(() => {
@@ -55,7 +152,7 @@ export default function ReportGenerator({
   const handleSaveReport = async () => {
     if (!onSaveReport) return;
     setSaving(true);
-    await onSaveReport();
+    await onSaveReport(messageNumber || undefined);
     setSaving(false);
   };
 
@@ -74,25 +171,24 @@ export default function ReportGenerator({
   } else if (radiogram) {
     content = (
       <>
-        <div className="mb-2 text-sm text-gray-600">
-          Word Count: {radiogram.wordCount}
-          {session?.report && !reportChanged && (
-            <span className="ml-2 text-green-600">✓ Saved</span>
-          )}
-          {reportChanged && (
-            <span className="ml-2 text-orange-600">• Unsaved changes</span>
-          )}
-        </div>
-        <pre className="bg-gray-100 p-4 rounded-md font-mono text-sm whitespace-pre-wrap overflow-x-auto max-h-96 overflow-y-auto">
-          {radiogram.text}
-        </pre>
+        {session?.report && !reportChanged && (
+          <div className="mb-2 text-sm text-green-600">✓ Saved</div>
+        )}
+        {reportChanged && (
+          <div className="mb-2 text-sm text-orange-600">• Unsaved changes</div>
+        )}
+        <FormattedRadiogram
+          radiogram={radiogram}
+          messageNumber={messageNumber}
+          onMessageNumberChange={setMessageNumber}
+        />
       </>
     );
   }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-4 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl p-4 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Net Report (Radiogram)</h2>
           <div className="flex items-center gap-2">
