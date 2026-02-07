@@ -117,7 +117,7 @@ export default function CheckInForm({ onCheckIn, disabled, allStations = [] }: C
               onChange={(e) => setInput(e.target.value.toUpperCase())}
               onKeyDown={handleKeyDown}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-              placeholder="e.g., W1AW/NC/T or ?vct to search"
+              placeholder="e.g., AD2HL/NC/T or ?2HL to search"
               disabled={disabled || isSubmitting}
               autoComplete="off"
               autoCapitalize="characters"
