@@ -112,12 +112,12 @@ export default function NetPage() {
 
       // Auto-save report when net ends
       if (updates.endTime && !session.endTime && profile) {
-        handleSaveReport(updatedSession);
+        handleSaveReport(undefined, updatedSession);
       }
     }
   };
 
-  const handleSaveReport = async (currentSession?: NetSession) => {
+  const handleSaveReport = async (messageNumber?: string, currentSession?: NetSession) => {
     const sess = currentSession || session;
     if (!user || !sess?.id || !profile?.callsign) return;
 
@@ -128,6 +128,7 @@ export default function NetPage() {
       userName: profile.name,
       userLocation: profile.location,
       addresseeCallsign: profile.netManagerCall || '',
+      messageNumber,
     });
 
     // Combine date and startTime into a single timestamp
