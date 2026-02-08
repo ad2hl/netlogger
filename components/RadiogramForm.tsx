@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Radiogram } from '@/types';
+import { formatRadiogramAsText } from '@/lib/radiogram';
 
 interface RadiogramFormProps {
   isOpen: boolean;
@@ -62,6 +63,7 @@ export default function RadiogramForm({
   };
 
   const [formData, setFormData] = useState<Omit<Radiogram, 'id'>>(emptyForm);
+  const [copied, setCopied] = useState(false);
   const wordInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const signatureRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -164,6 +166,21 @@ export default function RadiogramForm({
       onDelete(existingRadiogram.id);
       onClose();
     }
+  };
+
+  const handleCopy = async () => {
+    const trimmedWords = [...formData.textWords];
+    while (trimmedWords.length > 0 && trimmedWords[trimmedWords.length - 1] === '') {
+      trimmedWords.pop();
+    }
+    const radiogram: Radiogram = {
+      ...formData,
+      textWords: trimmedWords,
+      id: existingRadiogram?.id || '',
+    };
+    await navigator.clipboard.writeText(formatRadiogramAsText(radiogram));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (!isOpen) return null;
@@ -408,6 +425,13 @@ export default function RadiogramForm({
               )}
             </div>
             <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm"
+              >
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
               <button
                 type="button"
                 onClick={onClose}
