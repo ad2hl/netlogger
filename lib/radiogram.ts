@@ -201,6 +201,33 @@ export function generateRadiogram(data: RadiogramData): RadiogramResult {
   };
 }
 
+export function formatRadiogramAsText(radiogram: import('@/types').Radiogram): string {
+  const preamble = [
+    radiogram.number,
+    radiogram.precedence,
+    radiogram.handlingInstructions ? `HX${radiogram.handlingInstructions}` : '',
+    radiogram.stationOfOrigin,
+    radiogram.check,
+    radiogram.placeOfOrigin,
+    radiogram.timeFiled,
+    radiogram.date,
+  ].filter(Boolean).join(' ');
+
+  const bodyFormatted = formatWordsPerLine(radiogram.textWords);
+
+  const addressLine = radiogram.address + (radiogram.addressOpNote ? ` (${radiogram.addressOpNote})` : '');
+  const signatureLine = radiogram.signature + (radiogram.signatureOpNote ? ` (${radiogram.signatureOpNote})` : '');
+
+  return [
+    preamble,
+    addressLine,
+    'BT',
+    bodyFormatted,
+    'BT',
+    signatureLine,
+  ].join('\n');
+}
+
 export function parseCallsignInput(input: string): {
   callsign: string;
   tags: string[];

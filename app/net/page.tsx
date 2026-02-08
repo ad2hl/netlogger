@@ -662,6 +662,12 @@ export default function NetPage() {
               </span>
             )}
             <Link
+              href="/radiograms"
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Radiograms
+            </Link>
+            <Link
               href="/settings"
               className="text-blue-600 hover:text-blue-800 text-sm"
             >

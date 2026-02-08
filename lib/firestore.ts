@@ -221,6 +221,23 @@ export async function getRecentSessions(
   }
 }
 
+export async function getAllSessions(
+  uid: string
+): Promise<NetSession[]> {
+  try {
+    const sessionsRef = collection(getFirebaseDb(), 'users', uid, 'sessions');
+    const q = query(sessionsRef, orderBy('date', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as NetSession[];
+  } catch (error) {
+    console.error('Error getting all sessions:', error);
+    return [];
+  }
+}
+
 export async function deleteSession(
   uid: string,
   sessionId: string
