@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { signOut } from '@/lib/auth';
@@ -16,6 +16,7 @@ import {
   updateStationNickname,
   updateStationNote,
   getActiveSession,
+  getSession,
   getStations,
   getAllStations,
   saveReport,
@@ -32,9 +33,19 @@ import Checklist from '@/components/Checklist';
 import ReportGenerator from '@/components/ReportGenerator';
 import PrivacyPolicySummary from '@/components/PrivacyPolicySummary';
 
-export default function NetPage() {
+export default function NetPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <NetPage />
+    </Suspense>
+  );
+}
+
+function NetPage() {
   const { user, profile, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionIdParam = searchParams.get('session');
 
   const [session, setSession] = useState<NetSession | null>(null);
   const [stations, setStations] = useState<Map<string, Station>>(new Map());
@@ -72,17 +83,24 @@ export default function NetPage() {
     loadAllStations();
   }, [user, loading]);
 
-  // Check for active session on load
+  // Check for active session on load (or load specific session from URL)
   useEffect(() => {
-    const loadActiveSession = async () => {
+    const loadSession = async () => {
       if (!user || loading || session) return;
 
-      const activeSession = await getActiveSession(user.uid);
-      if (activeSession) {
-        setSession(activeSession);
+      let loadedSession: NetSession | null = null;
+
+      if (sessionIdParam) {
+        loadedSession = await getSession(user.uid, sessionIdParam);
+      } else {
+        loadedSession = await getActiveSession(user.uid);
+      }
+
+      if (loadedSession) {
+        setSession(loadedSession);
 
         // Load stations for all checked-in callsigns
-        const callsigns = activeSession.checkIns.map((c) => c.callsign);
+        const callsigns = loadedSession.checkIns.map((c) => c.callsign);
         if (callsigns.length > 0) {
           const stationMap = await getStations(user.uid, callsigns);
           setStations(stationMap);
@@ -90,8 +108,8 @@ export default function NetPage() {
       }
     };
 
-    loadActiveSession();
-  }, [user, loading, session]);
+    loadSession();
+  }, [user, loading, session, sessionIdParam]);
 
   const handleCreateSession = async (newSession: Omit<NetSession, 'id'>) => {
     if (!user) return;
@@ -664,6 +682,12 @@ export default function NetPage() {
                 {profile.callsign}
               </span>
             )}
+            <Link
+              href="/sessions"
+              className="text-blue-600 hover:text-blue-800 text-sm"
+            >
+              Sessions
+            </Link>
             <Link
               href="/radiograms"
               className="text-blue-600 hover:text-blue-800 text-sm"

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { NetSession } from '@/types';
 
@@ -27,6 +27,16 @@ export default function SessionSetup({
   });
   const [startTime, setStartTime] = useState(existingSession?.startTime || '');
   const [endTime, setEndTime] = useState(existingSession?.endTime || '');
+
+  // Sync state when existingSession loads or changes (e.g. navigating from /sessions)
+  useEffect(() => {
+    if (existingSession) {
+      setNetName(existingSession.netName || '');
+      setDate(existingSession.date.toDate().toISOString().split('T')[0]);
+      setStartTime(existingSession.startTime || '');
+      setEndTime(existingSession.endTime || '');
+    }
+  }, [existingSession]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
