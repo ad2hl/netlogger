@@ -90,6 +90,8 @@ export default function RadiogramForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    const el = e.target;
+    const cursorPos = el.selectionStart;
     const isTextarea = e.target.tagName === 'TEXTAREA';
     const allowsSpaces = FIELDS_WITH_SPACES.includes(name);
 
@@ -102,18 +104,44 @@ export default function RadiogramForm({
       filtered = filterRadiogramChars(value);
     }
 
+    // Calculate how many chars were removed before the cursor
+    const charsRemovedBeforeCursor = cursorPos !== null
+      ? value.slice(0, cursorPos).length - filtered.slice(0, cursorPos).length
+      : 0;
+    const adjustedCursor = cursorPos !== null ? cursorPos - charsRemovedBeforeCursor : null;
+
     setFormData(prev => ({
       ...prev,
       [name]: filtered,
     }));
+
+    // Restore cursor position after React re-renders
+    requestAnimationFrame(() => {
+      if (adjustedCursor !== null) {
+        el.setSelectionRange(adjustedCursor, adjustedCursor);
+      }
+    });
   };
 
-  const handleWordChange = (index: number, value: string) => {
+  const handleWordChange = (index: number, value: string, el: HTMLInputElement) => {
+    const cursorPos = el.selectionStart;
     const filtered = filterRadiogramChars(value);
+
+    const charsRemovedBeforeCursor = cursorPos !== null
+      ? value.slice(0, cursorPos).length - filtered.slice(0, cursorPos).length
+      : 0;
+    const adjustedCursor = cursorPos !== null ? cursorPos - charsRemovedBeforeCursor : null;
+
     setFormData(prev => {
       const newWords = [...prev.textWords];
       newWords[index] = filtered;
       return { ...prev, textWords: newWords };
+    });
+
+    requestAnimationFrame(() => {
+      if (adjustedCursor !== null) {
+        el.setSelectionRange(adjustedCursor, adjustedCursor);
+      }
     });
   };
 
@@ -200,7 +228,7 @@ export default function RadiogramForm({
             <input
               type="text"
               value={formData.textWords[index] || ''}
-              onChange={(e) => handleWordChange(index, e.target.value)}
+              onChange={(e) => handleWordChange(index, e.target.value, e.target)}
               onKeyDown={(e) => handleWordKeyDown(index, e)}
               ref={(el) => { wordInputRefs.current[index] = el; }}
               className="w-full px-2 pt-3 pb-1 border border-gray-300 rounded text-sm uppercase"
