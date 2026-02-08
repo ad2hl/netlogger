@@ -64,6 +64,17 @@ export interface NetReport {
   netName: string;
   startDateTime: Timestamp;
   radiogram: string;
+  parts?: {
+    number: string;
+    precedence: string;
+    stationOfOrigin: string;
+    check: string;
+    placeOfOrigin: string;
+    date: string;
+    addressee: string;
+    bodyWords: string[];
+    signature: string;
+  };
 }
 
 // ARRL Standard Radiogram

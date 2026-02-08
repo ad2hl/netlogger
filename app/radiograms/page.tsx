@@ -52,14 +52,22 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
       const displayDate = reportDate.toLocaleDateString() + ' ' +
         reportDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      // Parse addressee from line 2 of radiogram text
-      const lines = report.radiogram.split('\n');
-      const addresseePreview = lines[1] || '';
+      let number: string;
+      let stationOfOrigin: string;
+      let addresseePreview: string;
 
-      // Parse number and station of origin from preamble (line 1)
-      const preambleParts = (lines[0] || '').split(/\s+/);
-      const number = preambleParts[0] || '';
-      const stationOfOrigin = preambleParts[2] || '';
+      if (report.parts) {
+        number = report.parts.number;
+        stationOfOrigin = report.parts.stationOfOrigin;
+        addresseePreview = report.parts.addressee;
+      } else {
+        // Fallback: parse from text for old reports without parts
+        const lines = report.radiogram.split('\n');
+        addresseePreview = lines[1] || '';
+        const preambleParts = (lines[0] || '').split(/\s+/);
+        number = preambleParts[0] || '';
+        stationOfOrigin = preambleParts[2] || '';
+      }
 
       items.push({
         type: 'Net Report',
