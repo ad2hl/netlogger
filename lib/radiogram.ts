@@ -205,7 +205,7 @@ export function formatRadiogramAsText(radiogram: import('@/types').Radiogram): s
   const preamble = [
     radiogram.number,
     radiogram.precedence,
-    radiogram.handlingInstructions ? `HX${radiogram.handlingInstructions}` : '',
+    radiogram.handlingInstructions || '',
     radiogram.stationOfOrigin,
     radiogram.check,
     radiogram.placeOfOrigin,
