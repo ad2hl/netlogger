@@ -220,8 +220,23 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose }: Rea
       signatureOpNote: radiogram.signatureOpNote,
     };
   } else if (netReport) {
-    const parsed = parseNetReportText(netReport.radiogram);
-    fields = parsed;
+    if (netReport.parts) {
+      fields = {
+        number: netReport.parts.number,
+        precedence: netReport.parts.precedence,
+        hx: '',
+        stationOfOrigin: netReport.parts.stationOfOrigin,
+        check: netReport.parts.check,
+        placeOfOrigin: netReport.parts.placeOfOrigin,
+        timeFiled: '',
+        date: netReport.parts.date,
+        addressee: netReport.parts.addressee,
+        bodyWords: netReport.parts.bodyWords,
+        signature: netReport.parts.signature,
+      };
+    } else {
+      fields = parseNetReportText(netReport.radiogram);
+    }
   }
 
   return (

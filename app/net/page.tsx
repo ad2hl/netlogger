@@ -140,6 +140,7 @@ export default function NetPage() {
       netName: sess.netName,
       startDateTime: Timestamp.fromDate(sessionDate),
       radiogram: radiogram.text,
+      parts: radiogram.parts,
     };
 
     const success = await saveReport(user.uid, sess.id, report);
