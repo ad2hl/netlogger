@@ -4,9 +4,11 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { getAllSessions } from '@/lib/firestore';
+import { getAllSessions, updateSession } from '@/lib/firestore';
 import { NetSession, Radiogram, NetReport } from '@/types';
+import { Timestamp } from 'firebase/firestore';
 import ReadOnlyRadiogram from '@/components/ReadOnlyRadiogram';
+import RadiogramForm from '@/components/RadiogramForm';
 
 interface RadiogramListItem {
   type: 'Radiogram' | 'Net Report';
@@ -95,6 +97,7 @@ export default function RadiogramsPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedItem, setSelectedItem] = useState<RadiogramListItem | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -153,6 +156,31 @@ export default function RadiogramsPage() {
     return sortDirection === 'asc' ? ' \u2191' : ' \u2193';
   };
 
+  const handleSaveRadiogram = async (radiogram: Radiogram) => {
+    if (!user || sessions.length === 0) return;
+
+    const mostRecentSession = sessions[0];
+    if (!mostRecentSession.id) return;
+
+    const radiogramWithTimestamp = { ...radiogram, savedAt: Timestamp.now() };
+    const currentRadiograms = mostRecentSession.radiograms || [];
+    const updatedRadiograms = [...currentRadiograms, radiogramWithTimestamp];
+
+    const success = await updateSession(user.uid, mostRecentSession.id, {
+      radiograms: updatedRadiograms,
+    });
+
+    if (success) {
+      setSessions((prev) =>
+        prev.map((s) =>
+          s.id === mostRecentSession.id
+            ? { ...s, radiograms: updatedRadiograms }
+            : s
+        )
+      );
+    }
+  };
+
   if (loading || !user) {
     return null;
   }
@@ -172,7 +200,15 @@ export default function RadiogramsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Radiograms</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">Radiograms</h2>
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm"
+          >
+            New Radiogram
+          </button>
+        </div>
 
         {fetching ? (
           <p className="text-gray-500">Loading...</p>
@@ -242,6 +278,12 @@ export default function RadiogramsPage() {
           onClose={() => setSelectedItem(null)}
         />
       )}
+
+      <RadiogramForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSave={handleSaveRadiogram}
+      />
     </div>
   );
 }
