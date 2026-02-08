@@ -28,14 +28,15 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
     // User-created radiograms
     if (session.radiograms) {
       for (const radiogram of session.radiograms) {
-        const sessionDate = session.date.toDate();
-        const displayDate = radiogram.date && radiogram.timeFiled
-          ? `${radiogram.date} ${radiogram.timeFiled}`
-          : radiogram.date || sessionDate.toLocaleDateString();
+        const itemDate = radiogram.savedAt
+          ? radiogram.savedAt.toDate()
+          : session.date.toDate();
+        const displayDate = itemDate.toLocaleDateString() + ' ' +
+          itemDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         items.push({
           type: 'Radiogram',
-          sortDate: sessionDate,
+          sortDate: itemDate,
           displayDate,
           number: radiogram.number,
           stationOfOrigin: radiogram.stationOfOrigin,
@@ -48,7 +49,9 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
     // Net reports
     if (session.report) {
       const report = session.report;
-      const reportDate = report.startDateTime.toDate();
+      const reportDate = report.savedAt
+        ? report.savedAt.toDate()
+        : report.startDateTime.toDate();
       const displayDate = reportDate.toLocaleDateString() + ' ' +
         reportDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 

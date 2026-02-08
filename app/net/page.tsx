@@ -140,6 +140,7 @@ export default function NetPage() {
       netName: sess.netName,
       startDateTime: Timestamp.fromDate(sessionDate),
       radiogram: radiogram.text,
+      savedAt: Timestamp.now(),
       parts: radiogram.parts,
     };
 
@@ -488,6 +489,7 @@ export default function NetPage() {
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
     if (!user || !session?.id) return;
 
+    const radiogramWithTimestamp = { ...radiogram, savedAt: Timestamp.now() };
     const currentRadiograms = session.radiograms || [];
     const existingIndex = currentRadiograms.findIndex(r => r.id === radiogram.id);
     let updatedRadiograms: Radiogram[];
@@ -495,10 +497,10 @@ export default function NetPage() {
     if (existingIndex >= 0) {
       // Update existing radiogram
       updatedRadiograms = [...currentRadiograms];
-      updatedRadiograms[existingIndex] = radiogram;
+      updatedRadiograms[existingIndex] = radiogramWithTimestamp;
     } else {
       // Add new radiogram
-      updatedRadiograms = [...currentRadiograms, radiogram];
+      updatedRadiograms = [...currentRadiograms, radiogramWithTimestamp];
     }
 
     const success = await updateSession(user.uid, session.id, {

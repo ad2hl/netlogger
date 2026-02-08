@@ -64,6 +64,7 @@ export interface NetReport {
   netName: string;
   startDateTime: Timestamp;
   radiogram: string;
+  savedAt?: Timestamp;
   parts?: {
     number: string;
     precedence: string;
@@ -97,6 +98,8 @@ export interface Radiogram {
   // Signature
   signature: string;
   signatureOpNote: string;
+  // Metadata
+  savedAt?: Timestamp;
 }
 
 // Traffic item for the checklist (e.g., KM2I -> WM2C)
