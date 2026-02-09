@@ -39,6 +39,7 @@ service-account.json
 # Scripts
 scripts/delete_sessions.py
 
-# Privacy policy (site-specific)
+# Privacy policy and about (site-specific)
 .privacy-policy.md
 .privacy-policy-summary.md
+.about.md
