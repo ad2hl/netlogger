@@ -17,7 +17,7 @@ let db: Firestore;
 
 function ensureInitialized() {
   if (typeof window === 'undefined') return;
-  if (!app) {
+  if (!app || !auth || !db) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
     db = getFirestore(app);
