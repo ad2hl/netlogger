@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
+import { getFirebaseAuth } from '@/lib/firebase';
 import { onAuthChange, getUserProfile } from '@/lib/auth';
 import { UserProfile } from '@/types';
 
@@ -36,21 +37,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (authUser) => {
-      try {
-        setUser(authUser);
-        if (authUser) {
-          const userProfile = await getUserProfile(authUser.uid);
-          setProfile(userProfile);
-        } else {
-          setProfile(null);
-        }
-      } finally {
-        setLoading(false);
-      }
-    });
+    let unsubscribe: (() => void) | undefined;
 
-    return () => unsubscribe();
+    try {
+      unsubscribe = onAuthChange(async (authUser) => {
+        try {
+          setUser(authUser);
+          if (authUser) {
+            const userProfile = await getUserProfile(authUser.uid);
+            setProfile(userProfile);
+          } else {
+            setProfile(null);
+          }
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      // Safety net: authStateReady() resolves when the initial auth state
+      // is determined, ensuring loading clears even if the listener misfires
+      getFirebaseAuth()?.authStateReady?.()
+        .then(() => setLoading(false))
+        .catch(() => setLoading(false));
+    } catch (error) {
+      console.error('Failed to initialize auth:', error);
+      setLoading(false);
+    }
+
+    return () => unsubscribe?.();
   }, []);
 
   return (
