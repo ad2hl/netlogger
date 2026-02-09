@@ -4,10 +4,18 @@ import React, { useState } from 'react';
 import { Radiogram, NetReport } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
 
+interface DispositionFields {
+  dispositionMethod: string;
+  dispositionDestination: string;
+  dispositionDate: string;
+  dispositionTime: string;
+}
+
 interface ReadOnlyRadiogramProps {
   radiogram?: Radiogram;
   netReport?: NetReport;
   onClose: () => void;
+  onUpdateDisposition?: (disposition: DispositionFields) => Promise<void> | void;
 }
 
 const WORDS_PER_LINE = 5;
@@ -116,7 +124,7 @@ function parseNetReportText(text: string): {
   };
 }
 
-function RadiogramFormView({ fields }: {
+function RadiogramFormView({ fields, dispositionSection }: {
   fields: {
     number: string;
     precedence: string;
@@ -132,6 +140,7 @@ function RadiogramFormView({ fields }: {
     signature: string;
     signatureOpNote?: string;
   };
+  dispositionSection?: React.ReactNode;
 }) {
   return (
     <div className="space-y-3">
@@ -181,12 +190,132 @@ function RadiogramFormView({ fields }: {
           <div className="mt-1 text-xs text-gray-500">Op Note: {fields.signatureOpNote}</div>
         )}
       </div>
+
+      {dispositionSection}
     </div>
   );
 }
 
-export default function ReadOnlyRadiogram({ radiogram, netReport, onClose }: ReadOnlyRadiogramProps) {
+function EditableDisposition({ disposition, onChange, onSave, onCancel }: {
+  disposition: DispositionFields;
+  onChange: (d: DispositionFields) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  const inputClass = "w-full px-2 border border-gray-300 rounded text-sm h-[30px]";
+  return (
+    <div className="border-t pt-3">
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">Disposition</h3>
+      <div className="grid grid-cols-4 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Method</label>
+          <select
+            value={disposition.dispositionMethod}
+            onChange={(e) => onChange({ ...disposition, dispositionMethod: e.target.value })}
+            className={inputClass}
+          >
+            <option value=""></option>
+            <option value="VHF">VHF</option>
+            <option value="SSB">SSB</option>
+            <option value="DTN">DTN</option>
+            <option value="DELIVERED">Delivered</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Destination</label>
+          <input
+            type="text"
+            value={disposition.dispositionDestination}
+            onChange={(e) => onChange({ ...disposition, dispositionDestination: e.target.value.toUpperCase() })}
+            className={`${inputClass} uppercase`}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+          <input
+            type="date"
+            value={disposition.dispositionDate}
+            onChange={(e) => onChange({ ...disposition, dispositionDate: e.target.value })}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
+          <input
+            type="time"
+            value={disposition.dispositionTime}
+            onChange={(e) => onChange({ ...disposition, dispositionTime: e.target.value })}
+            className={inputClass}
+          />
+        </div>
+      </div>
+      <div className="flex justify-end gap-2 mt-3">
+        <button
+          onClick={onCancel}
+          className="px-3 py-1 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onSave}
+          className="px-3 py-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }) {
+  if (!disposition.dispositionMethod && !disposition.dispositionDestination &&
+      !disposition.dispositionDate && !disposition.dispositionTime) {
+    return null;
+  }
+  return (
+    <div className="border-t pt-3">
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">Disposition</h3>
+      <div className="grid grid-cols-4 gap-3">
+        <ReadOnlyField label="Method" value={disposition.dispositionMethod} />
+        <ReadOnlyField label="Destination" value={disposition.dispositionDestination} />
+        <ReadOnlyField label="Date" value={disposition.dispositionDate} />
+        <ReadOnlyField label="Time" value={disposition.dispositionTime} />
+      </div>
+    </div>
+  );
+}
+
+export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition }: ReadOnlyRadiogramProps) {
   const [copied, setCopied] = useState(false);
+
+  const initDisposition = (): DispositionFields => {
+    if (radiogram) {
+      return {
+        dispositionMethod: radiogram.dispositionMethod || '',
+        dispositionDestination: radiogram.dispositionDestination || '',
+        dispositionDate: radiogram.dispositionDate || '',
+        dispositionTime: radiogram.dispositionTime || '',
+      };
+    }
+    if (netReport?.parts) {
+      return {
+        dispositionMethod: netReport.parts.dispositionMethod || '',
+        dispositionDestination: netReport.parts.dispositionDestination || '',
+        dispositionDate: netReport.parts.dispositionDate || '',
+        dispositionTime: netReport.parts.dispositionTime || '',
+      };
+    }
+    return { dispositionMethod: '', dispositionDestination: '', dispositionDate: '', dispositionTime: '' };
+  };
+
+  const [disposition, setDisposition] = useState<DispositionFields>(initDisposition);
+
+  const handleSaveDisposition = async () => {
+    if (onUpdateDisposition) {
+      await onUpdateDisposition(disposition);
+    }
+    onClose();
+  };
 
   const handleCopy = async () => {
     let text = '';
@@ -239,6 +368,10 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose }: Rea
     }
   }
 
+  const dispositionSection = onUpdateDisposition
+    ? <EditableDisposition disposition={disposition} onChange={setDisposition} onSave={handleSaveDisposition} onCancel={onClose} />
+    : <ReadOnlyDisposition disposition={disposition} />;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-4 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -259,7 +392,7 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose }: Rea
             </button>
           </div>
         </div>
-        {fields && <RadiogramFormView fields={fields} />}
+        {fields && <RadiogramFormView fields={fields} dispositionSection={dispositionSection} />}
       </div>
     </div>
   );
