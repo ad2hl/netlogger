@@ -104,11 +104,18 @@ export default function RadiogramForm({
       filtered = filterRadiogramChars(value);
     }
 
-    // Calculate how many chars were removed before the cursor
-    const charsRemovedBeforeCursor = cursorPos !== null
-      ? value.slice(0, cursorPos).length - filtered.slice(0, cursorPos).length
-      : 0;
-    const adjustedCursor = cursorPos !== null ? cursorPos - charsRemovedBeforeCursor : null;
+    // Filter the text before the cursor to find the correct cursor position
+    let adjustedCursor: number | null = null;
+    if (cursorPos !== null) {
+      const beforeCursor = value.slice(0, cursorPos);
+      if (isTextarea && allowsSpaces) {
+        adjustedCursor = filterRadiogramCharsWithSpacesAndNewlines(beforeCursor).length;
+      } else if (allowsSpaces) {
+        adjustedCursor = filterRadiogramCharsWithSpaces(beforeCursor).length;
+      } else {
+        adjustedCursor = filterRadiogramChars(beforeCursor).length;
+      }
+    }
 
     setFormData(prev => ({
       ...prev,
@@ -127,10 +134,9 @@ export default function RadiogramForm({
     const cursorPos = el.selectionStart;
     const filtered = filterRadiogramChars(value);
 
-    const charsRemovedBeforeCursor = cursorPos !== null
-      ? value.slice(0, cursorPos).length - filtered.slice(0, cursorPos).length
-      : 0;
-    const adjustedCursor = cursorPos !== null ? cursorPos - charsRemovedBeforeCursor : null;
+    const adjustedCursor = cursorPos !== null
+      ? filterRadiogramChars(value.slice(0, cursorPos)).length
+      : null;
 
     setFormData(prev => {
       const newWords = [...prev.textWords];
