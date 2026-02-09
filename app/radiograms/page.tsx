@@ -12,16 +12,18 @@ import RadiogramForm from '@/components/RadiogramForm';
 
 interface RadiogramListItem {
   type: 'Radiogram' | 'Net Report';
+  sessionId: string;
   sortDate: Date;
   displayDate: string;
   number: string;
   stationOfOrigin: string;
   addresseePreview: string;
+  disposition: string;
   radiogram?: Radiogram;
   netReport?: NetReport;
 }
 
-type SortColumn = 'date' | 'type' | 'number' | 'stationOfOrigin' | 'addressee';
+type SortColumn = 'date' | 'type' | 'number' | 'stationOfOrigin' | 'addressee' | 'disposition';
 
 function buildItems(sessions: NetSession[]): RadiogramListItem[] {
   const items: RadiogramListItem[] = [];
@@ -38,11 +40,13 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
 
         items.push({
           type: 'Radiogram',
+          sessionId: session.id || '',
           sortDate: itemDate,
           displayDate,
           number: radiogram.number,
           stationOfOrigin: radiogram.stationOfOrigin,
           addresseePreview: (radiogram.address || '').split('\n')[0],
+          disposition: radiogram.dispositionMethod || '',
           radiogram,
         });
       }
@@ -60,11 +64,13 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
       let number: string;
       let stationOfOrigin: string;
       let addresseePreview: string;
+      let disposition = '';
 
       if (report.parts) {
         number = report.parts.number;
         stationOfOrigin = report.parts.stationOfOrigin;
         addresseePreview = report.parts.addressee;
+        disposition = report.parts.dispositionMethod || '';
       } else {
         // Fallback: parse from text for old reports without parts
         const lines = report.radiogram.split('\n');
@@ -76,11 +82,13 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
 
       items.push({
         type: 'Net Report',
+        sessionId: session.id || '',
         sortDate: reportDate,
         displayDate,
         number,
         stationOfOrigin,
         addresseePreview,
+        disposition,
         netReport: report,
       });
     }
@@ -136,6 +144,9 @@ export default function RadiogramsPage() {
         case 'addressee':
           cmp = a.addresseePreview.localeCompare(b.addresseePreview);
           break;
+        case 'disposition':
+          cmp = a.disposition.localeCompare(b.disposition);
+          break;
       }
       return sortDirection === 'asc' ? cmp : -cmp;
     });
@@ -154,6 +165,41 @@ export default function RadiogramsPage() {
   const sortArrow = (column: SortColumn) => {
     if (column !== sortColumn) return null;
     return sortDirection === 'asc' ? ' \u2191' : ' \u2193';
+  };
+
+  const handleUpdateDisposition = async (item: RadiogramListItem, disposition: {
+    dispositionMethod: string;
+    dispositionDestination: string;
+    dispositionDate: string;
+    dispositionTime: string;
+  }) => {
+    if (!user || !item.sessionId) return;
+
+    const session = sessions.find(s => s.id === item.sessionId);
+    if (!session) return;
+
+    if (item.type === 'Radiogram' && item.radiogram) {
+      const updatedRadiograms = (session.radiograms || []).map(r =>
+        r.id === item.radiogram!.id ? { ...r, ...disposition } : r
+      );
+      const success = await updateSession(user.uid, item.sessionId, { radiograms: updatedRadiograms });
+      if (success) {
+        setSessions(prev => prev.map(s =>
+          s.id === item.sessionId ? { ...s, radiograms: updatedRadiograms } : s
+        ));
+      }
+    } else if (item.type === 'Net Report' && session.report?.parts) {
+      const updatedReport = {
+        ...session.report,
+        parts: { ...session.report.parts, ...disposition },
+      };
+      const success = await updateSession(user.uid, item.sessionId, { report: updatedReport });
+      if (success) {
+        setSessions(prev => prev.map(s =>
+          s.id === item.sessionId ? { ...s, report: updatedReport } : s
+        ));
+      }
+    }
   };
 
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
@@ -249,6 +295,12 @@ export default function RadiogramsPage() {
                   >
                     Addressee{sortArrow('addressee')}
                   </th>
+                  <th
+                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => handleSort('disposition')}
+                  >
+                    Disposition{sortArrow('disposition')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -263,6 +315,7 @@ export default function RadiogramsPage() {
                     <td className="py-2 pr-4 font-mono">{item.number}</td>
                     <td className="py-2 pr-4 font-mono">{item.stationOfOrigin}</td>
                     <td className="py-2 pr-4 truncate max-w-xs">{item.addresseePreview}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">{item.disposition}</td>
                   </tr>
                 ))}
               </tbody>
@@ -276,6 +329,12 @@ export default function RadiogramsPage() {
           radiogram={selectedItem.radiogram}
           netReport={selectedItem.netReport}
           onClose={() => setSelectedItem(null)}
+          onUpdateDisposition={
+            // Net reports without parts can't store disposition
+            selectedItem.netReport && !selectedItem.netReport.parts
+              ? undefined
+              : (d) => handleUpdateDisposition(selectedItem, d)
+          }
         />
       )}
 

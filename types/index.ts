@@ -75,6 +75,10 @@ export interface NetReport {
     addressee: string;
     bodyWords: string[];
     signature: string;
+    dispositionMethod?: string;
+    dispositionDestination?: string;
+    dispositionDate?: string;
+    dispositionTime?: string;
   };
 }
 
@@ -98,6 +102,11 @@ export interface Radiogram {
   // Signature
   signature: string;
   signatureOpNote: string;
+  // Disposition
+  dispositionMethod?: string;
+  dispositionDestination?: string;
+  dispositionDate?: string;
+  dispositionTime?: string;
   // Metadata
   savedAt?: Timestamp;
 }

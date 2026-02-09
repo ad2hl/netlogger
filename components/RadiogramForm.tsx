@@ -32,7 +32,7 @@ function filterRadiogramCharsWithSpacesAndNewlines(value: string): string {
 }
 
 // Fields that allow spaces
-const FIELDS_WITH_SPACES = ['placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote'];
+const FIELDS_WITH_SPACES = ['placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote', 'dispositionDestination'];
 
 const WORDS_PER_LINE = 5;
 const INITIAL_LINES = 5;
@@ -60,6 +60,10 @@ export default function RadiogramForm({
     textWords: createEmptyWords(INITIAL_LINES),
     signature: '',
     signatureOpNote: '',
+    dispositionMethod: '',
+    dispositionDestination: '',
+    dispositionDate: '',
+    dispositionTime: '',
   };
 
   const [formData, setFormData] = useState<Omit<Radiogram, 'id'>>(emptyForm);
@@ -440,6 +444,63 @@ export default function RadiogramForm({
                   onChange={handleChange}
                   rows={2}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Disposition Section */}
+          <div className="border-t pt-3">
+            <h3 className="text-sm font-semibold text-gray-700 mb-1">Disposition</h3>
+            <div className="grid grid-cols-4 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Method
+                </label>
+                <select
+                  value={formData.dispositionMethod || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dispositionMethod: e.target.value }))}
+                  className="w-full px-2 border border-gray-300 rounded text-sm h-[30px]"
+                >
+                  <option value=""></option>
+                  <option value="VHF">VHF</option>
+                  <option value="SSB">SSB</option>
+                  <option value="DTN">DTN</option>
+                  <option value="DELIVERED">Delivered</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Destination
+                </label>
+                <input
+                  type="text"
+                  name="dispositionDestination"
+                  value={formData.dispositionDestination || ''}
+                  onChange={handleChange}
+                  className="w-full px-2 border border-gray-300 rounded text-sm uppercase h-[30px]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.dispositionDate || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dispositionDate: e.target.value }))}
+                  className="w-full px-2 border border-gray-300 rounded text-sm h-[30px]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Time
+                </label>
+                <input
+                  type="time"
+                  value={formData.dispositionTime || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dispositionTime: e.target.value }))}
+                  className="w-full px-2 border border-gray-300 rounded text-sm h-[30px]"
                 />
               </div>
             </div>
