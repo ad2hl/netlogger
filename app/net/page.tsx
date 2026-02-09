@@ -561,14 +561,16 @@ function NetPage() {
 
     const currentItems = session.trafficItems || [];
     const updatedItems = [...currentItems, newItem];
+    const updatedReported = session.trafficReported + 1;
 
     const success = await updateSession(user.uid, session.id, {
       trafficItems: updatedItems,
+      trafficReported: updatedReported,
     });
 
     if (success) {
       setSession((prev) =>
-        prev ? { ...prev, trafficItems: updatedItems } : null
+        prev ? { ...prev, trafficItems: updatedItems, trafficReported: updatedReported } : null
       );
     }
   };
@@ -577,17 +579,24 @@ function NetPage() {
     if (!user || !session?.id) return;
 
     const currentItems = session.trafficItems || [];
-    const updatedItems = currentItems.map((item) =>
-      item.id === id ? { ...item, checked: !item.checked } : item
+    const item = currentItems.find((i) => i.id === id);
+    if (!item) return;
+
+    const updatedItems = currentItems.map((i) =>
+      i.id === id ? { ...i, checked: !i.checked } : i
     );
+    const updatedCleared = item.checked
+      ? session.trafficCleared - 1
+      : session.trafficCleared + 1;
 
     const success = await updateSession(user.uid, session.id, {
       trafficItems: updatedItems,
+      trafficCleared: updatedCleared,
     });
 
     if (success) {
       setSession((prev) =>
-        prev ? { ...prev, trafficItems: updatedItems } : null
+        prev ? { ...prev, trafficItems: updatedItems, trafficCleared: updatedCleared } : null
       );
     }
   };
@@ -596,15 +605,24 @@ function NetPage() {
     if (!user || !session?.id) return;
 
     const currentItems = session.trafficItems || [];
-    const updatedItems = currentItems.filter((item) => item.id !== id);
+    const item = currentItems.find((i) => i.id === id);
+    if (!item) return;
+
+    const updatedItems = currentItems.filter((i) => i.id !== id);
+    const updatedReported = session.trafficReported - 1;
+    const updatedCleared = item.checked
+      ? session.trafficCleared - 1
+      : session.trafficCleared;
 
     const success = await updateSession(user.uid, session.id, {
       trafficItems: updatedItems,
+      trafficReported: updatedReported,
+      trafficCleared: updatedCleared,
     });
 
     if (success) {
       setSession((prev) =>
-        prev ? { ...prev, trafficItems: updatedItems } : null
+        prev ? { ...prev, trafficItems: updatedItems, trafficReported: updatedReported, trafficCleared: updatedCleared } : null
       );
     }
   };
