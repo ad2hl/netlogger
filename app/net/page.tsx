@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
@@ -52,6 +52,8 @@ function NetPage() {
   const [allStations, setAllStations] = useState<Station[]>([]);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [addingTrafficFor, setAddingTrafficFor] = useState<string | null>(null);
+  const checkInFormRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!loading && !user) {
       router.push('/');
@@ -652,6 +654,28 @@ function NetPage() {
     }
   };
 
+  const handleTabToTraffic = useCallback(() => {
+    if (!session) return;
+
+    const trafficItems = session.trafficItems || [];
+    const stationsWithItems = new Set(trafficItems.map(i => i.fromCallsign.toUpperCase()));
+
+    const stationsWithTrafficTag = session.checkIns
+      .filter(c => c.tags.includes('T'))
+      .map(c => c.callsign.toUpperCase());
+
+    const firstNeedingTraffic = stationsWithTrafficTag.find(cs => !stationsWithItems.has(cs));
+
+    if (firstNeedingTraffic) {
+      setAddingTrafficFor(firstNeedingTraffic);
+    }
+  }, [session]);
+
+  const handleTrafficEntryDone = useCallback(() => {
+    setAddingTrafficFor(null);
+    setTimeout(() => checkInFormRef.current?.focus(), 0);
+  }, []);
+
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
@@ -746,9 +770,11 @@ function NetPage() {
             {session && (
               <>
                 <CheckInForm
+                  ref={checkInFormRef}
                   onCheckIn={handleCheckIn}
                   disabled={isLookingUp}
                   allStations={allStations}
+                  onTabToTraffic={handleTabToTraffic}
                 />
                 <CheckInList
                   checkIns={session.checkIns}
@@ -782,6 +808,9 @@ function NetPage() {
                 onDeleteTrafficItem={handleDeleteTrafficItem}
                 onToggleAnnouncement={handleToggleAnnouncement}
                 onToggleSecure={handleToggleSecure}
+                addingTrafficFor={addingTrafficFor}
+                onAddingTrafficForChange={setAddingTrafficFor}
+                onTrafficEntryDone={handleTrafficEntryDone}
               />
               <RadiogramList
                 radiograms={session.radiograms || []}
