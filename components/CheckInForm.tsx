@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { CheckIn, Station } from '@/types';
 import { parseCallsignInput } from '@/lib/radiogram';
 import { searchStations } from '@/lib/stationSearch';
@@ -10,18 +10,28 @@ interface CheckInFormProps {
   onCheckIn: (checkIn: CheckIn) => void;
   disabled?: boolean;
   allStations?: Station[];
+  onTabToTraffic?: () => void;
 }
 
-export default function CheckInForm({ onCheckIn, disabled, allStations = [] }: CheckInFormProps) {
+const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function CheckInForm({ onCheckIn, disabled, allStations = [], onTabToTraffic }, ref) {
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
+  useImperativeHandle(ref, () => inputRef.current!);
+
   const isSearchMode = input.startsWith('?');
   const searchQuery = isSearchMode ? input.slice(1) : '';
   const searchResults = isSearchMode ? searchStations(allStations, searchQuery) : [];
+
+  // Re-focus input when it becomes enabled after a lookup
+  useEffect(() => {
+    if (!disabled && !isSubmitting) {
+      inputRef.current?.focus();
+    }
+  }, [disabled, isSubmitting]);
 
   // Reset selection when search results change
   useEffect(() => {
@@ -49,7 +59,13 @@ export default function CheckInForm({ onCheckIn, disabled, allStations = [] }: C
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isSearchMode) return;
+    if (!isSearchMode) {
+      if (e.key === 'Tab' && onTabToTraffic) {
+        e.preventDefault();
+        onTabToTraffic();
+      }
+      return;
+    }
 
     switch (e.key) {
       case 'ArrowDown':
@@ -143,4 +159,6 @@ export default function CheckInForm({ onCheckIn, disabled, allStations = [] }: C
       </form>
     </div>
   );
-}
+});
+
+export default CheckInForm;

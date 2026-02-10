@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckIn, TrafficItem } from '@/types';
 
 interface ChecklistProps {
@@ -13,6 +13,9 @@ interface ChecklistProps {
   onDeleteTrafficItem: (id: string) => void;
   onToggleAnnouncement: (callsign: string) => void;
   onToggleSecure: (callsign: string) => void;
+  addingTrafficFor: string | null;
+  onAddingTrafficForChange: (callsign: string | null) => void;
+  onTrafficEntryDone: () => void;
 }
 
 export default function Checklist({
@@ -25,9 +28,21 @@ export default function Checklist({
   onDeleteTrafficItem,
   onToggleAnnouncement,
   onToggleSecure,
+  addingTrafficFor,
+  onAddingTrafficForChange,
+  onTrafficEntryDone,
 }: ChecklistProps) {
-  const [addingTrafficFor, setAddingTrafficFor] = useState<string | null>(null);
   const [newDestination, setNewDestination] = useState('');
+  const destinationInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus destination input when addingTrafficFor changes to a station
+  useEffect(() => {
+    if (addingTrafficFor) {
+      setNewDestination('');
+      // Use setTimeout to ensure the input is rendered before focusing
+      setTimeout(() => destinationInputRef.current?.focus(), 0);
+    }
+  }, [addingTrafficFor]);
 
   // Get stations with /T tag
   const stationsWithTraffic = checkIns
@@ -55,7 +70,7 @@ export default function Checklist({
   }
 
   const handleAddClick = (callsign: string) => {
-    setAddingTrafficFor(callsign);
+    onAddingTrafficForChange(callsign);
     setNewDestination('');
   };
 
@@ -63,16 +78,61 @@ export default function Checklist({
     if (newDestination.trim()) {
       onAddTrafficItem(callsign, newDestination.trim().toUpperCase());
       setNewDestination('');
-      setAddingTrafficFor(null);
+      // Keep form open for same station (don't close)
+    }
+  };
+
+  const findNextStationNeedingTraffic = (afterCallsign: string | null): string | null => {
+    // Build set of stations that already have traffic items
+    const stationsWithItems = new Set<string>();
+    for (const item of trafficItems) {
+      stationsWithItems.add(item.fromCallsign.toUpperCase());
+    }
+
+    // Find stations with /T tag that have no traffic items
+    const needingTraffic = stationsWithTraffic.filter(cs => !stationsWithItems.has(cs));
+
+    if (needingTraffic.length === 0) return null;
+
+    if (!afterCallsign) return needingTraffic[0];
+
+    // Find next station after the current one
+    const currentIndex = needingTraffic.indexOf(afterCallsign.toUpperCase());
+    if (currentIndex >= 0 && currentIndex < needingTraffic.length - 1) {
+      return needingTraffic[currentIndex + 1];
+    }
+    // If current is last or not found, check if there are any remaining
+    const afterCurrentInFull = stationsWithTraffic.indexOf(afterCallsign.toUpperCase());
+    for (let i = afterCurrentInFull + 1; i < stationsWithTraffic.length; i++) {
+      if (!stationsWithItems.has(stationsWithTraffic[i])) {
+        return stationsWithTraffic[i];
+      }
+    }
+    return null;
+  };
+
+  const handleAdvanceOrDone = (callsign: string) => {
+    const next = findNextStationNeedingTraffic(callsign);
+    if (next) {
+      onAddingTrafficForChange(next);
+      setNewDestination('');
+    } else {
+      onAddingTrafficForChange(null);
+      onTrafficEntryDone();
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, callsign: string) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
-      handleAddSubmit(callsign);
+      if (newDestination.trim()) {
+        handleAddSubmit(callsign);
+      } else {
+        // Empty destination — advance to next station or done
+        handleAdvanceOrDone(callsign);
+      }
     } else if (e.key === 'Escape') {
-      setAddingTrafficFor(null);
+      onAddingTrafficForChange(null);
       setNewDestination('');
     }
   };
@@ -130,33 +190,6 @@ export default function Checklist({
                     </button>
                   </div>
 
-                  {addingTrafficFor === callsign && (
-                    <div className="flex items-center gap-2 ml-4 mt-1">
-                      <span className="text-gray-500">→</span>
-                      <input
-                        type="text"
-                        value={newDestination}
-                        onChange={(e) => setNewDestination(e.target.value.toUpperCase())}
-                        onKeyDown={(e) => handleKeyDown(e, callsign)}
-                        placeholder="Destination"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm uppercase"
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => handleAddSubmit(callsign)}
-                        className="text-green-600 hover:text-green-800 text-sm"
-                      >
-                        Add
-                      </button>
-                      <button
-                        onClick={() => setAddingTrafficFor(null)}
-                        className="text-gray-500 hover:text-gray-700 text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-
                   {items.length > 0 && (
                     <div className="ml-4 mt-1 space-y-1">
                       {items.map(item => (
@@ -183,6 +216,34 @@ export default function Checklist({
                           </button>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {addingTrafficFor === callsign && (
+                    <div className="flex items-center gap-2 ml-4 mt-1">
+                      <span className="text-gray-500">→</span>
+                      <input
+                        ref={destinationInputRef}
+                        type="text"
+                        value={newDestination}
+                        onChange={(e) => setNewDestination(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => handleKeyDown(e, callsign)}
+                        placeholder="Destination"
+                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleAddSubmit(callsign)}
+                        className="text-green-600 hover:text-green-800 text-sm"
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => onAddingTrafficForChange(null)}
+                        className="text-gray-500 hover:text-gray-700 text-sm"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   )}
                 </div>
