@@ -25,7 +25,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-slate-600">Loading...</div>
       </div>
     );
   }
@@ -34,14 +34,14 @@ export default function Home() {
     <div className="flex-1 flex items-center justify-center">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
         <h1 className="text-3xl font-bold text-center mb-2">NetLogger</h1>
-        <p className="text-gray-600 text-center mb-6">
+        <p className="text-slate-600 text-center mb-6">
           Amateur radio net logging made easy
         </p>
 
         <div className="space-y-4">
           <button
             onClick={handleSignIn}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-3 px-4 hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg py-3 px-4 hover:bg-slate-50 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -61,13 +61,13 @@ export default function Home() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="text-gray-700 font-medium">
+            <span className="text-slate-700 font-medium">
               Sign in with Google
             </span>
           </button>
         </div>
 
-        <p className="text-sm text-gray-500 text-center mt-6">
+        <p className="text-sm text-slate-500 text-center mt-6">
           Track check-ins, manage traffic, and generate net reports
         </p>
       </div>

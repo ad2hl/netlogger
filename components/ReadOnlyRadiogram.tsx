@@ -24,8 +24,8 @@ const WORDS_PER_LINE = 5;
 function ReadOnlyField({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div className={className}>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+      <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
+      <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
         {value || '\u00A0'}
       </div>
     </div>
@@ -43,10 +43,10 @@ function WordGrid({ words }: { words: string[] }) {
             const word = words[index] || '';
             return (
               <div key={index} className="relative">
-                <span className="absolute top-0 left-0.5 text-[10px] text-gray-400 leading-none">
+                <span className="absolute top-0 left-0.5 text-[10px] text-slate-400 leading-none">
                   {index + 1}
                 </span>
-                <div className="w-full px-2 pt-3 pb-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+                <div className="w-full px-2 pt-3 pb-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
                   {word || '\u00A0'}
                 </div>
               </div>
@@ -163,32 +163,32 @@ function RadiogramFormView({ fields, dispositionSection }: {
 
       {/* Addressee */}
       <div className="border-b pb-3">
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">Addressee</h3>
-        <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700 whitespace-pre-line">
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
+        <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700 whitespace-pre-line">
           {fields.addressee || '\u00A0'}
         </div>
         {fields.addressOpNote && (
-          <div className="mt-1 text-xs text-gray-500">Op Note: {fields.addressOpNote}</div>
+          <div className="mt-1 text-xs text-slate-500">Op Note: {fields.addressOpNote}</div>
         )}
       </div>
 
       {/* Text */}
       <div className="border-b pb-3">
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">Text</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Text</h3>
         <WordGrid words={fields.bodyWords} />
-        <p className="text-xs mt-2 text-gray-500">
+        <p className="text-xs mt-2 text-slate-500">
           Word count: {fields.bodyWords.length}
         </p>
       </div>
 
       {/* Signature */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">Signature</h3>
-        <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Signature</h3>
+        <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
           {fields.signature || '\u00A0'}
         </div>
         {fields.signatureOpNote && (
-          <div className="mt-1 text-xs text-gray-500">Op Note: {fields.signatureOpNote}</div>
+          <div className="mt-1 text-xs text-slate-500">Op Note: {fields.signatureOpNote}</div>
         )}
       </div>
 
@@ -205,13 +205,13 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
   dispositionMethods?: string[];
 }) {
   const methods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
-  const inputClass = "w-full px-2 border border-gray-300 rounded text-sm h-[30px]";
+  const inputClass = "w-full px-2 border border-slate-300 rounded text-sm h-[30px]";
   return (
     <div className="border-t pt-3">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Disposition</h3>
+      <h3 className="text-sm font-semibold text-slate-700 mb-1">Disposition</h3>
       <div className="grid grid-cols-4 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Method</label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Method</label>
           <select
             value={disposition.dispositionMethod}
             onChange={(e) => onChange({ ...disposition, dispositionMethod: e.target.value })}
@@ -224,7 +224,7 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Destination</label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Destination</label>
           <input
             type="text"
             value={disposition.dispositionDestination}
@@ -233,7 +233,7 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Date</label>
           <input
             type="date"
             value={disposition.dispositionDate}
@@ -242,7 +242,7 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Time</label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Time</label>
           <input
             type="time"
             value={disposition.dispositionTime}
@@ -254,13 +254,13 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
       <div className="flex justify-end gap-2 mt-3">
         <button
           onClick={onCancel}
-          className="px-3 py-1 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
+          className="px-3 py-1 text-sm text-slate-600 border border-slate-300 rounded-md hover:bg-slate-100"
         >
           Cancel
         </button>
         <button
           onClick={onSave}
-          className="px-3 py-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          className="px-3 py-1 text-sm text-white bg-indigo-700 rounded-md hover:bg-indigo-800"
         >
           Save
         </button>
@@ -276,7 +276,7 @@ function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }
   }
   return (
     <div className="border-t pt-3">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">Disposition</h3>
+      <h3 className="text-sm font-semibold text-slate-700 mb-1">Disposition</h3>
       <div className="grid grid-cols-4 gap-3">
         <ReadOnlyField label="Method" value={disposition.dispositionMethod} />
         <ReadOnlyField label="Destination" value={disposition.dispositionDestination} />
@@ -382,13 +382,13 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm"
+              className="bg-indigo-700 text-white py-1 px-3 rounded-md hover:bg-indigo-800 text-sm"
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl px-2"
+              className="text-slate-500 hover:text-slate-700 text-xl px-2"
             >
               ×
             </button>

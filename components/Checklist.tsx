@@ -143,7 +143,7 @@ export default function Checklist({
 
       {/* Request to Secure Section */}
       {stationsRequestingSecure.length > 0 && (
-        <div className="mb-4 pb-4 border-b border-gray-200">
+        <div className="mb-4 pb-4 border-b border-slate-200">
           <h3 className="text-sm font-medium mb-2">
             Request to secure ({stationsRequestingSecure.filter(c => !checkedSecure.includes(c)).length})
           </h3>
@@ -158,7 +158,7 @@ export default function Checklist({
                     onChange={() => onToggleSecure(callsign)}
                     className="rounded"
                   />
-                  <span className={`font-mono ${isChecked ? 'line-through text-gray-400' : ''}`}>
+                  <span className={`font-mono ${isChecked ? 'line-through text-slate-400' : ''}`}>
                     {callsign}
                   </span>
                 </label>
@@ -183,7 +183,7 @@ export default function Checklist({
                     <span className="font-mono font-semibold">{callsign}</span>
                     <button
                       onClick={() => handleAddClick(callsign)}
-                      className="text-blue-600 hover:text-blue-800 text-xs px-1"
+                      className="text-indigo-700 hover:text-indigo-800 text-xs px-1"
                       title="Add traffic destination"
                     >
                       [+]
@@ -201,9 +201,9 @@ export default function Checklist({
                               onChange={() => onToggleTrafficItem(item.id)}
                               className="rounded"
                             />
-                            <span className={item.checked ? 'line-through text-gray-400' : ''}>
+                            <span className={item.checked ? 'line-through text-slate-400' : ''}>
                               <span className="font-mono">{item.fromCallsign}</span>
-                              <span className="text-gray-500 mx-1">→</span>
+                              <span className="text-slate-500 mx-1">→</span>
                               <span className="font-mono">{item.toDestination}</span>
                             </span>
                           </label>
@@ -221,7 +221,7 @@ export default function Checklist({
 
                   {addingTrafficFor === callsign && (
                     <div className="flex items-center gap-2 ml-4 mt-1">
-                      <span className="text-gray-500">→</span>
+                      <span className="text-slate-500">→</span>
                       <input
                         ref={destinationInputRef}
                         type="text"
@@ -229,7 +229,7 @@ export default function Checklist({
                         onChange={(e) => setNewDestination(e.target.value.toUpperCase())}
                         onKeyDown={(e) => handleKeyDown(e, callsign)}
                         placeholder="Destination"
-                        className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                        className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                         autoFocus
                       />
                       <button
@@ -240,7 +240,7 @@ export default function Checklist({
                       </button>
                       <button
                         onClick={() => onAddingTrafficForChange(null)}
-                        className="text-gray-500 hover:text-gray-700 text-sm"
+                        className="text-slate-500 hover:text-slate-700 text-sm"
                       >
                         Cancel
                       </button>
@@ -270,7 +270,7 @@ export default function Checklist({
                     onChange={() => onToggleAnnouncement(callsign)}
                     className="rounded"
                   />
-                  <span className={`font-mono ${isChecked ? 'line-through text-gray-400' : ''}`}>
+                  <span className={`font-mono ${isChecked ? 'line-through text-slate-400' : ''}`}>
                     {callsign}
                   </span>
                 </label>
@@ -281,7 +281,7 @@ export default function Checklist({
       )}
 
       {stationsWithTraffic.length === 0 && stationsWithAnnouncements.length === 0 && stationsRequestingSecure.length === 0 && (
-        <p className="text-sm text-gray-500">No traffic or announcements.</p>
+        <p className="text-sm text-slate-500">No traffic or announcements.</p>
       )}
     </div>
   );

@@ -74,7 +74,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-slate-600">Loading...</div>
       </div>
     );
   }
@@ -87,10 +87,10 @@ export default function SettingsPage() {
     <div>
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+          <h1 className="text-xl font-bold text-slate-900">Settings</h1>
           <Link
             href="/net"
-            className="text-blue-600 hover:text-blue-800 text-sm"
+            className="text-indigo-700 hover:text-indigo-800 text-sm"
           >
             Back to Net
           </Link>
@@ -104,7 +104,7 @@ export default function SettingsPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Your Callsign
                 </label>
                 <input
@@ -112,13 +112,13 @@ export default function SettingsPage() {
                   name="callsign"
                   value={formData.callsign}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   placeholder="e.g., K3ABC"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Your Name (for radiogram signature)
                 </label>
                 <input
@@ -126,13 +126,13 @@ export default function SettingsPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="e.g., John"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Location (place of origin)
                 </label>
                 <input
@@ -140,13 +140,13 @@ export default function SettingsPage() {
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="e.g., BALTIMORE MD"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Default Net Manager Callsign
                 </label>
                 <input
@@ -154,7 +154,7 @@ export default function SettingsPage() {
                   name="netManagerCall"
                   value={formData.netManagerCall}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   placeholder="e.g., W3XYZ"
                 />
               </div>
@@ -163,13 +163,13 @@ export default function SettingsPage() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold mb-4">QRZ.com Credentials (Optional)</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-slate-600 mb-4">
               If you have a QRZ.com account, enter your credentials to automatically look up operator names and locations. Without credentials, you can enter this information manually.
             </p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   QRZ Username
                 </label>
                 <input
@@ -177,13 +177,13 @@ export default function SettingsPage() {
                   name="qrzUsername"
                   value={formData.qrzUsername}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Your QRZ username"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   QRZ Password
                 </label>
                 <input
@@ -191,7 +191,7 @@ export default function SettingsPage() {
                   name="qrzPassword"
                   value={formData.qrzPassword}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="Your QRZ password"
                 />
               </div>
@@ -200,7 +200,7 @@ export default function SettingsPage() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold mb-4">Disposition Methods</h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-slate-600 mb-4">
               Customize the disposition methods available in radiogram forms.
             </p>
 
@@ -215,7 +215,7 @@ export default function SettingsPage() {
                       updated[index] = e.target.value;
                       setDispositionMethods(updated);
                     }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                   />
                   <button
                     type="button"
@@ -243,7 +243,7 @@ export default function SettingsPage() {
                     }
                   }
                 }}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                 placeholder="New method name"
               />
               <button
@@ -255,7 +255,7 @@ export default function SettingsPage() {
                     setNewMethod('');
                   }
                 }}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 text-sm"
+                className="bg-slate-200 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-300 text-sm"
               >
                 Add
               </button>
@@ -277,7 +277,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </button>

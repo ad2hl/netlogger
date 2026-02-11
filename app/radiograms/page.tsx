@@ -235,10 +235,10 @@ export default function RadiogramsPage() {
     <div>
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">NetLogger</h1>
+          <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
           <Link
             href="/net"
-            className="text-blue-600 hover:text-blue-800 text-sm"
+            className="text-indigo-700 hover:text-indigo-800 text-sm"
           >
             Back to Net
           </Link>
@@ -247,24 +247,24 @@ export default function RadiogramsPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900">Radiograms</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Radiograms</h2>
           <button
             onClick={() => setIsFormOpen(true)}
-            className="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm"
+            className="bg-indigo-700 text-white py-1 px-3 rounded-md hover:bg-indigo-800 text-sm"
           >
             New Radiogram
           </button>
         </div>
 
         {fetching ? (
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-slate-500">Loading...</p>
         ) : sortedItems.length === 0 ? (
-          <p className="text-gray-500">No radiograms or net reports found.</p>
+          <p className="text-slate-500">No radiograms or net reports found.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-gray-600">
+                <tr className="border-b text-left text-slate-600">
                   <th
                     className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => handleSort('date')}
@@ -307,7 +307,7 @@ export default function RadiogramsPage() {
                 {sortedItems.map((item, i) => (
                   <tr
                     key={i}
-                    className="border-b hover:bg-gray-50 cursor-pointer"
+                    className="border-b hover:bg-slate-50 cursor-pointer"
                     onClick={() => setSelectedItem(item)}
                   >
                     <td className="py-2 pr-4 whitespace-nowrap">{item.displayDate}</td>

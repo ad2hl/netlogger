@@ -30,8 +30,8 @@ export default function StationLookupDropdown({
 
   if (stations.length === 0) {
     return (
-      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-        <div className="px-3 py-2 text-gray-500 text-sm">
+      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-md shadow-lg">
+        <div className="px-3 py-2 text-slate-500 text-sm">
           {query ? 'No stations found' : 'Type to search stations...'}
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function StationLookupDropdown({
   return (
     <ul
       ref={listRef}
-      className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+      className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-auto"
     >
       {stations.map((station, index) => {
         const displayName = station.nickname || station.firstName || '';
@@ -52,19 +52,19 @@ export default function StationLookupDropdown({
             key={station.callsign}
             className={`px-3 py-2 cursor-pointer flex items-center gap-3 ${
               index === selectedIndex
-                ? 'bg-blue-100'
-                : 'hover:bg-gray-100'
+                ? 'bg-indigo-100'
+                : 'hover:bg-slate-100'
             }`}
             onClick={() => onSelect(station)}
           >
-            <span className="font-mono font-semibold text-gray-900 w-20">
+            <span className="font-mono font-semibold text-slate-900 w-20">
               {station.callsign}
             </span>
-            <span className="text-gray-700 flex-1 truncate">
+            <span className="text-slate-700 flex-1 truncate">
               {displayName}
             </span>
             {location && (
-              <span className="text-gray-500 text-sm truncate max-w-32">
+              <span className="text-slate-500 text-sm truncate max-w-32">
                 {location}
               </span>
             )}

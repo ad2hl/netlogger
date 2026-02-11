@@ -18,8 +18,8 @@ const WORDS_PER_LINE = 5;
 function ReadOnlyField({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div className={className}>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+      <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
+      <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
         {value || '\u00A0'}
       </div>
     </div>
@@ -40,13 +40,13 @@ function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange }:
       <div className="border-b pb-3">
         <div className="grid grid-cols-12 gap-3">
           <div className="col-span-2">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Number</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Number</label>
             <input
               type="text"
               value={messageNumber}
               onChange={(e) => onMessageNumberChange(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
               placeholder="XXX"
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+              className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
             />
           </div>
           <ReadOnlyField label="Precedence" value={parts.precedence} className="col-span-2" />
@@ -63,15 +63,15 @@ function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange }:
 
       {/* Addressee */}
       <div className="border-b pb-3">
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">Addressee</h3>
-        <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
+        <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
           {parts.addressee || '\u00A0'}
         </div>
       </div>
 
       {/* Text - word grid */}
       <div className="border-b pb-3">
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">Text</h3>
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Text</h3>
         <div className="space-y-2">
           {Array.from({ length: numLines }, (_, line) => (
             <div key={line} className="grid grid-cols-5 gap-2">
@@ -80,10 +80,10 @@ function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange }:
                 const word = parts.bodyWords[index] || '';
                 return (
                   <div key={index} className="relative">
-                    <span className="absolute top-0 left-0.5 text-[10px] text-gray-400 leading-none">
+                    <span className="absolute top-0 left-0.5 text-[10px] text-slate-400 leading-none">
                       {index + 1}
                     </span>
-                    <div className="w-full px-2 pt-3 pb-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+                    <div className="w-full px-2 pt-3 pb-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
                       {word || '\u00A0'}
                     </div>
                   </div>
@@ -92,15 +92,15 @@ function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange }:
             </div>
           ))}
         </div>
-        <p className="text-xs mt-2 text-gray-500">
+        <p className="text-xs mt-2 text-slate-500">
           Word count: {radiogram.wordCount}
         </p>
       </div>
 
       {/* Signature */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-1">Signature</h3>
-        <div className="w-full px-2 py-1 border border-gray-200 rounded text-sm uppercase bg-gray-50 text-gray-700">
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Signature</h3>
+        <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
           {parts.signature || '\u00A0'}
         </div>
       </div>
@@ -161,10 +161,10 @@ export default function ReportGenerator({
   let content: React.ReactNode;
 
   if (!session) {
-    content = <p className="text-gray-500">Start a session to generate a report.</p>;
+    content = <p className="text-slate-500">Start a session to generate a report.</p>;
   } else if (!profile?.callsign || !profile?.netManagerCall) {
     content = (
-      <p className="text-gray-500">
+      <p className="text-slate-500">
         Please set up your callsign and net manager callsign in Settings to generate reports.
       </p>
     );
@@ -204,14 +204,14 @@ export default function ReportGenerator({
             {radiogram && (
               <button
                 onClick={handleCopy}
-                className="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm"
+                className="bg-indigo-700 text-white py-1 px-3 rounded-md hover:bg-indigo-800 text-sm"
               >
                 {copied ? 'Copied!' : 'Copy'}
               </button>
             )}
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl px-2"
+              className="text-slate-500 hover:text-slate-700 text-xl px-2"
             >
               ×
             </button>

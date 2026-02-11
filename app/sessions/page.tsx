@@ -118,10 +118,10 @@ export default function SessionsPage() {
     <div>
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">NetLogger</h1>
+          <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
           <Link
             href="/net"
-            className="text-blue-600 hover:text-blue-800 text-sm"
+            className="text-indigo-700 hover:text-indigo-800 text-sm"
           >
             Back to Net
           </Link>
@@ -129,17 +129,17 @@ export default function SessionsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Sessions</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Sessions</h2>
 
         {fetching ? (
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-slate-500">Loading...</p>
         ) : sortedSessions.length === 0 ? (
-          <p className="text-gray-500">No sessions found.</p>
+          <p className="text-slate-500">No sessions found.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-gray-600">
+                <tr className="border-b text-left text-slate-600">
                   <th
                     className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => handleSort('date')}
@@ -194,7 +194,7 @@ export default function SessionsPage() {
                 {sortedSessions.map((s) => (
                   <tr
                     key={s.id}
-                    className="border-b hover:bg-gray-50 cursor-pointer"
+                    className="border-b hover:bg-slate-50 cursor-pointer"
                     onClick={() => router.push(`/net?session=${s.id}`)}
                   >
                     <td className="py-2 pr-4 whitespace-nowrap">

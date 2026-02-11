@@ -38,7 +38,7 @@ export default function CheckInList({
 
   if (checkIns.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+      <div className="bg-white rounded-lg shadow p-6 text-center text-slate-500">
         No stations checked in yet. Add a callsign above to get started.
       </div>
     );
@@ -54,7 +54,7 @@ export default function CheckInList({
 
       <div
         ref={scrollRef}
-        className="divide-y divide-gray-100 max-h-96 overflow-y-auto"
+        className="divide-y divide-slate-100 max-h-96 overflow-y-auto"
       >
         {checkIns.map((checkIn, index) => (
           <StationCard
