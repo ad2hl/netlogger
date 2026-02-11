@@ -159,10 +159,9 @@ export default function SettingsPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4">QRZ.com Credentials</h2>
+            <h2 className="text-lg font-semibold mb-4">QRZ.com Credentials (Optional)</h2>
             <p className="text-sm text-gray-600 mb-4">
-              Enter your QRZ.com credentials to enable automatic callsign lookups.
-              Your credentials are stored securely and only used on the server.
+              If you have a QRZ.com account, enter your credentials to automatically look up operator names and locations. Without credentials, you can enter this information manually.
             </p>
 
             <div className="space-y-4">

@@ -143,7 +143,7 @@ export default function StationCard({
       ) : (
         <span
           onClick={() => setEditingField('callsign')}
-          className={`font-mono font-semibold text-sm w-20 flex-shrink-0 cursor-pointer hover:text-blue-600 ${station?.firstName === 'Unknown' ? 'text-red-600' : ''}`}
+          className="font-mono font-semibold text-sm w-20 flex-shrink-0 cursor-pointer hover:text-blue-600"
           title="Click to edit callsign"
         >
           {checkIn.callsign}

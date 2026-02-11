@@ -171,7 +171,7 @@ function NetPage() {
       if (!profile.qrzUsername || !profile.qrzPassword) {
         const station: Station = {
           callsign: callsign.toUpperCase(),
-          firstName: 'Unknown',
+          firstName: null,
           nickname: null,
           city: null,
           state: null,
@@ -199,7 +199,7 @@ function NetPage() {
           console.error('QRZ lookup error:', data.error);
           const station: Station = {
             callsign: callsign.toUpperCase(),
-            firstName: 'Unknown',
+            firstName: null,
             nickname: null,
             city: null,
             state: null,
@@ -212,7 +212,7 @@ function NetPage() {
 
         const station: Station = {
           callsign: data.callsign,
-          firstName: data.nickname || data.firstName || 'Unknown',
+          firstName: data.nickname || data.firstName || null,
           nickname: cachedStation?.nickname || null,
           city: data.city || null,
           state: data.state || null,
@@ -775,7 +775,7 @@ function NetPage() {
               <Link href="/settings" className="underline font-medium">
                 configure your settings
               </Link>{' '}
-              to set your callsign and QRZ credentials.
+              to set your callsign.
             </p>
           </div>
         )}

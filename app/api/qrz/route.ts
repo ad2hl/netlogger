@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           callsign: result.callsign,
-          firstName: 'Unknown',
+          firstName: null,
           error: result.error,
         },
         { status: 200 }
