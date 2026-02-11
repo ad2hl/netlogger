@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getQRZSession, lookupCallsign } from '@/lib/qrz';
+import { decrypt, isEncrypted } from '@/lib/crypto';
 
 const sessionCache = new Map<string, { key: string; expiry: number }>();
 
+function decryptPassword(password: string): string {
+  if (isEncrypted(password)) {
+    return decrypt(password);
+  }
+  return password;
+}
+
 async function getOrCreateSession(username: string, password: string): Promise<string | null> {
-  const cacheKey = `${username}:${password}`;
+  const plaintextPassword = decryptPassword(password);
+  const cacheKey = `${username}:${plaintextPassword}`;
   const cached = sessionCache.get(cacheKey);
 
   if (cached && cached.expiry > Date.now()) {
     return cached.key;
   }
 
-  const result = await getQRZSession(username, password);
+  const result = await getQRZSession(username, plaintextPassword);
 
   if (result.error) {
     console.error('QRZ session error:', result.error);
@@ -57,7 +66,8 @@ export async function POST(request: NextRequest) {
     let result = await lookupCallsign(sessionKey, callsign);
 
     if (result.error === 'SESSION_EXPIRED') {
-      sessionCache.delete(`${username}:${password}`);
+      const plaintextPassword = decryptPassword(password);
+      sessionCache.delete(`${username}:${plaintextPassword}`);
       sessionKey = await getOrCreateSession(username, password);
 
       if (!sessionKey) {
