@@ -11,6 +11,7 @@ interface CheckInListProps {
   onUpdateCallsign: (oldCallsign: string, newCallsign: string) => void;
   onUpdateNickname: (callsign: string, nickname: string | null) => void;
   onUpdateNote: (callsign: string, note: string | null) => void;
+  onUpdateLocation: (callsign: string, city: string | null, state: string | null) => void;
   lastAcknowledged?: string | null;
   onSetLastAcknowledged?: (callsign: string) => void;
 }
@@ -22,6 +23,7 @@ export default function CheckInList({
   onUpdateCallsign,
   onUpdateNickname,
   onUpdateNote,
+  onUpdateLocation,
   lastAcknowledged,
   onSetLastAcknowledged,
 }: CheckInListProps) {
@@ -64,6 +66,7 @@ export default function CheckInList({
             onUpdateCallsign={onUpdateCallsign}
             onUpdateNickname={onUpdateNickname}
             onUpdateNote={onUpdateNote}
+            onUpdateLocation={onUpdateLocation}
             isBookmarked={lastAcknowledged?.toUpperCase() === checkIn.callsign.toUpperCase()}
             onSetBookmark={onSetLastAcknowledged ? () => onSetLastAcknowledged(checkIn.callsign) : undefined}
           />
