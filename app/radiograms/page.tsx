@@ -98,7 +98,7 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
 }
 
 export default function RadiogramsPage() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -335,6 +335,7 @@ export default function RadiogramsPage() {
               ? undefined
               : (d) => handleUpdateDisposition(selectedItem, d)
           }
+          dispositionMethods={profile?.dispositionMethods}
         />
       )}
 
@@ -342,6 +343,7 @@ export default function RadiogramsPage() {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSave={handleSaveRadiogram}
+        dispositionMethods={profile?.dispositionMethods}
       />
     </div>
   );

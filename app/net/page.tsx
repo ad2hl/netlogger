@@ -839,6 +839,7 @@ function NetPage() {
                 radiograms={session.radiograms || []}
                 onSave={handleSaveRadiogram}
                 onDelete={handleDeleteRadiogram}
+                dispositionMethods={profile?.dispositionMethods}
               />
             </div>
           )}

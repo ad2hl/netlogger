@@ -8,12 +8,14 @@ interface RadiogramListProps {
   radiograms: Radiogram[];
   onSave: (radiogram: Radiogram) => void;
   onDelete: (id: string) => void;
+  dispositionMethods?: string[];
 }
 
 export default function RadiogramList({
   radiograms,
   onSave,
   onDelete,
+  dispositionMethods,
 }: RadiogramListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRadiogram, setEditingRadiogram] = useState<Radiogram | null>(null);
@@ -72,6 +74,7 @@ export default function RadiogramList({
         onSave={onSave}
         onDelete={onDelete}
         existingRadiogram={editingRadiogram}
+        dispositionMethods={dispositionMethods}
       />
     </div>
   );

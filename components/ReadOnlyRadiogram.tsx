@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Radiogram, NetReport } from '@/types';
+import { Radiogram, NetReport, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
 
 interface DispositionFields {
@@ -16,6 +16,7 @@ interface ReadOnlyRadiogramProps {
   netReport?: NetReport;
   onClose: () => void;
   onUpdateDisposition?: (disposition: DispositionFields) => Promise<void> | void;
+  dispositionMethods?: string[];
 }
 
 const WORDS_PER_LINE = 5;
@@ -196,12 +197,14 @@ function RadiogramFormView({ fields, dispositionSection }: {
   );
 }
 
-function EditableDisposition({ disposition, onChange, onSave, onCancel }: {
+function EditableDisposition({ disposition, onChange, onSave, onCancel, dispositionMethods }: {
   disposition: DispositionFields;
   onChange: (d: DispositionFields) => void;
   onSave: () => void;
   onCancel: () => void;
+  dispositionMethods?: string[];
 }) {
+  const methods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
   const inputClass = "w-full px-2 border border-gray-300 rounded text-sm h-[30px]";
   return (
     <div className="border-t pt-3">
@@ -215,10 +218,9 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel }: {
             className={inputClass}
           >
             <option value=""></option>
-            <option value="VHF">VHF</option>
-            <option value="SSB">SSB</option>
-            <option value="DTN">DTN</option>
-            <option value="DELIVERED">Delivered</option>
+            {methods.map((m) => (
+              <option key={m} value={m.toUpperCase()}>{m}</option>
+            ))}
           </select>
         </div>
         <div>
@@ -285,7 +287,7 @@ function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }
   );
 }
 
-export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition }: ReadOnlyRadiogramProps) {
+export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition, dispositionMethods }: ReadOnlyRadiogramProps) {
   const [copied, setCopied] = useState(false);
 
   const initDisposition = (): DispositionFields => {
@@ -369,7 +371,7 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
   }
 
   const dispositionSection = onUpdateDisposition
-    ? <EditableDisposition disposition={disposition} onChange={setDisposition} onSave={handleSaveDisposition} onCancel={onClose} />
+    ? <EditableDisposition disposition={disposition} onChange={setDisposition} onSave={handleSaveDisposition} onCancel={onClose} dispositionMethods={dispositionMethods} />
     : <ReadOnlyDisposition disposition={disposition} />;
 
   return (

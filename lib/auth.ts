@@ -7,7 +7,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb } from './firebase';
-import { UserProfile } from '@/types';
+import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -27,6 +27,7 @@ export async function signInWithGoogle(): Promise<User | null> {
         netManagerCall: '',
         qrzUsername: '',
         qrzPassword: '',
+        dispositionMethods: DEFAULT_DISPOSITION_METHODS,
       };
       await setDoc(userDocRef, defaultProfile);
     }
