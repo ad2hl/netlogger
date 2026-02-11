@@ -11,7 +11,7 @@ export interface UserProfile {
 
 export interface Station {
   callsign: string;
-  firstName: string;
+  firstName: string | null;
   nickname: string | null;
   city: string | null;
   state: string | null;
