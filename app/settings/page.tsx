@@ -30,6 +30,8 @@ export default function SettingsPage() {
     }
   }, [user, loading, router]);
 
+  const hasQrzCredentials = !!(profile?.qrzUsername && profile?.qrzPassword);
+
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -38,7 +40,7 @@ export default function SettingsPage() {
         location: profile.location || '',
         netManagerCall: profile.netManagerCall || '',
         qrzUsername: profile.qrzUsername || '',
-        qrzPassword: profile.qrzPassword || '',
+        qrzPassword: '',
       });
       setDispositionMethods(profile.dispositionMethods ?? DEFAULT_DISPOSITION_METHODS);
     }
@@ -59,7 +61,28 @@ export default function SettingsPage() {
     setSaving(true);
     setMessage(null);
 
-    const success = await updateUserProfile(user.uid, { ...formData, dispositionMethods });
+    const dataToSave = { ...formData, dispositionMethods };
+
+    if (dataToSave.qrzPassword) {
+      try {
+        const res = await fetch('/api/credentials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: dataToSave.qrzPassword }),
+        });
+        if (!res.ok) throw new Error('Encryption failed');
+        const { encrypted } = await res.json();
+        dataToSave.qrzPassword = encrypted;
+      } catch {
+        setMessage({ type: 'error', text: 'Failed to encrypt QRZ password. Please try again.' });
+        setSaving(false);
+        return;
+      }
+    } else {
+      delete dataToSave.qrzPassword;
+    }
+
+    const success = await updateUserProfile(user.uid, dataToSave);
 
     if (success) {
       await refreshProfile();
@@ -192,7 +215,7 @@ export default function SettingsPage() {
                   value={formData.qrzPassword}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Your QRZ password"
+                  placeholder={hasQrzCredentials ? 'Password saved (leave blank to keep)' : 'Your QRZ password'}
                 />
               </div>
             </div>
