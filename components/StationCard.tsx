@@ -11,6 +11,7 @@ interface StationCardProps {
   onUpdateCallsign: (oldCallsign: string, newCallsign: string) => void;
   onUpdateNickname: (callsign: string, nickname: string | null) => void;
   onUpdateNote: (callsign: string, note: string | null) => void;
+  onUpdateLocation: (callsign: string, city: string | null, state: string | null) => void;
   isBookmarked?: boolean;
   onSetBookmark?: () => void;
 }
@@ -23,13 +24,15 @@ export default function StationCard({
   onUpdateCallsign,
   onUpdateNickname,
   onUpdateNote,
+  onUpdateLocation,
   isBookmarked,
   onSetBookmark,
 }: StationCardProps) {
-  const [editingField, setEditingField] = useState<'callsign' | 'name' | 'note' | null>(null);
+  const [editingField, setEditingField] = useState<'callsign' | 'name' | 'note' | 'location' | null>(null);
   const [callsign, setCallsign] = useState(checkIn.callsign);
   const [nickname, setNickname] = useState(station?.nickname || '');
   const [note, setNote] = useState(station?.note || '');
+  const [editLocation, setEditLocation] = useState('');
 
   const displayName = station?.nickname || station?.firstName || '';
   const lastSeenText = station?.lastSeen ? formatLastSeen(station.lastSeen) : null;
@@ -52,6 +55,23 @@ export default function StationCard({
   const handleSaveNote = () => {
     const trimmed = note.trim();
     onUpdateNote(checkIn.callsign, trimmed || null);
+    setEditingField(null);
+  };
+
+  const handleSaveLocation = () => {
+    const trimmed = editLocation.trim();
+    if (!trimmed) {
+      onUpdateLocation(checkIn.callsign, null, null);
+    } else {
+      const lastComma = trimmed.lastIndexOf(',');
+      if (lastComma >= 0) {
+        const city = trimmed.slice(0, lastComma).trim() || null;
+        const state = trimmed.slice(lastComma + 1).trim() || null;
+        onUpdateLocation(checkIn.callsign, city, state);
+      } else {
+        onUpdateLocation(checkIn.callsign, trimmed, null);
+      }
+    }
     setEditingField(null);
   };
 
@@ -154,9 +174,30 @@ export default function StationCard({
         </span>
       )}
 
-      {location && (
-        <span className="text-sm text-gray-400 w-32 truncate flex-shrink-0" title={location}>
-          {location}
+      {editingField === 'location' ? (
+        <input
+          type="text"
+          value={editLocation}
+          onChange={(e) => setEditLocation(e.target.value)}
+          onBlur={handleSaveLocation}
+          onKeyDown={(e) => handleKeyDown(e, handleSaveLocation, () => {
+            setEditLocation(location);
+            setEditingField(null);
+          })}
+          className="text-sm text-gray-400 w-32 flex-shrink-0 px-1 border-b border-blue-400 focus:outline-none bg-transparent"
+          placeholder="City, ST"
+          autoFocus
+        />
+      ) : (
+        <span
+          onClick={() => {
+            setEditLocation(location);
+            setEditingField('location');
+          }}
+          className={`text-sm w-32 truncate cursor-pointer hover:text-blue-600 flex-shrink-0 ${location ? 'text-gray-400' : 'text-gray-300'}`}
+          title={location ? `Click to edit: ${location}` : 'Click to add location'}
+        >
+          {location || '—'}
         </span>
       )}
 

@@ -14,6 +14,7 @@ import {
   getStation,
   saveStation,
   updateStationNickname,
+  updateStationLocation,
   updateStationNote,
   getActiveSession,
   getSession,
@@ -393,6 +394,27 @@ function NetPage() {
         const station = newMap.get(callsign.toUpperCase());
         if (station) {
           newMap.set(callsign.toUpperCase(), { ...station, note });
+        }
+        return newMap;
+      });
+    }
+  };
+
+  const handleUpdateLocation = async (
+    callsign: string,
+    city: string | null,
+    state: string | null
+  ) => {
+    if (!user) return;
+
+    const success = await updateStationLocation(user.uid, callsign, city, state);
+
+    if (success) {
+      setStations((prev) => {
+        const newMap = new Map(prev);
+        const station = newMap.get(callsign.toUpperCase());
+        if (station) {
+          newMap.set(callsign.toUpperCase(), { ...station, city, state });
         }
         return newMap;
       });
@@ -783,6 +805,7 @@ function NetPage() {
                   onUpdateCallsign={handleUpdateCallsign}
                   onUpdateNickname={handleUpdateNickname}
                   onUpdateNote={handleUpdateNote}
+                  onUpdateLocation={handleUpdateLocation}
                   lastAcknowledged={session.lastAcknowledged}
                   onSetLastAcknowledged={handleSetLastAcknowledged}
                 />

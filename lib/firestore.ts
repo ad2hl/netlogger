@@ -65,6 +65,22 @@ export async function updateStationNickname(
   }
 }
 
+export async function updateStationLocation(
+  uid: string,
+  callsign: string,
+  city: string | null,
+  state: string | null
+): Promise<boolean> {
+  try {
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+    await updateDoc(stationRef, { city, state });
+    return true;
+  } catch (error) {
+    console.error('Error updating station location:', error);
+    return false;
+  }
+}
+
 export async function updateStationNote(
   uid: string,
   callsign: string,
