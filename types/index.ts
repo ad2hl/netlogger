@@ -1,5 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 
+export const DEFAULT_DISPOSITION_METHODS = ['VHF', 'SSB', 'CW', 'Digital', 'Delivered'];
+
 export interface UserProfile {
   callsign: string;
   name: string;
@@ -7,6 +9,7 @@ export interface UserProfile {
   netManagerCall: string;
   qrzUsername: string;
   qrzPassword: string;
+  dispositionMethods?: string[];
 }
 
 export interface Station {

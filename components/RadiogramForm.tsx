@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Radiogram } from '@/types';
+import { Radiogram, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
 
 interface RadiogramFormProps {
@@ -10,6 +10,7 @@ interface RadiogramFormProps {
   onSave: (radiogram: Radiogram) => void;
   onDelete?: (id: string) => void;
   existingRadiogram?: Radiogram | null;
+  dispositionMethods?: string[];
 }
 
 function generateId(): string {
@@ -43,7 +44,9 @@ export default function RadiogramForm({
   onSave,
   onDelete,
   existingRadiogram,
+  dispositionMethods,
 }: RadiogramFormProps) {
+  const methods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
   const createEmptyWords = (lines: number) => Array(lines * WORDS_PER_LINE).fill('');
 
   const emptyForm: Omit<Radiogram, 'id'> = {
@@ -463,10 +466,9 @@ export default function RadiogramForm({
                   className="w-full px-2 border border-gray-300 rounded text-sm h-[30px]"
                 >
                   <option value=""></option>
-                  <option value="VHF">VHF</option>
-                  <option value="SSB">SSB</option>
-                  <option value="DTN">DTN</option>
-                  <option value="DELIVERED">Delivered</option>
+                  {methods.map((m) => (
+                    <option key={m} value={m.toUpperCase()}>{m}</option>
+                  ))}
                 </select>
               </div>
               <div>
