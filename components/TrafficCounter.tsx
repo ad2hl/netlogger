@@ -21,13 +21,13 @@ export default function TrafficCounter({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Reported
           </label>
           <div className="flex items-center gap-2">
             <button
               onClick={() => onReportedChange(Math.max(0, reported - 1))}
-              className="w-10 h-10 bg-gray-200 rounded-md hover:bg-gray-300 text-xl font-bold"
+              className="w-10 h-10 bg-slate-200 rounded-md hover:bg-slate-300 text-xl font-bold"
               disabled={reported <= 0}
             >
               -
@@ -37,7 +37,7 @@ export default function TrafficCounter({
             </span>
             <button
               onClick={() => onReportedChange(reported + 1)}
-              className="w-10 h-10 bg-gray-200 rounded-md hover:bg-gray-300 text-xl font-bold"
+              className="w-10 h-10 bg-slate-200 rounded-md hover:bg-slate-300 text-xl font-bold"
             >
               +
             </button>
@@ -45,13 +45,13 @@ export default function TrafficCounter({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
             Cleared
           </label>
           <div className="flex items-center gap-2">
             <button
               onClick={() => onClearedChange(Math.max(0, cleared - 1))}
-              className="w-10 h-10 bg-gray-200 rounded-md hover:bg-gray-300 text-xl font-bold"
+              className="w-10 h-10 bg-slate-200 rounded-md hover:bg-slate-300 text-xl font-bold"
               disabled={cleared <= 0}
             >
               -
@@ -61,7 +61,7 @@ export default function TrafficCounter({
             </span>
             <button
               onClick={() => onClearedChange(cleared + 1)}
-              className="w-10 h-10 bg-gray-200 rounded-md hover:bg-gray-300 text-xl font-bold"
+              className="w-10 h-10 bg-slate-200 rounded-md hover:bg-slate-300 text-xl font-bold"
             >
               +
             </button>
@@ -69,7 +69,7 @@ export default function TrafficCounter({
         </div>
       </div>
 
-      <div className="mt-3 text-sm text-gray-600">
+      <div className="mt-3 text-sm text-slate-600">
         Traffic: {reported}/{cleared}
       </div>
     </div>

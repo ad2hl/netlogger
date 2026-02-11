@@ -88,7 +88,7 @@ export default function StationCard({
       case 'NC':
         return 'bg-purple-100 text-purple-800 border border-purple-300';
       case 'ANC':
-        return 'bg-indigo-100 text-indigo-800 border border-indigo-300';
+        return 'bg-violet-100 text-violet-800 border border-violet-300';
       case 'T':
         return 'bg-red-500 text-white font-bold animate-pulse';
       case 'A':
@@ -110,21 +110,21 @@ export default function StationCard({
   const hasUrgentTag = tags.some(t => URGENT_TAGS.includes(t));
 
   return (
-    <div className={`flex items-center gap-2 py-1.5 px-2 rounded group ${hasUrgentTag ? 'bg-yellow-50' : 'hover:bg-gray-50'}`}>
+    <div className={`flex items-center gap-2 py-1.5 px-2 rounded group ${hasUrgentTag ? 'bg-yellow-50' : 'hover:bg-slate-50'}`}>
       {onSetBookmark && (
         <button
           onClick={onSetBookmark}
           className={`w-4 flex-shrink-0 text-center transition-opacity ${
             isBookmarked
-              ? 'text-blue-600 opacity-100'
-              : 'text-gray-300 opacity-0 group-hover:opacity-100 hover:text-blue-400'
+              ? 'text-indigo-700 opacity-100'
+              : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-indigo-500'
           }`}
           title={isBookmarked ? 'Last acknowledged' : 'Mark as last acknowledged'}
         >
           ▶
         </button>
       )}
-      <span className="text-sm text-gray-400 w-6 flex-shrink-0 text-right">
+      <span className="text-sm text-slate-400 w-6 flex-shrink-0 text-right">
         {number}
       </span>
       {editingField === 'callsign' ? (
@@ -137,13 +137,13 @@ export default function StationCard({
             setCallsign(checkIn.callsign);
             setEditingField(null);
           })}
-          className="font-mono font-semibold text-sm w-20 flex-shrink-0 px-1 border-b border-blue-400 focus:outline-none bg-transparent"
+          className="font-mono font-semibold text-sm w-20 flex-shrink-0 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
           autoFocus
         />
       ) : (
         <span
           onClick={() => setEditingField('callsign')}
-          className="font-mono font-semibold text-sm w-20 flex-shrink-0 cursor-pointer hover:text-blue-600"
+          className="font-mono font-semibold text-sm w-20 flex-shrink-0 cursor-pointer hover:text-indigo-700"
           title="Click to edit callsign"
         >
           {checkIn.callsign}
@@ -160,14 +160,14 @@ export default function StationCard({
             setNickname(station?.nickname || '');
             setEditingField(null);
           })}
-          className="text-sm text-gray-600 w-24 px-1 border-b border-blue-400 focus:outline-none bg-transparent"
+          className="text-sm text-slate-600 w-24 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
           placeholder={station?.firstName || 'Name'}
           autoFocus
         />
       ) : (
         <span
           onClick={() => setEditingField('name')}
-          className="text-sm text-gray-600 w-24 truncate cursor-pointer hover:text-blue-600 flex-shrink-0"
+          className="text-sm text-slate-600 w-24 truncate cursor-pointer hover:text-indigo-700 flex-shrink-0"
           title={displayName ? `Click to edit: ${displayName}` : 'Click to add name'}
         >
           {displayName || '—'}
@@ -184,7 +184,7 @@ export default function StationCard({
             setEditLocation(location);
             setEditingField(null);
           })}
-          className="text-sm text-gray-400 w-32 flex-shrink-0 px-1 border-b border-blue-400 focus:outline-none bg-transparent"
+          className="text-sm text-slate-400 w-32 flex-shrink-0 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
           placeholder="City, ST"
           autoFocus
         />
@@ -194,7 +194,7 @@ export default function StationCard({
             setEditLocation(location);
             setEditingField('location');
           }}
-          className={`text-sm w-32 truncate cursor-pointer hover:text-blue-600 flex-shrink-0 ${location ? 'text-gray-400' : 'text-gray-300'}`}
+          className={`text-sm w-32 truncate cursor-pointer hover:text-indigo-700 flex-shrink-0 ${location ? 'text-slate-400' : 'text-slate-300'}`}
           title={location ? `Click to edit: ${location}` : 'Click to add location'}
         >
           {location || '—'}
@@ -211,14 +211,14 @@ export default function StationCard({
             setNote(station?.note || '');
             setEditingField(null);
           })}
-          className="text-sm text-gray-500 italic flex-1 min-w-0 px-1 border-b border-blue-400 focus:outline-none bg-transparent"
+          className="text-sm text-slate-500 italic flex-1 min-w-0 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
           placeholder="Note..."
           autoFocus
         />
       ) : (
         <span
           onClick={() => setEditingField('note')}
-          className={`text-sm italic flex-1 min-w-0 truncate cursor-pointer hover:text-blue-600 ${station?.note ? 'text-gray-500' : 'text-gray-300'}`}
+          className={`text-sm italic flex-1 min-w-0 truncate cursor-pointer hover:text-indigo-700 ${station?.note ? 'text-slate-500' : 'text-slate-300'}`}
           title={station?.note ? `Click to edit: ${station.note}` : 'Click to add note'}
         >
           {station?.note || '(note)'}
@@ -238,14 +238,14 @@ export default function StationCard({
       </div>
 
       {lastSeenText && (
-        <span className="text-xs text-gray-400 flex-shrink-0" title="Time since last check-in">
+        <span className="text-xs text-slate-400 flex-shrink-0" title="Time since last check-in">
           {lastSeenText}
         </span>
       )}
 
       <button
         onClick={() => onRemove(checkIn.callsign)}
-        className="text-gray-400 hover:text-red-500 p-0.5 flex-shrink-0"
+        className="text-slate-400 hover:text-red-500 p-0.5 flex-shrink-0"
         title="Remove"
       >
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

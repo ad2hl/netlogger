@@ -30,13 +30,13 @@ export default function Footer() {
     <>
       <footer className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-4 text-sm">
-          <span className="text-gray-600">
+          <span className="text-slate-600">
             Created and maintained by{' '}
             <a
               href="https://www.qrz.com/db/AD2HL"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800"
+              className="text-indigo-700 hover:text-indigo-800"
             >
               AD2HL
             </a>
@@ -44,7 +44,7 @@ export default function Footer() {
           {aboutContent && (
             <button
               onClick={() => setShowAbout(true)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-indigo-700 hover:text-indigo-800"
             >
               About this website
             </button>
@@ -52,7 +52,7 @@ export default function Footer() {
           {summaryContent && (
             <button
               onClick={() => setShowPrivacy(true)}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-indigo-700 hover:text-indigo-800"
             >
               Privacy Policy
             </button>
@@ -97,10 +97,10 @@ function AboutModal({ content, onClose }: { content: string; onClose: () => void
     >
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">About this website</h2>
+          <h2 className="text-lg font-semibold text-slate-900">About this website</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
             aria-label="Close"
           >
             &times;

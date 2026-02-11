@@ -41,7 +41,7 @@ export default function RadiogramList({
 
       <button
         onClick={handleNewRadiogram}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm mb-3"
+        className="w-full bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 text-sm mb-3"
       >
         New Radiogram
       </button>
@@ -52,15 +52,15 @@ export default function RadiogramList({
             <button
               key={radiogram.id}
               onClick={() => handleEditRadiogram(radiogram)}
-              className="w-full text-left px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded text-sm flex items-center gap-2"
+              className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded text-sm flex items-center gap-2"
             >
-              <span className="font-mono font-semibold text-gray-700 flex-shrink-0">
+              <span className="font-mono font-semibold text-slate-700 flex-shrink-0">
                 {radiogram.number}
               </span>
-              <span className="font-mono text-gray-600 flex-shrink-0">
+              <span className="font-mono text-slate-600 flex-shrink-0">
                 {radiogram.stationOfOrigin}
               </span>
-              <span className="font-mono text-gray-600 truncate">
+              <span className="font-mono text-slate-600 truncate">
                 {radiogram.address.split('\n')[0]}
               </span>
             </button>

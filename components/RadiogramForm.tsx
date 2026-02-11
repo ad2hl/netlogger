@@ -235,7 +235,7 @@ export default function RadiogramForm({
         const index = line * WORDS_PER_LINE + col;
         cols.push(
           <div key={index} className="relative">
-            <span className="absolute top-0 left-0.5 text-[10px] text-gray-400 leading-none">
+            <span className="absolute top-0 left-0.5 text-[10px] text-slate-400 leading-none">
               {index + 1}
             </span>
             <input
@@ -244,7 +244,7 @@ export default function RadiogramForm({
               onChange={(e) => handleWordChange(index, e.target.value, e.target)}
               onKeyDown={(e) => handleWordKeyDown(index, e)}
               ref={(el) => { wordInputRefs.current[index] = el; }}
-              className="w-full px-2 pt-3 pb-1 border border-gray-300 rounded text-sm uppercase"
+              className="w-full px-2 pt-3 pb-1 border border-slate-300 rounded text-sm uppercase"
             />
           </div>
         );
@@ -267,7 +267,7 @@ export default function RadiogramForm({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-xl px-2"
+            className="text-slate-500 hover:text-slate-700 text-xl px-2"
           >
             ×
           </button>
@@ -278,7 +278,7 @@ export default function RadiogramForm({
           <div className="border-b pb-3">
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Number
                 </label>
                 <input
@@ -286,12 +286,12 @@ export default function RadiogramForm({
                   name="number"
                   value={formData.number}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Precedence
                 </label>
                 <input
@@ -299,12 +299,12 @@ export default function RadiogramForm({
                   name="precedence"
                   value={formData.precedence}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   HX
                 </label>
                 <input
@@ -312,11 +312,11 @@ export default function RadiogramForm({
                   name="handlingInstructions"
                   value={formData.handlingInstructions}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                 />
               </div>
               <div className="col-span-3">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Station of Origin
                 </label>
                 <input
@@ -324,12 +324,12 @@ export default function RadiogramForm({
                   name="stationOfOrigin"
                   value={formData.stationOfOrigin}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Check
                 </label>
                 <input
@@ -337,7 +337,7 @@ export default function RadiogramForm({
                   name="check"
                   value={formData.check}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
@@ -345,7 +345,7 @@ export default function RadiogramForm({
 
             <div className="grid grid-cols-12 gap-3 mt-2">
               <div className="col-span-4">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Place of Origin
                 </label>
                 <input
@@ -353,12 +353,12 @@ export default function RadiogramForm({
                   name="placeOfOrigin"
                   value={formData.placeOfOrigin}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Time
                 </label>
                 <input
@@ -366,11 +366,11 @@ export default function RadiogramForm({
                   name="timeFiled"
                   value={formData.timeFiled}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                 />
               </div>
               <div className="col-span-6">
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Date
                 </label>
                 <input
@@ -378,7 +378,7 @@ export default function RadiogramForm({
                   name="date"
                   value={formData.date}
                   onChange={handleChange}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
@@ -389,24 +389,24 @@ export default function RadiogramForm({
           <div className="border-b pb-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-1">Addressee</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
                 <textarea
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-1">Op Note</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-1">Op Note</h3>
                 <textarea
                   name="addressOpNote"
                   value={formData.addressOpNote}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                 />
               </div>
             </div>
@@ -414,11 +414,11 @@ export default function RadiogramForm({
 
           {/* Text Section */}
           <div className="border-b pb-3">
-            <h3 className="text-sm font-semibold text-gray-700 mb-1">Text</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Text</h3>
             <div className="space-y-2">
               {renderWordGrid()}
             </div>
-            <p className={`text-xs mt-2 ${formData.check && wordCount !== parseInt(formData.check) ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+            <p className={`text-xs mt-2 ${formData.check && wordCount !== parseInt(formData.check) ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>
               Word count: {wordCount}
               {formData.check && wordCount !== parseInt(formData.check) && ' (does not match check)'}
             </p>
@@ -428,25 +428,25 @@ export default function RadiogramForm({
           <div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-1">Signature</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-1">Signature</h3>
                 <textarea
                   ref={signatureRef}
                   name="signature"
                   value={formData.signature}
                   onChange={handleChange}
                   rows={2}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-1">Op Note</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-1">Op Note</h3>
                 <textarea
                   name="signatureOpNote"
                   value={formData.signatureOpNote}
                   onChange={handleChange}
                   rows={2}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm uppercase"
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                 />
               </div>
             </div>
@@ -454,16 +454,16 @@ export default function RadiogramForm({
 
           {/* Disposition Section */}
           <div className="border-t pt-3">
-            <h3 className="text-sm font-semibold text-gray-700 mb-1">Disposition</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Disposition</h3>
             <div className="grid grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Method
                 </label>
                 <select
                   value={formData.dispositionMethod || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, dispositionMethod: e.target.value }))}
-                  className="w-full px-2 border border-gray-300 rounded text-sm h-[30px]"
+                  className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
                 >
                   <option value=""></option>
                   {methods.map((m) => (
@@ -472,7 +472,7 @@ export default function RadiogramForm({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Destination
                 </label>
                 <input
@@ -480,29 +480,29 @@ export default function RadiogramForm({
                   name="dispositionDestination"
                   value={formData.dispositionDestination || ''}
                   onChange={handleChange}
-                  className="w-full px-2 border border-gray-300 rounded text-sm uppercase h-[30px]"
+                  className="w-full px-2 border border-slate-300 rounded text-sm uppercase h-[30px]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Date
                 </label>
                 <input
                   type="date"
                   value={formData.dispositionDate || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, dispositionDate: e.target.value }))}
-                  className="w-full px-2 border border-gray-300 rounded text-sm h-[30px]"
+                  className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">
                   Time
                 </label>
                 <input
                   type="time"
                   value={formData.dispositionTime || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, dispositionTime: e.target.value }))}
-                  className="w-full px-2 border border-gray-300 rounded text-sm h-[30px]"
+                  className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
                 />
               </div>
             </div>
@@ -525,20 +525,20 @@ export default function RadiogramForm({
               <button
                 type="button"
                 onClick={handleCopy}
-                className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm"
+                className="bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 text-sm"
               >
                 {copied ? 'Copied!' : 'Copy'}
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 text-sm"
+                className="bg-slate-300 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-400 text-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm"
+                className="bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 text-sm"
               >
                 OK
               </button>

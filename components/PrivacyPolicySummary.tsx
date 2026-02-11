@@ -33,12 +33,12 @@ export default function PrivacyPolicySummary({ content, fullPolicyContent, onClo
     >
       <div className={`bg-white rounded-lg shadow-xl w-full max-h-[80vh] flex flex-col ${showFullPolicy ? 'max-w-4xl' : 'max-w-2xl'}`}>
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-slate-900">
             {showFullPolicy ? 'Privacy Policy' : 'Privacy Policy Summary'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
             aria-label="Close"
           >
             &times;
@@ -49,14 +49,14 @@ export default function PrivacyPolicySummary({ content, fullPolicyContent, onClo
           {showFullPolicy ? (
             <button
               onClick={() => setShowFullPolicy(false)}
-              className="mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="mt-4 text-indigo-700 hover:text-indigo-800 text-sm font-medium"
             >
               &larr; Back to Summary
             </button>
           ) : fullPolicyContent ? (
             <button
               onClick={() => setShowFullPolicy(true)}
-              className="mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="mt-4 text-indigo-700 hover:text-indigo-800 text-sm font-medium"
             >
               View Full Privacy Policy &rarr;
             </button>

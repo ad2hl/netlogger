@@ -132,7 +132,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               value={input}
               onChange={(e) => setInput(e.target.value.toUpperCase())}
               onKeyDown={handleKeyDown}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
               placeholder="e.g., AD2HL/NC/T or ?2HL to search"
               disabled={disabled || isSubmitting}
               autoComplete="off"

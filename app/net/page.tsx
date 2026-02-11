@@ -711,7 +711,7 @@ function NetPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg text-slate-600">Loading...</div>
       </div>
     );
   }
@@ -724,42 +724,42 @@ function NetPage() {
     <div>
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">NetLogger</h1>
+          <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
           <div className="flex items-center gap-4">
             {profile?.callsign && (
-              <span className="font-mono text-gray-600">
+              <span className="font-mono text-slate-600">
                 {profile.callsign}
               </span>
             )}
             <Link
               href="/sessions"
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-indigo-700 hover:text-indigo-800 text-sm"
             >
               Sessions
             </Link>
             <Link
               href="/radiograms"
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-indigo-700 hover:text-indigo-800 text-sm"
             >
               Radiograms
             </Link>
             <Link
               href="/settings"
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-indigo-700 hover:text-indigo-800 text-sm"
             >
               Settings
             </Link>
             {session && (
               <button
                 onClick={handleNewSession}
-                className="text-gray-600 hover:text-gray-800 text-sm"
+                className="text-slate-600 hover:text-slate-800 text-sm"
               >
                 New Session
               </button>
             )}
             <button
               onClick={handleSignOut}
-              className="text-gray-600 hover:text-gray-800 text-sm"
+              className="text-slate-600 hover:text-slate-800 text-sm"
             >
               Sign Out
             </button>
