@@ -45,7 +45,7 @@ export default function NetPageWrapper() {
 }
 
 function NetPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, emailVerified } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionIdParam = searchParams.get('session');
@@ -59,10 +59,10 @@ function NetPage() {
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const checkInFormRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || !emailVerified)) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, loading, emailVerified, router]);
 
   // Load all stations for lookup on mount
   useEffect(() => {

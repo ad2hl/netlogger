@@ -3,7 +3,12 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   User,
+  AuthError,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb } from './firebase';
@@ -44,6 +49,99 @@ export async function signOut(): Promise<void> {
     await firebaseSignOut(getFirebaseAuth());
   } catch (error) {
     console.error('Error signing out:', error);
+  }
+}
+
+function getAuthErrorMessage(error: AuthError): string {
+  switch (error.code) {
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists.';
+    case 'auth/weak-password':
+      return 'Password must be at least 6 characters.';
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/invalid-credential':
+      return 'Invalid email or password.';
+    case 'auth/user-not-found':
+      return 'No account found with this email.';
+    case 'auth/wrong-password':
+      return 'Invalid email or password.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled.';
+    default:
+      return 'An unexpected error occurred. Please try again.';
+  }
+}
+
+export async function signUpWithEmail(
+  email: string,
+  password: string
+): Promise<{ user?: User; error?: string }> {
+  try {
+    const result = await createUserWithEmailAndPassword(
+      getFirebaseAuth(),
+      email,
+      password
+    );
+    const user = result.user;
+
+    await sendEmailVerification(user);
+
+    const userDocRef = doc(getFirebaseDb(), 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      const defaultProfile: UserProfile = {
+        callsign: '',
+        name: '',
+        location: '',
+        netManagerCall: '',
+        qrzUsername: '',
+        qrzPassword: '',
+        dispositionMethods: DEFAULT_DISPOSITION_METHODS,
+      };
+      await setDoc(userDocRef, defaultProfile);
+    }
+
+    return { user };
+  } catch (error) {
+    return { error: getAuthErrorMessage(error as AuthError) };
+  }
+}
+
+export async function signInWithEmail(
+  email: string,
+  password: string
+): Promise<{ user?: User; error?: string }> {
+  try {
+    const result = await signInWithEmailAndPassword(
+      getFirebaseAuth(),
+      email,
+      password
+    );
+    return { user: result.user };
+  } catch (error) {
+    return { error: getAuthErrorMessage(error as AuthError) };
+  }
+}
+
+export async function sendPasswordReset(email: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await sendPasswordResetEmail(getFirebaseAuth(), email);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: getAuthErrorMessage(error as AuthError) };
+  }
+}
+
+export async function resendVerificationEmail(user: User): Promise<{ success: boolean; error?: string }> {
+  try {
+    await sendEmailVerification(user);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: getAuthErrorMessage(error as AuthError) };
   }
 }
 

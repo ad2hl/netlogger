@@ -43,7 +43,7 @@ function formatDuration(minutes: number): string {
 }
 
 export default function SessionsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, emailVerified } = useAuth();
   const router = useRouter();
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -51,10 +51,10 @@ export default function SessionsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || !emailVerified)) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, loading, emailVerified, router]);
 
   useEffect(() => {
     if (user) {
