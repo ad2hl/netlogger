@@ -8,7 +8,7 @@ import { updateUserProfile } from '@/lib/auth';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 
 export default function SettingsPage() {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
   const router = useRouter();
 
   const [formData, setFormData] = useState<Partial<UserProfile>>({
@@ -25,10 +25,10 @@ export default function SettingsPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || !emailVerified)) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, loading, emailVerified, router]);
 
   const hasQrzCredentials = !!(profile?.qrzUsername && profile?.qrzPassword);
 

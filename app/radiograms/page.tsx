@@ -98,7 +98,7 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
 }
 
 export default function RadiogramsPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, emailVerified } = useAuth();
   const router = useRouter();
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -108,10 +108,10 @@ export default function RadiogramsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || !emailVerified)) {
       router.push('/');
     }
-  }, [user, loading, router]);
+  }, [user, loading, emailVerified, router]);
 
   useEffect(() => {
     if (user) {
