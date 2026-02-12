@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { readContent } from '@/lib/content';
 
 export async function GET() {
-  try {
-    const filePath = join(process.cwd(), '.about.md');
-    const content = await readFile(filePath, 'utf-8');
-    return NextResponse.json({ content });
-  } catch {
+  const content = await readContent('about.md');
+  if (content === null) {
     return NextResponse.json({ content: null }, { status: 404 });
   }
+  return NextResponse.json({ content });
 }

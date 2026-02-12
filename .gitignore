@@ -39,7 +39,6 @@ service-account.json
 # Scripts
 scripts/delete_sessions.py
 
-# Privacy policy and about (site-specific)
-.privacy-policy.md
-.privacy-policy-summary.md
-.about.md
+# Site-specific content overrides
+content/local/*
+!content/local/.gitkeep
