@@ -37,7 +37,7 @@ const GoogleIcon = () => (
 );
 
 export default function Home() {
-  const { user, loading, emailVerified } = useAuth();
+  const { user, loading, emailVerified, refreshUser } = useAuth();
   const router = useRouter();
 
   const [tab, setTab] = useState<Tab>('signin');
@@ -133,7 +133,7 @@ export default function Home() {
     clearMessages();
     if (!user) return;
     setSubmitting(true);
-    await user.reload();
+    await refreshUser();
     setSubmitting(false);
     if (user.emailVerified) {
       router.push('/net');

@@ -7,6 +7,9 @@ import {
   signInWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
+  updatePassword as firebaseUpdatePassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   User,
   AuthError,
 } from 'firebase/auth';
@@ -139,6 +142,21 @@ export async function sendPasswordReset(email: string): Promise<{ success: boole
 export async function resendVerificationEmail(user: User): Promise<{ success: boolean; error?: string }> {
   try {
     await sendEmailVerification(user);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: getAuthErrorMessage(error as AuthError) };
+  }
+}
+
+export async function changePassword(
+  user: User,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const credential = EmailAuthProvider.credential(user.email!, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+    await firebaseUpdatePassword(user, newPassword);
     return { success: true };
   } catch (error) {
     return { success: false, error: getAuthErrorMessage(error as AuthError) };
