@@ -7,7 +7,17 @@ import { useAuth } from '@/components/AuthProvider';
 import { getAllSessions } from '@/lib/firestore';
 import { NetSession } from '@/types';
 
-type SortColumn = 'date' | 'startTime' | 'endTime' | 'netName' | 'duration' | 'stations' | 'trafficReported' | 'trafficCleared';
+type SortColumn = 'date' | 'startTime' | 'endTime' | 'netName' | 'ncs' | 'ancs' | 'duration' | 'stations' | 'trafficReported' | 'trafficCleared';
+
+function getNCS(session: NetSession): string {
+  const nc = session.checkIns.find(c => c.tags.includes('NC'));
+  return nc?.callsign || '—';
+}
+
+function getANCS(session: NetSession): string {
+  const anc = session.checkIns.find(c => c.tags.includes('ANC'));
+  return anc?.callsign || '—';
+}
 
 function computeDurationMinutes(session: NetSession): number {
   const [startH, startM] = session.startTime.split(':').map(Number);
@@ -78,6 +88,12 @@ export default function SessionsPage() {
         case 'netName':
           cmp = a.netName.localeCompare(b.netName);
           break;
+        case 'ncs':
+          cmp = getNCS(a).localeCompare(getNCS(b));
+          break;
+        case 'ancs':
+          cmp = getANCS(a).localeCompare(getANCS(b));
+          break;
         case 'duration':
           cmp = computeDurationMinutes(a) - computeDurationMinutes(b);
           break;
@@ -140,53 +156,35 @@ export default function SessionsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-slate-600">
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('date')}
-                  >
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('date')}>
                     Date{sortArrow('date')}
                   </th>
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('startTime')}
-                  >
-                    Start Time{sortArrow('startTime')}
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('startTime')}>
+                    Start{sortArrow('startTime')}
                   </th>
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('endTime')}
-                  >
-                    End Time{sortArrow('endTime')}
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('endTime')}>
+                    End{sortArrow('endTime')}
                   </th>
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('netName')}
-                  >
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('netName')}>
                     Net Name{sortArrow('netName')}
                   </th>
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('duration')}
-                  >
-                    Duration{sortArrow('duration')}
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('ncs')}>
+                    NCS{sortArrow('ncs')}
                   </th>
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('stations')}
-                  >
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('ancs')}>
+                    ANCS{sortArrow('ancs')}
+                  </th>
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('stations')}>
                     Stations{sortArrow('stations')}
                   </th>
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('trafficReported')}
-                  >
-                    Traffic Rptd{sortArrow('trafficReported')}
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('trafficReported')}>
+                    Rptd{sortArrow('trafficReported')}
                   </th>
-                  <th
-                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort('trafficCleared')}
-                  >
-                    Traffic Clrd{sortArrow('trafficCleared')}
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('trafficCleared')}>
+                    Clrd{sortArrow('trafficCleared')}
+                  </th>
+                  <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('duration')}>
+                    Duration{sortArrow('duration')}
                   </th>
                 </tr>
               </thead>
@@ -205,12 +203,14 @@ export default function SessionsPage() {
                       {s.endTime || 'Active'}
                     </td>
                     <td className="py-2 pr-4">{s.netName}</td>
-                    <td className="py-2 pr-4 whitespace-nowrap">
-                      {formatDuration(computeDurationMinutes(s))}
-                    </td>
+                    <td className="py-2 pr-4 whitespace-nowrap">{getNCS(s)}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">{getANCS(s)}</td>
                     <td className="py-2 pr-4">{s.checkIns.length}</td>
                     <td className="py-2 pr-4">{s.trafficReported}</td>
                     <td className="py-2 pr-4">{s.trafficCleared}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">
+                      {s.endTime ? formatDuration(computeDurationMinutes(s)) : 'Active'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
