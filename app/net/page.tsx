@@ -21,6 +21,8 @@ import {
   getStations,
   getAllStations,
   saveReport,
+  deleteSession,
+  getRecentSessions,
 } from '@/lib/firestore';
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
@@ -54,6 +56,7 @@ function NetPage() {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [addingTrafficFor, setAddingTrafficFor] = useState<string | null>(null);
+  const [showAbandonModal, setShowAbandonModal] = useState(false);
   const checkInFormRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!loading && !user) {
@@ -704,8 +707,37 @@ function NetPage() {
   };
 
   const handleNewSession = () => {
+    if (session && !session.report) {
+      setShowAbandonModal(true);
+    } else {
+      setSession(null);
+      setStations(new Map());
+    }
+  };
+
+  const handleConfirmAbandon = async () => {
+    if (!user || !session?.id) return;
+
+    // Move radiograms to the most recent other session
+    const radiograms = session.radiograms || [];
+    if (radiograms.length > 0) {
+      const recentSessions = await getRecentSessions(user.uid, 10);
+      const otherSession = recentSessions.find((s) => s.id !== session.id);
+      if (otherSession?.id) {
+        const existingRadiograms = otherSession.radiograms || [];
+        await updateSession(user.uid, otherSession.id!, {
+          radiograms: [...existingRadiograms, ...radiograms],
+        });
+      }
+    }
+
+    // Delete the abandoned session from Firestore
+    await deleteSession(user.uid, session.id);
+
+    // Clear local state
     setSession(null);
     setStations(new Map());
+    setShowAbandonModal(false);
   };
 
   if (loading) {
@@ -854,6 +886,31 @@ function NetPage() {
         isOpen={showReport}
         onClose={() => setShowReport(false)}
       />
+
+      {showAbandonModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Abandon Session?</h2>
+            <p className="text-gray-600 mb-6">
+              The current session will be ended and deleted. Any radiograms will be preserved. Station information will not be affected.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowAbandonModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAbandon}
+                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium"
+              >
+                Abandon Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
