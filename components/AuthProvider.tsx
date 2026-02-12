@@ -17,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   emailVerified: boolean;
   refreshProfile: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   emailVerified: false,
   refreshProfile: async () => {},
+  refreshUser: async () => {},
 });
 
 export function useAuth() {
@@ -41,6 +43,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const userProfile = await getUserProfile(user.uid);
       setProfile(userProfile);
+    }
+  };
+
+  const refreshUser = async () => {
+    if (user) {
+      await user.reload();
+      const isPasswordProvider = user.providerData.some(
+        (p) => p.providerId === 'password'
+      );
+      setEmailVerified(isPasswordProvider ? user.emailVerified : true);
     }
   };
 
@@ -101,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, emailVerified, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, emailVerified, refreshProfile, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
