@@ -30,7 +30,7 @@ import { generateRadiogram } from '@/lib/radiogram';
 import SessionSetup from '@/components/SessionSetup';
 import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
-import TrafficCounter from '@/components/TrafficCounter';
+import SessionSummary from '@/components/SessionSummary';
 import RadiogramList from '@/components/RadiogramList';
 import Checklist from '@/components/Checklist';
 import ReportGenerator from '@/components/ReportGenerator';
@@ -813,16 +813,34 @@ function NetPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 space-y-2">
+          {/* Row 1: Net Session + Session Summary */}
+          <div className="lg:col-span-2">
             <SessionSetup
               onCreateSession={handleCreateSession}
               existingSession={session}
               onUpdateSession={handleUpdateSession}
               onShowReport={() => setShowReport(true)}
             />
+          </div>
 
-            {session && (
-              <>
+          {session && (
+            <div className="lg:self-stretch">
+              <SessionSummary
+                stationCount={session.checkIns.length}
+                reported={session.trafficReported}
+                cleared={session.trafficCleared}
+                onReportedChange={handleTrafficReportedChange}
+                onClearedChange={handleTrafficClearedChange}
+                startTime={session.startTime}
+                endTime={session.endTime}
+              />
+            </div>
+          )}
+
+          {/* Row 2: Check In + Checklist */}
+          {session && (
+            <>
+              <div className="lg:col-span-2 space-y-2">
                 <CheckInForm
                   ref={checkInFormRef}
                   onCheckIn={handleCheckIn}
@@ -841,39 +859,31 @@ function NetPage() {
                   lastAcknowledged={session.lastAcknowledged}
                   onSetLastAcknowledged={handleSetLastAcknowledged}
                 />
-              </>
-            )}
-          </div>
+              </div>
 
-          {session && (
-            <div className="space-y-4">
-              <TrafficCounter
-                reported={session.trafficReported}
-                cleared={session.trafficCleared}
-                onReportedChange={handleTrafficReportedChange}
-                onClearedChange={handleTrafficClearedChange}
-              />
-              <Checklist
-                checkIns={session.checkIns}
-                trafficItems={session.trafficItems || []}
-                checkedAnnouncements={session.checkedAnnouncements || []}
-                checkedSecure={session.checkedSecure || []}
-                onAddTrafficItem={handleAddTrafficItem}
-                onToggleTrafficItem={handleToggleTrafficItem}
-                onDeleteTrafficItem={handleDeleteTrafficItem}
-                onToggleAnnouncement={handleToggleAnnouncement}
-                onToggleSecure={handleToggleSecure}
-                addingTrafficFor={addingTrafficFor}
-                onAddingTrafficForChange={setAddingTrafficFor}
-                onTrafficEntryDone={handleTrafficEntryDone}
-              />
-              <RadiogramList
-                radiograms={session.radiograms || []}
-                onSave={handleSaveRadiogram}
-                onDelete={handleDeleteRadiogram}
-                dispositionMethods={profile?.dispositionMethods}
-              />
-            </div>
+              <div className="space-y-4">
+                <Checklist
+                  checkIns={session.checkIns}
+                  trafficItems={session.trafficItems || []}
+                  checkedAnnouncements={session.checkedAnnouncements || []}
+                  checkedSecure={session.checkedSecure || []}
+                  onAddTrafficItem={handleAddTrafficItem}
+                  onToggleTrafficItem={handleToggleTrafficItem}
+                  onDeleteTrafficItem={handleDeleteTrafficItem}
+                  onToggleAnnouncement={handleToggleAnnouncement}
+                  onToggleSecure={handleToggleSecure}
+                  addingTrafficFor={addingTrafficFor}
+                  onAddingTrafficForChange={setAddingTrafficFor}
+                  onTrafficEntryDone={handleTrafficEntryDone}
+                />
+                <RadiogramList
+                  radiograms={session.radiograms || []}
+                  onSave={handleSaveRadiogram}
+                  onDelete={handleDeleteRadiogram}
+                  dispositionMethods={profile?.dispositionMethods}
+                />
+              </div>
+            </>
           )}
         </div>
       </main>
