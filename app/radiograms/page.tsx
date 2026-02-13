@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { getAllSessions, updateSession } from '@/lib/firestore';
 import { NetSession, Radiogram, NetReport } from '@/types';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, deleteField } from 'firebase/firestore';
 import ReadOnlyRadiogram from '@/components/ReadOnlyRadiogram';
 import RadiogramForm from '@/components/RadiogramForm';
 
@@ -106,6 +106,7 @@ export default function RadiogramsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedItem, setSelectedItem] = useState<RadiogramListItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<RadiogramListItem | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !emailVerified)) {
@@ -200,6 +201,42 @@ export default function RadiogramsPage() {
         ));
       }
     }
+  };
+
+  const handleDeleteItem = async () => {
+    if (!user || !deleteTarget) return;
+
+    const session = sessions.find((s) => s.id === deleteTarget.sessionId);
+    if (!session) return;
+
+    if (deleteTarget.type === 'Radiogram' && deleteTarget.radiogram) {
+      const updatedRadiograms = (session.radiograms || []).filter(
+        (r) => r.id !== deleteTarget.radiogram!.id
+      );
+      const success = await updateSession(user.uid, deleteTarget.sessionId, {
+        radiograms: updatedRadiograms,
+      });
+      if (success) {
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === deleteTarget.sessionId ? { ...s, radiograms: updatedRadiograms } : s
+          )
+        );
+      }
+    } else if (deleteTarget.type === 'Net Report') {
+      const success = await updateSession(user.uid, deleteTarget.sessionId, {
+        report: deleteField(),
+      } as unknown as Partial<NetSession>);
+      if (success) {
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === deleteTarget.sessionId ? { ...s, report: undefined } : s
+          )
+        );
+      }
+    }
+
+    setDeleteTarget(null);
   };
 
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
@@ -301,6 +338,7 @@ export default function RadiogramsPage() {
                   >
                     Disposition{sortArrow('disposition')}
                   </th>
+                  <th className="py-2 w-8"></th>
                 </tr>
               </thead>
               <tbody>
@@ -316,6 +354,17 @@ export default function RadiogramsPage() {
                     <td className="py-2 pr-4 font-mono">{item.stationOfOrigin}</td>
                     <td className="py-2 pr-4 truncate max-w-xs">{item.addresseePreview}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{item.disposition}</td>
+                    <td className="py-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
+                        className="text-slate-400 hover:text-red-600 p-1"
+                        title={`Delete ${item.type.toLowerCase()}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                          <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.519.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -345,6 +394,34 @@ export default function RadiogramsPage() {
         onSave={handleSaveRadiogram}
         dispositionMethods={profile?.dispositionMethods}
       />
+
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">
+              Delete {deleteTarget.type}?
+            </h2>
+            <p className="text-gray-600 mb-6">
+              This will permanently delete {deleteTarget.type === 'Radiogram' ? 'radiogram' : 'net report'}{' '}
+              <strong>{deleteTarget.number}</strong> from <strong>{deleteTarget.stationOfOrigin}</strong>.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteItem}
+                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

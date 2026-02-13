@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { getAllSessions } from '@/lib/firestore';
+import { getAllSessions, deleteSession } from '@/lib/firestore';
 import { NetSession } from '@/types';
 
 type SortColumn = 'date' | 'startTime' | 'endTime' | 'netName' | 'ncs' | 'ancs' | 'duration' | 'stations' | 'trafficReported' | 'trafficCleared';
@@ -49,6 +49,7 @@ export default function SessionsPage() {
   const [fetching, setFetching] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [deleteTarget, setDeleteTarget] = useState<NetSession | null>(null);
 
   useEffect(() => {
     if (!loading && (!user || !emailVerified)) {
@@ -126,6 +127,15 @@ export default function SessionsPage() {
     return sortDirection === 'asc' ? ' ↑' : ' ↓';
   };
 
+  const handleDeleteSession = async () => {
+    if (!user || !deleteTarget?.id) return;
+    const success = await deleteSession(user.uid, deleteTarget.id);
+    if (success) {
+      setSessions((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+    }
+    setDeleteTarget(null);
+  };
+
   if (loading || !user) {
     return null;
   }
@@ -186,6 +196,7 @@ export default function SessionsPage() {
                   <th className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap" onClick={() => handleSort('duration')}>
                     Duration{sortArrow('duration')}
                   </th>
+                  <th className="py-2 w-8"></th>
                 </tr>
               </thead>
               <tbody>
@@ -211,6 +222,17 @@ export default function SessionsPage() {
                     <td className="py-2 pr-4 whitespace-nowrap">
                       {s.endTime ? formatDuration(computeDurationMinutes(s)) : 'Active'}
                     </td>
+                    <td className="py-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(s); }}
+                        className="text-slate-400 hover:text-red-600 p-1"
+                        title="Delete session"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                          <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.519.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -218,6 +240,32 @@ export default function SessionsPage() {
           </div>
         )}
       </main>
+
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Delete Session?</h2>
+            <p className="text-gray-600 mb-6">
+              This will permanently delete the session <strong>{deleteTarget.netName}</strong> from{' '}
+              <strong>{deleteTarget.date.toDate().toLocaleDateString()}</strong> at <strong>{deleteTarget.startTime}</strong>, including all check-ins, radiograms, and reports.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSession}
+                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
