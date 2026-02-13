@@ -48,6 +48,19 @@ export default function Home() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [bgUrl, setBgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/login-background')
+      .then((res) => {
+        if (res.ok) return res.blob();
+        return null;
+      })
+      .then((blob) => {
+        if (blob) setBgUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!loading && user && emailVerified) {
@@ -149,10 +162,15 @@ export default function Home() {
     clearMessages();
   };
 
+  const bgStyle = bgUrl
+    ? { backgroundImage: `url(${bgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : {};
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-slate-600">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={bgStyle}>
+        {bgUrl && <div className="absolute inset-0 bg-black/40" />}
+        <div className="text-lg text-slate-600 relative">Loading...</div>
       </div>
     );
   }
@@ -160,8 +178,9 @@ export default function Home() {
   // Email verification screen
   if (view === 'verify' && user) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+      <div className="flex-1 flex items-center justify-center relative" style={bgStyle}>
+        {bgUrl && <div className="absolute inset-0 bg-black/40" />}
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 relative z-10">
           <h1 className="text-3xl font-bold text-center mb-2">NetLogger</h1>
           <h2 className="text-lg font-semibold text-center mb-4">Verify Your Email</h2>
           <p className="text-slate-600 text-center mb-4">
@@ -213,8 +232,9 @@ export default function Home() {
   // Forgot password view
   if (view === 'forgot') {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+      <div className="flex-1 flex items-center justify-center relative" style={bgStyle}>
+        {bgUrl && <div className="absolute inset-0 bg-black/40" />}
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 relative z-10">
           <h1 className="text-3xl font-bold text-center mb-2">NetLogger</h1>
           <h2 className="text-lg font-semibold text-center mb-4">Reset Password</h2>
           <p className="text-slate-600 text-center mb-6">
@@ -269,8 +289,9 @@ export default function Home() {
 
   // Main auth view (sign in / sign up tabs)
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+    <div className="flex-1 flex items-center justify-center relative" style={bgStyle}>
+      {bgUrl && <div className="absolute inset-0 bg-black/40" />}
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 relative z-10">
         <h1 className="text-3xl font-bold text-center mb-2">NetLogger</h1>
         <p className="text-slate-600 text-center mb-6">
           Amateur radio net logging made easy
