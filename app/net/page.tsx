@@ -46,7 +46,7 @@ export default function NetPageWrapper() {
 }
 
 function NetPage() {
-  const { user, profile, loading, emailVerified } = useAuth();
+  const { user, profile, loading, emailVerified, photoURL } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionIdParam = searchParams.get('session');
@@ -789,12 +789,6 @@ function NetPage() {
             >
               Radiograms
             </Link>
-            <Link
-              href="/settings"
-              className="text-cyan-700 hover:text-cyan-900 text-sm"
-            >
-              Settings
-            </Link>
             {session && (
               <button
                 onClick={handleNewSession}
@@ -809,6 +803,15 @@ function NetPage() {
             >
               Sign Out
             </button>
+            <Link href="/settings" title="Settings">
+              <img
+                src={photoURL || '/profile-head.png'}
+                alt="Settings"
+                className="w-7 h-7 rounded-full object-cover border border-slate-200"
+                referrerPolicy="no-referrer"
+                onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
+              />
+            </Link>
           </div>
         </div>
       </header>

@@ -16,6 +16,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   emailVerified: boolean;
+  photoURL: string | null;
   refreshProfile: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   emailVerified: false,
+  photoURL: null,
   refreshProfile: async () => {},
   refreshUser: async () => {},
 });
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [cachedPhotoURL, setCachedPhotoURL] = useState<string | null>(null);
 
   const refreshProfile = async () => {
     if (user) {
@@ -112,8 +115,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe?.();
   }, []);
 
+  // Fetch and cache user photo as a blob URL to avoid repeated requests to Google
+  useEffect(() => {
+    const remoteURL = user?.photoURL
+      || user?.providerData?.find((p) => p.providerId === 'google.com')?.photoURL
+      || null;
+
+    if (!remoteURL) {
+      setCachedPhotoURL(null);
+      return;
+    }
+
+    let revoked = false;
+    fetch(remoteURL, { referrerPolicy: 'no-referrer' })
+      .then((res) => {
+        if (res.ok) return res.blob();
+        return null;
+      })
+      .then((blob) => {
+        if (blob && !revoked) {
+          setCachedPhotoURL(URL.createObjectURL(blob));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      revoked = true;
+    };
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, emailVerified, refreshProfile, refreshUser }}>
+    <AuthContext.Provider value={{ user, profile, loading, emailVerified, photoURL: cachedPhotoURL, refreshProfile, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
