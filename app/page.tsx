@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import ReactMarkdown from 'react-markdown';
 import {
   signInWithGoogle,
   signInWithEmail,
@@ -49,6 +50,7 @@ export default function Home() {
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [bgUrl, setBgUrl] = useState<string | null>(null);
+  const [bannerContent, setBannerContent] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/login-background')
@@ -58,6 +60,16 @@ export default function Home() {
       })
       .then((blob) => {
         if (blob) setBgUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => {});
+
+    fetch('/api/login-banner')
+      .then((res) => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (data?.content) setBannerContent(data.content);
       })
       .catch(() => {});
   }, []);
@@ -225,6 +237,11 @@ export default function Home() {
             </button>
           </div>
         </div>
+        {bannerContent && (
+          <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900">
+            {bannerContent}
+          </div>
+        )}
       </div>
     );
   }
@@ -283,6 +300,11 @@ export default function Home() {
             Back to Sign In
           </button>
         </div>
+        {bannerContent && (
+          <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900">
+            {bannerContent}
+          </div>
+        )}
       </div>
     );
   }
@@ -458,6 +480,11 @@ export default function Home() {
           Track check-ins, manage traffic, and generate net reports
         </p>
       </div>
+      {bannerContent && (
+        <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900 prose prose-sm prose-amber">
+          <ReactMarkdown>{bannerContent}</ReactMarkdown>
+        </div>
+      )}
     </div>
   );
 }
