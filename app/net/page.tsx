@@ -57,6 +57,7 @@ function NetPage() {
   const [showReport, setShowReport] = useState(false);
   const [addingTrafficFor, setAddingTrafficFor] = useState<string | null>(null);
   const [showAbandonModal, setShowAbandonModal] = useState(false);
+  const [sessionDefaults, setSessionDefaults] = useState<{ netName: string; startTime: string } | undefined>();
   const checkInFormRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!loading && (!user || !emailVerified)) {
@@ -95,6 +96,15 @@ function NetPage() {
         if (callsigns.length > 0) {
           const stationMap = await getStations(user.uid, callsigns);
           setStations(stationMap);
+        }
+      } else {
+        // No active session — pre-fill defaults from most recent session
+        const recent = await getRecentSessions(user.uid, 1);
+        if (recent.length > 0) {
+          setSessionDefaults({
+            netName: recent[0].netName || '',
+            startTime: recent[0].startTime || '',
+          });
         }
       }
     };
@@ -820,6 +830,7 @@ function NetPage() {
               existingSession={session}
               onUpdateSession={handleUpdateSession}
               onShowReport={() => setShowReport(true)}
+              defaults={sessionDefaults}
             />
           </div>
 

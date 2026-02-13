@@ -9,6 +9,7 @@ interface SessionSetupProps {
   existingSession?: NetSession | null;
   onUpdateSession?: (updates: Partial<NetSession>) => void;
   onShowReport?: () => void;
+  defaults?: { netName: string; startTime: string };
 }
 
 export default function SessionSetup({
@@ -16,8 +17,9 @@ export default function SessionSetup({
   existingSession,
   onUpdateSession,
   onShowReport,
+  defaults,
 }: SessionSetupProps) {
-  const [netName, setNetName] = useState(existingSession?.netName || '');
+  const [netName, setNetName] = useState(existingSession?.netName || defaults?.netName || '');
   const [date, setDate] = useState(() => {
     if (existingSession?.date) {
       return existingSession.date.toDate().toISOString().split('T')[0];
@@ -25,7 +27,7 @@ export default function SessionSetup({
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   });
-  const [startTime, setStartTime] = useState(existingSession?.startTime || '');
+  const [startTime, setStartTime] = useState(existingSession?.startTime || defaults?.startTime || '');
   const [endTime, setEndTime] = useState(existingSession?.endTime || '');
 
   // Sync state when existingSession loads or changes (e.g. navigating from /sessions)
@@ -37,6 +39,14 @@ export default function SessionSetup({
       setEndTime(existingSession.endTime || '');
     }
   }, [existingSession]);
+
+  // Apply defaults from most recent session (when no existing session)
+  useEffect(() => {
+    if (!existingSession && defaults) {
+      setNetName((prev) => prev || defaults.netName);
+      setStartTime((prev) => prev || defaults.startTime);
+    }
+  }, [existingSession, defaults]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
