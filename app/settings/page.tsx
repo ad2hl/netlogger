@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { updateUserProfile, changePassword } from '@/lib/auth';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
+import HeaderBanner from '@/components/HeaderBanner';
 
 export default function SettingsPage() {
   const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
@@ -138,7 +139,10 @@ export default function SettingsPage() {
     <div>
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">Settings</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-slate-900">Settings</h1>
+            <HeaderBanner />
+          </div>
           <Link
             href="/net"
             className="text-cyan-700 hover:text-cyan-900 text-sm"

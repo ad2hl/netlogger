@@ -27,6 +27,7 @@ import {
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
+import HeaderBanner from '@/components/HeaderBanner';
 import SessionSetup from '@/components/SessionSetup';
 import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
@@ -766,7 +767,10 @@ function NetPage() {
     <div>
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
+            <HeaderBanner />
+          </div>
           <div className="flex items-center gap-4">
             {profile?.callsign && (
               <span className="font-mono text-slate-600">
