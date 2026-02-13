@@ -132,7 +132,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               value={input}
               onChange={(e) => setInput(e.target.value.toUpperCase())}
               onKeyDown={handleKeyDown}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
               placeholder="e.g., AD2HL/NC/T or ?2HL to search"
               disabled={disabled || isSubmitting}
               autoComplete="off"
@@ -151,7 +151,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
           <button
             type="submit"
             disabled={disabled || isSubmitting || !input.trim() || isSearchMode}
-            className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? '...' : 'Add'}
           </button>

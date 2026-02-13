@@ -275,7 +275,7 @@ export default function RadiogramsPage() {
           <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
           <Link
             href="/net"
-            className="text-indigo-700 hover:text-indigo-800 text-sm"
+            className="text-cyan-700 hover:text-cyan-900 text-sm"
           >
             Back to Net
           </Link>
@@ -287,7 +287,7 @@ export default function RadiogramsPage() {
           <h2 className="text-lg font-semibold text-slate-900">Radiograms</h2>
           <button
             onClick={() => setIsFormOpen(true)}
-            className="bg-indigo-700 text-white py-1 px-3 rounded-md hover:bg-indigo-800 text-sm"
+            className="bg-amber-700 text-white py-1 px-3 rounded-md hover:bg-amber-900 text-sm"
           >
             New Radiogram
           </button>

@@ -100,7 +100,7 @@ export default function SessionSetup({
               type="text"
               value={netName}
               onChange={(e) => setNetName(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
               placeholder="e.g., SDN"
               required
             />
@@ -114,7 +114,7 @@ export default function SessionSetup({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
               required
             />
           </div>
@@ -127,7 +127,7 @@ export default function SessionSetup({
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
               required
             />
           </div>
@@ -140,7 +140,7 @@ export default function SessionSetup({
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function SessionSetup({
         <div className={`grid gap-2 ${existingSession ? 'grid-cols-3' : 'grid-cols-1'}`}>
           <button
             type="submit"
-            className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
             {existingSession ? 'Update Session' : 'Start Session'}
           </button>
@@ -159,7 +159,7 @@ export default function SessionSetup({
                 <button
                   type="button"
                   onClick={handleEndNet}
-                  className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
                   End Session
                 </button>
@@ -169,7 +169,7 @@ export default function SessionSetup({
               <button
                 type="button"
                 onClick={onShowReport}
-                className="bg-slate-600 text-white py-2 px-4 rounded-md hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500"
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
               >
                 Show Report
               </button>

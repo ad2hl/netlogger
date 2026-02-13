@@ -147,7 +147,7 @@ export default function SessionsPage() {
           <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
           <Link
             href="/net"
-            className="text-indigo-700 hover:text-indigo-800 text-sm"
+            className="text-cyan-700 hover:text-cyan-900 text-sm"
           >
             Back to Net
           </Link>

@@ -206,7 +206,7 @@ export default function Home() {
             <button
               onClick={handleCheckVerification}
               disabled={submitting}
-              className="w-full bg-blue-600 text-white rounded-lg py-3 px-4 hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full bg-cyan-700 text-white rounded-lg py-3 px-4 hover:bg-cyan-900 transition-colors disabled:opacity-50"
             >
               I&apos;ve Verified My Email
             </button>
@@ -270,7 +270,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-blue-600 text-white rounded-lg py-3 px-4 hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full bg-cyan-700 text-white rounded-lg py-3 px-4 hover:bg-cyan-900 transition-colors disabled:opacity-50"
             >
               Send Reset Email
             </button>
@@ -366,7 +366,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-blue-600 text-white rounded-lg py-3 px-4 hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full bg-cyan-700 text-white rounded-lg py-3 px-4 hover:bg-cyan-900 transition-colors disabled:opacity-50"
             >
               Sign In
             </button>
@@ -428,7 +428,7 @@ export default function Home() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full bg-blue-600 text-white rounded-lg py-3 px-4 hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full bg-cyan-700 text-white rounded-lg py-3 px-4 hover:bg-cyan-900 transition-colors disabled:opacity-50"
             >
               Create Account
             </button>

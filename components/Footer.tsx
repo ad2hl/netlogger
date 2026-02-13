@@ -36,7 +36,7 @@ export default function Footer() {
               href="https://www.qrz.com/db/AD2HL"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-indigo-700 hover:text-indigo-800"
+              className="text-cyan-700 hover:text-cyan-900"
             >
               AD2HL
             </a>
@@ -44,7 +44,7 @@ export default function Footer() {
           {aboutContent && (
             <button
               onClick={() => setShowAbout(true)}
-              className="text-indigo-700 hover:text-indigo-800"
+              className="text-cyan-700 hover:text-cyan-900"
             >
               About this website
             </button>
@@ -52,7 +52,7 @@ export default function Footer() {
           {summaryContent && (
             <button
               onClick={() => setShowPrivacy(true)}
-              className="text-indigo-700 hover:text-indigo-800"
+              className="text-cyan-700 hover:text-cyan-900"
             >
               Privacy Policy
             </button>
