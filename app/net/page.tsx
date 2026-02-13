@@ -833,6 +833,8 @@ function NetPage() {
                 onClearedChange={handleTrafficClearedChange}
                 startTime={session.startTime}
                 endTime={session.endTime}
+                ncCallsign={session.checkIns.find(c => c.tags.includes('NC'))?.callsign ?? null}
+                ancCallsigns={session.checkIns.filter(c => c.tags.includes('ANC')).map(c => c.callsign)}
               />
             </div>
           )}
