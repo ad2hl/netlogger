@@ -10,6 +10,8 @@ interface SessionSummaryProps {
   onClearedChange: (value: number) => void;
   startTime: string | null;
   endTime: string | null;
+  ncCallsign: string | null;
+  ancCallsigns: string[];
 }
 
 function formatDuration(startTime: string | null, endTime: string | null): string {
@@ -32,10 +34,30 @@ export default function SessionSummary({
   onClearedChange,
   startTime,
   endTime,
+  ncCallsign,
+  ancCallsigns,
 }: SessionSummaryProps) {
   return (
     <div className="bg-white rounded-lg shadow p-3 h-full flex flex-col">
       <h2 className="text-lg font-semibold mb-auto">Session Summary</h2>
+
+      {/* NC / ANC row */}
+      {(ncCallsign || ancCallsigns.length > 0) && (
+        <div className="flex items-center gap-4 text-sm mt-4 mb-3">
+          {ncCallsign && (
+            <span>
+              <span className="font-medium text-slate-600">NC:</span>{' '}
+              <span className="font-mono font-bold">{ncCallsign}</span>
+            </span>
+          )}
+          {ancCallsigns.length > 0 && (
+            <span>
+              <span className="font-medium text-slate-600">ANC:</span>{' '}
+              <span className="font-mono font-bold">{ancCallsigns.join(', ')}</span>
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="space-y-3">
         {/* Stations row */}
