@@ -116,8 +116,8 @@ export default function StationCard({
           onClick={onSetBookmark}
           className={`w-4 flex-shrink-0 text-center transition-opacity ${
             isBookmarked
-              ? 'text-indigo-700 opacity-100'
-              : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-indigo-500'
+              ? 'text-cyan-700 opacity-100'
+              : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-sky-500'
           }`}
           title={isBookmarked ? 'Last acknowledged' : 'Mark as last acknowledged'}
         >
@@ -137,13 +137,13 @@ export default function StationCard({
             setCallsign(checkIn.callsign);
             setEditingField(null);
           })}
-          className="font-mono font-semibold text-sm w-20 flex-shrink-0 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
+          className="font-mono font-semibold text-sm w-20 flex-shrink-0 px-1 border-b border-sky-500 focus:outline-none bg-transparent"
           autoFocus
         />
       ) : (
         <span
           onClick={() => setEditingField('callsign')}
-          className="font-mono font-semibold text-sm w-20 flex-shrink-0 cursor-pointer hover:text-indigo-700"
+          className="font-mono font-semibold text-sm w-20 flex-shrink-0 cursor-pointer hover:text-cyan-700"
           title="Click to edit callsign"
         >
           {checkIn.callsign}
@@ -160,14 +160,14 @@ export default function StationCard({
             setNickname(station?.nickname || '');
             setEditingField(null);
           })}
-          className="text-sm text-slate-600 w-24 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
+          className="text-sm text-slate-600 w-24 px-1 border-b border-sky-500 focus:outline-none bg-transparent"
           placeholder={station?.firstName || 'Name'}
           autoFocus
         />
       ) : (
         <span
           onClick={() => setEditingField('name')}
-          className="text-sm text-slate-600 w-24 truncate cursor-pointer hover:text-indigo-700 flex-shrink-0"
+          className="text-sm text-slate-600 w-24 truncate cursor-pointer hover:text-cyan-700 flex-shrink-0"
           title={displayName ? `Click to edit: ${displayName}` : 'Click to add name'}
         >
           {displayName || '—'}
@@ -184,7 +184,7 @@ export default function StationCard({
             setEditLocation(location);
             setEditingField(null);
           })}
-          className="text-sm text-slate-400 w-32 flex-shrink-0 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
+          className="text-sm text-slate-400 w-32 flex-shrink-0 px-1 border-b border-sky-500 focus:outline-none bg-transparent"
           placeholder="City, ST"
           autoFocus
         />
@@ -194,7 +194,7 @@ export default function StationCard({
             setEditLocation(location);
             setEditingField('location');
           }}
-          className={`text-sm w-32 truncate cursor-pointer hover:text-indigo-700 flex-shrink-0 ${location ? 'text-slate-400' : 'text-slate-300'}`}
+          className={`text-sm w-32 truncate cursor-pointer hover:text-cyan-700 flex-shrink-0 ${location ? 'text-slate-400' : 'text-slate-300'}`}
           title={location ? `Click to edit: ${location}` : 'Click to add location'}
         >
           {location || '—'}
@@ -211,14 +211,14 @@ export default function StationCard({
             setNote(station?.note || '');
             setEditingField(null);
           })}
-          className="text-sm text-slate-500 italic flex-1 min-w-0 px-1 border-b border-indigo-500 focus:outline-none bg-transparent"
+          className="text-sm text-slate-500 italic flex-1 min-w-0 px-1 border-b border-sky-500 focus:outline-none bg-transparent"
           placeholder="Note..."
           autoFocus
         />
       ) : (
         <span
           onClick={() => setEditingField('note')}
-          className={`text-sm italic flex-1 min-w-0 truncate cursor-pointer hover:text-indigo-700 ${station?.note ? 'text-slate-500' : 'text-slate-300'}`}
+          className={`text-sm italic flex-1 min-w-0 truncate cursor-pointer hover:text-cyan-700 ${station?.note ? 'text-slate-500' : 'text-slate-300'}`}
           title={station?.note ? `Click to edit: ${station.note}` : 'Click to add note'}
         >
           {station?.note || '(note)'}

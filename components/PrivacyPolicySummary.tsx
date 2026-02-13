@@ -49,14 +49,14 @@ export default function PrivacyPolicySummary({ content, fullPolicyContent, onClo
           {showFullPolicy ? (
             <button
               onClick={() => setShowFullPolicy(false)}
-              className="mt-4 text-indigo-700 hover:text-indigo-800 text-sm font-medium"
+              className="mt-4 text-cyan-700 hover:text-cyan-900 text-sm font-medium"
             >
               &larr; Back to Summary
             </button>
           ) : fullPolicyContent ? (
             <button
               onClick={() => setShowFullPolicy(true)}
-              className="mt-4 text-indigo-700 hover:text-indigo-800 text-sm font-medium"
+              className="mt-4 text-cyan-700 hover:text-cyan-900 text-sm font-medium"
             >
               View Full Privacy Policy &rarr;
             </button>

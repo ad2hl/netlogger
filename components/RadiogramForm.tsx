@@ -525,7 +525,7 @@ export default function RadiogramForm({
               <button
                 type="button"
                 onClick={handleCopy}
-                className="bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 text-sm"
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
               >
                 {copied ? 'Copied!' : 'Copy'}
               </button>
@@ -538,7 +538,7 @@ export default function RadiogramForm({
               </button>
               <button
                 type="submit"
-                className="bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 text-sm"
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
               >
                 OK
               </button>

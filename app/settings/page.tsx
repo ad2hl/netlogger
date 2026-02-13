@@ -141,7 +141,7 @@ export default function SettingsPage() {
           <h1 className="text-xl font-bold text-slate-900">Settings</h1>
           <Link
             href="/net"
-            className="text-indigo-700 hover:text-indigo-800 text-sm"
+            className="text-cyan-700 hover:text-cyan-900 text-sm"
           >
             Back to Net
           </Link>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
                   name="callsign"
                   value={formData.callsign}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                   placeholder="e.g., K3ABC"
                 />
               </div>
@@ -177,7 +177,7 @@ export default function SettingsPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   placeholder="e.g., John"
                 />
               </div>
@@ -191,7 +191,7 @@ export default function SettingsPage() {
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   placeholder="e.g., BALTIMORE MD"
                 />
               </div>
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                   name="netManagerCall"
                   value={formData.netManagerCall}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                   placeholder="e.g., W3XYZ"
                 />
               </div>
@@ -228,7 +228,7 @@ export default function SettingsPage() {
                   name="qrzUsername"
                   value={formData.qrzUsername}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   placeholder="Your QRZ username"
                 />
               </div>
@@ -242,7 +242,7 @@ export default function SettingsPage() {
                   name="qrzPassword"
                   value={formData.qrzPassword}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   placeholder={hasQrzCredentials ? 'Password saved (leave blank to keep)' : 'Your QRZ password'}
                 />
               </div>
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                       updated[index] = e.target.value;
                       setDispositionMethods(updated);
                     }}
-                    className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                   />
                   <button
                     type="button"
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                     }
                   }
                 }}
-                className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                 placeholder="New method name"
               />
               <button
@@ -328,7 +328,7 @@ export default function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="w-full bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </button>
@@ -347,7 +347,7 @@ export default function SettingsPage() {
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                     required
                   />
                 </div>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="At least 6 characters"
                     required
                   />
@@ -372,7 +372,7 @@ export default function SettingsPage() {
                     type="password"
                     value={confirmNewPassword}
                     onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                     required
                   />
                 </div>
@@ -393,7 +393,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={changingPassword}
-                className="mt-4 w-full bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="mt-4 w-full bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
               >
                 {changingPassword ? 'Changing...' : 'Change Password'}
               </button>

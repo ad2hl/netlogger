@@ -775,19 +775,19 @@ function NetPage() {
             )}
             <Link
               href="/sessions"
-              className="text-indigo-700 hover:text-indigo-800 text-sm"
+              className="text-cyan-700 hover:text-cyan-900 text-sm"
             >
               Sessions
             </Link>
             <Link
               href="/radiograms"
-              className="text-indigo-700 hover:text-indigo-800 text-sm"
+              className="text-cyan-700 hover:text-cyan-900 text-sm"
             >
               Radiograms
             </Link>
             <Link
               href="/settings"
-              className="text-indigo-700 hover:text-indigo-800 text-sm"
+              className="text-cyan-700 hover:text-cyan-900 text-sm"
             >
               Settings
             </Link>

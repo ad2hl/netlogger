@@ -183,7 +183,7 @@ export default function Checklist({
                     <span className="font-mono font-semibold">{callsign}</span>
                     <button
                       onClick={() => handleAddClick(callsign)}
-                      className="text-indigo-700 hover:text-indigo-800 text-xs px-1"
+                      className="text-cyan-700 hover:text-cyan-900 text-xs px-1"
                       title="Add traffic destination"
                     >
                       [+]

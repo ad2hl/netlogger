@@ -204,7 +204,7 @@ export default function ReportGenerator({
             {radiogram && (
               <button
                 onClick={handleCopy}
-                className="bg-indigo-700 text-white py-1 px-3 rounded-md hover:bg-indigo-800 text-sm"
+                className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
               >
                 {copied ? 'Copied!' : 'Copy'}
               </button>
