@@ -44,7 +44,7 @@ function formatDuration(minutes: number): string {
 }
 
 export default function SessionsPage() {
-  const { user, loading, emailVerified } = useAuth();
+  const { user, loading, emailVerified, photoURL } = useAuth();
   const router = useRouter();
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -149,12 +149,23 @@ export default function SessionsPage() {
             <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
             <HeaderBanner />
           </div>
-          <Link
-            href="/net"
-            className="text-cyan-700 hover:text-cyan-900 text-sm"
-          >
-            Back to Net
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/net"
+              className="text-cyan-700 hover:text-cyan-900 text-sm"
+            >
+              Back to Net
+            </Link>
+            <Link href="/settings" title="Settings">
+              <img
+                src={photoURL || '/profile-head.png'}
+                alt="Settings"
+                className="w-7 h-7 rounded-full object-cover border border-slate-200"
+                referrerPolicy="no-referrer"
+                onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
+              />
+            </Link>
+          </div>
         </div>
       </header>
 

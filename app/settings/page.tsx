@@ -9,7 +9,7 @@ import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
 
 export default function SettingsPage() {
-  const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
+  const { user, profile, loading, emailVerified, photoURL, refreshProfile } = useAuth();
   const router = useRouter();
 
   const [formData, setFormData] = useState<Partial<UserProfile>>({
@@ -143,12 +143,21 @@ export default function SettingsPage() {
             <h1 className="text-xl font-bold text-slate-900">Settings</h1>
             <HeaderBanner />
           </div>
-          <Link
-            href="/net"
-            className="text-cyan-700 hover:text-cyan-900 text-sm"
-          >
-            Back to Net
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/net"
+              className="text-cyan-700 hover:text-cyan-900 text-sm"
+            >
+              Back to Net
+            </Link>
+            <img
+              src={photoURL || '/profile-head.png'}
+              alt="Profile"
+              className="w-7 h-7 rounded-full object-cover border border-slate-200"
+              referrerPolicy="no-referrer"
+              onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
+            />
+          </div>
         </div>
       </header>
 
