@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getQRZSession, lookupCallsign } from '@/lib/qrz';
 import { decrypt, isEncrypted } from '@/lib/crypto';
+import { verifyAuth } from '@/lib/auth-api';
 
 const sessionCache = new Map<string, { key: string; expiry: number }>();
 
@@ -36,6 +37,9 @@ async function getOrCreateSession(username: string, password: string): Promise<s
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const body = await request.json();
     const { callsign, username, password } = body;

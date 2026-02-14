@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { encrypt } from '@/lib/crypto';
+import { verifyAuth } from '@/lib/auth-api';
 
 export async function POST(request: NextRequest) {
+  const authResult = await verifyAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const { password } = await request.json();
 
