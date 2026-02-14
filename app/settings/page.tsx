@@ -71,9 +71,13 @@ export default function SettingsPage() {
 
     if (dataToSave.qrzPassword) {
       try {
+        const token = await user!.getIdToken();
         const res = await fetch('/api/credentials', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
           body: JSON.stringify({ password: dataToSave.qrzPassword }),
         });
         if (!res.ok) throw new Error('Encryption failed');

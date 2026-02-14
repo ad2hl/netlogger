@@ -197,9 +197,13 @@ function NetPage() {
       }
 
       try {
+        const token = await user.getIdToken();
         const response = await fetch('/api/qrz', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
           body: JSON.stringify({
             callsign,
             username: profile.qrzUsername,
