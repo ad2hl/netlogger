@@ -16,6 +16,8 @@ import {
 type Tab = 'signin' | 'signup';
 type View = 'auth' | 'forgot' | 'verify';
 
+const signupDisabled = process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true';
+
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
     <path
@@ -320,28 +322,36 @@ export default function Home() {
         </p>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 mb-6">
-          <button
-            onClick={() => { setTab('signin'); clearMessages(); }}
-            className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'signin'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => { setTab('signup'); clearMessages(); }}
-            className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'signup'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
+        {signupDisabled ? (
+          <div className="border-b border-slate-200 mb-6 pb-3">
+            <span className="text-sm font-medium text-blue-600 border-b-2 border-blue-600 pb-3">
+              Sign In
+            </span>
+          </div>
+        ) : (
+          <div className="flex border-b border-slate-200 mb-6">
+            <button
+              onClick={() => { setTab('signin'); clearMessages(); }}
+              className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
+                tab === 'signin'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => { setTab('signup'); clearMessages(); }}
+              className={`flex-1 pb-3 text-sm font-medium border-b-2 transition-colors ${
+                tab === 'signup'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -457,28 +467,37 @@ export default function Home() {
           </form>
         )}
 
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 border-t border-slate-200" />
-          <span className="px-4 text-sm text-slate-400">OR</span>
-          <div className="flex-1 border-t border-slate-200" />
-        </div>
+        {/* Divider and Google Sign In - hidden when signup is disabled */}
+        {!signupDisabled && (
+          <>
+            <div className="flex items-center my-6">
+              <div className="flex-1 border-t border-slate-200" />
+              <span className="px-4 text-sm text-slate-400">OR</span>
+              <div className="flex-1 border-t border-slate-200" />
+            </div>
 
-        {/* Google Sign In */}
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={submitting}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg py-3 px-4 hover:bg-slate-50 transition-colors disabled:opacity-50"
-        >
-          <GoogleIcon />
-          <span className="text-slate-700 font-medium">
-            Sign in with Google
-          </span>
-        </button>
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg py-3 px-4 hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              <GoogleIcon />
+              <span className="text-slate-700 font-medium">
+                Sign in with Google
+              </span>
+            </button>
+          </>
+        )}
 
-        <p className="text-sm text-slate-500 text-center mt-6">
-          Track check-ins, manage traffic, and generate net reports
-        </p>
+        {signupDisabled ? (
+          <p className="text-sm text-slate-500 text-center mt-6">
+            Account creation is disabled. Contact an administrator.
+          </p>
+        ) : (
+          <p className="text-sm text-slate-500 text-center mt-6">
+            Track check-ins, manage traffic, and generate net reports
+          </p>
+        )}
       </div>
       {bannerContent && (
         <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900 prose prose-sm prose-amber">

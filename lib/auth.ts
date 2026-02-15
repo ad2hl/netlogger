@@ -82,6 +82,9 @@ export async function signUpWithEmail(
   email: string,
   password: string
 ): Promise<{ user?: User; error?: string }> {
+  if (process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true') {
+    return { error: 'Account creation is disabled. Contact an administrator.' };
+  }
   try {
     const result = await createUserWithEmailAndPassword(
       getFirebaseAuth(),
