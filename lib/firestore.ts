@@ -153,6 +153,13 @@ export async function addCheckIn(
     await updateDoc(sessionRef, {
       checkIns: [...currentCheckIns, checkIn],
     });
+
+    // Update lastSeen on the station document
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', checkIn.callsign.toUpperCase());
+    await updateDoc(stationRef, { lastSeen: Timestamp.now() }).catch(() => {
+      // Station doc may not exist yet — ignore
+    });
+
     return true;
   } catch (error) {
     console.error('Error adding check-in:', error);
