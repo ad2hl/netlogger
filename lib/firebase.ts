@@ -35,6 +35,8 @@ function ensureInitialized() {
         provider: new ReCaptchaEnterpriseProvider(siteKey),
         isTokenAutoRefreshEnabled: true,
       });
+    } else {
+      console.warn('App Check: NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY is not set. API requests will not include App Check tokens.');
     }
   }
 }
