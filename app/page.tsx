@@ -12,6 +12,7 @@ import {
   resendVerificationEmail,
   signOut,
 } from '@/lib/auth';
+import { apiFetch } from '@/lib/api-fetch';
 
 type Tab = 'signin' | 'signup';
 type View = 'auth' | 'forgot' | 'verify';
@@ -55,7 +56,7 @@ export default function Home() {
   const [bannerContent, setBannerContent] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/login-background')
+    apiFetch('/api/login-background')
       .then((res) => {
         if (res.ok) return res.blob();
         return null;
@@ -65,7 +66,7 @@ export default function Home() {
       })
       .catch(() => {});
 
-    fetch('/api/login-banner')
+    apiFetch('/api/login-banner')
       .then((res) => {
         if (res.ok) return res.json();
         return null;

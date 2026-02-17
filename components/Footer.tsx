@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import PrivacyPolicySummary from './PrivacyPolicySummary';
+import { apiFetch } from '@/lib/api-fetch';
 
 export default function Footer() {
   const [aboutContent, setAboutContent] = useState<string | null>(null);
@@ -12,15 +13,15 @@ export default function Footer() {
   const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
-    fetch('/api/about')
+    apiFetch('/api/about')
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.content) setAboutContent(data.content); })
       .catch(() => {});
-    fetch('/api/privacy-policy-summary')
+    apiFetch('/api/privacy-policy-summary')
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.content) setSummaryContent(data.content); })
       .catch(() => {});
-    fetch('/api/privacy-policy')
+    apiFetch('/api/privacy-policy')
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.content) setFullPolicyContent(data.content); })
       .catch(() => {});
@@ -95,17 +96,15 @@ function AboutModal({ content, onClose }: { content: string; onClose: () => void
       onClick={handleOverlayClick}
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-end px-6 py-2">
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-        <div className="px-6 py-4 overflow-y-auto prose prose-sm max-w-none">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col relative">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-4 text-slate-400 hover:text-slate-600 text-2xl leading-none"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <div className="px-6 pt-4 pb-4 overflow-y-auto prose prose-sm max-w-none">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getQRZSession, lookupCallsign } from '@/lib/qrz';
 import { decrypt, isEncrypted } from '@/lib/crypto';
 import { verifyAuth } from '@/lib/auth-api';
+import { verifyAppCheck } from '@/lib/appcheck-api';
 
 const sessionCache = new Map<string, { key: string; expiry: number }>();
 
@@ -37,6 +38,9 @@ async function getOrCreateSession(username: string, password: string): Promise<s
 }
 
 export async function POST(request: NextRequest) {
+  const appCheckResult = await verifyAppCheck(request);
+  if (appCheckResult !== true) return appCheckResult;
+
   const authResult = await verifyAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 

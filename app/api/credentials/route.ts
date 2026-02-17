@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { encrypt } from '@/lib/crypto';
 import { verifyAuth } from '@/lib/auth-api';
+import { verifyAppCheck } from '@/lib/appcheck-api';
 
 export async function POST(request: NextRequest) {
+  const appCheckResult = await verifyAppCheck(request);
+  if (appCheckResult !== true) return appCheckResult;
+
   const authResult = await verifyAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 

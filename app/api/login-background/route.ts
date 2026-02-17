@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { verifyAppCheck } from '@/lib/appcheck-api';
 
 const EXTENSIONS = ['png', 'jpg', 'jpeg'];
 const CONTENT_TYPES: Record<string, string> = {
@@ -9,7 +10,10 @@ const CONTENT_TYPES: Record<string, string> = {
   jpeg: 'image/jpeg',
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const appCheckResult = await verifyAppCheck(request);
+  if (appCheckResult !== true) return appCheckResult;
+
   const base = join(process.cwd(), 'content');
 
   for (const dir of ['local', 'default']) {

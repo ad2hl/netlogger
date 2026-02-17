@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 let app: App;
 let auth: Auth;
 
-function getAdminApp(): App {
+export function getAdminApp(): App {
   if (!app) {
     const existingApps = getApps();
     if (existingApps.length > 0) {

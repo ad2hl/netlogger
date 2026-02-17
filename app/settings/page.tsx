@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { updateUserProfile, changePassword } from '@/lib/auth';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
+import { apiFetch } from '@/lib/api-fetch';
 
 export default function SettingsPage() {
   const { user, profile, loading, emailVerified, photoURL, refreshProfile } = useAuth();
@@ -72,7 +73,7 @@ export default function SettingsPage() {
     if (dataToSave.qrzPassword) {
       try {
         const token = await user!.getIdToken();
-        const res = await fetch('/api/credentials', {
+        const res = await apiFetch('/api/credentials', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

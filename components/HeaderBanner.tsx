@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { apiFetch } from '@/lib/api-fetch';
 
 export default function HeaderBanner() {
   const [content, setContent] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/header-message')
+    apiFetch('/api/header-message')
       .then((res) => {
         if (res.ok) return res.json();
         return null;

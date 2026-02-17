@@ -1,6 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { initializeAppCheck, AppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,6 +15,7 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
+let appCheck: AppCheck;
 
 function ensureInitialized() {
   if (typeof window === 'undefined') return;
@@ -21,6 +23,19 @@ function ensureInitialized() {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
     db = getFirestore(app);
+
+    const debugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN;
+    if (debugToken) {
+      (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+    }
+
+    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
+    if (siteKey) {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(siteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    }
   }
 }
 
@@ -32,4 +47,9 @@ export function getFirebaseAuth(): Auth {
 export function getFirebaseDb(): Firestore {
   ensureInitialized();
   return db;
+}
+
+export function getFirebaseAppCheck(): AppCheck | undefined {
+  ensureInitialized();
+  return appCheck;
 }

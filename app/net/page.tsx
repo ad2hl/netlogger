@@ -35,6 +35,7 @@ import SessionSummary from '@/components/SessionSummary';
 import RadiogramList from '@/components/RadiogramList';
 import Checklist from '@/components/Checklist';
 import ReportGenerator from '@/components/ReportGenerator';
+import { apiFetch } from '@/lib/api-fetch';
 
 
 export default function NetPageWrapper() {
@@ -198,7 +199,7 @@ function NetPage() {
 
       try {
         const token = await user.getIdToken();
-        const response = await fetch('/api/qrz', {
+        const response = await apiFetch('/api/qrz', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
