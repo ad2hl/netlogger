@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { NetSession, Station, UserProfile } from '@/types';
 import { generateRadiogram, RadiogramResult } from '@/lib/radiogram';
 
@@ -155,6 +155,13 @@ export default function ReportGenerator({
     await onSaveReport(messageNumber || undefined);
     setSaving(false);
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
