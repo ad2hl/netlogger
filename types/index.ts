@@ -112,6 +112,7 @@ export interface Radiogram {
   dispositionTime?: string;
   // Metadata
   savedAt?: Timestamp;
+  sessionNetName?: string;
 }
 
 // Traffic item for the checklist (e.g., KM2I -> WM2C)

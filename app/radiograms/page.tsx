@@ -16,6 +16,7 @@ interface RadiogramListItem {
   sessionId: string;
   sortDate: Date;
   displayDate: string;
+  netName: string;
   number: string;
   stationOfOrigin: string;
   addresseePreview: string;
@@ -24,7 +25,7 @@ interface RadiogramListItem {
   netReport?: NetReport;
 }
 
-type SortColumn = 'date' | 'type' | 'number' | 'stationOfOrigin' | 'addressee' | 'disposition';
+type SortColumn = 'date' | 'netName' | 'type' | 'number' | 'stationOfOrigin' | 'addressee' | 'disposition';
 
 function buildItems(sessions: NetSession[]): RadiogramListItem[] {
   const items: RadiogramListItem[] = [];
@@ -44,6 +45,7 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
           sessionId: session.id || '',
           sortDate: itemDate,
           displayDate,
+          netName: radiogram.sessionNetName ?? '',
           number: radiogram.number,
           stationOfOrigin: radiogram.stationOfOrigin,
           addresseePreview: (radiogram.address || '').split('\n')[0],
@@ -86,6 +88,7 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
         sessionId: session.id || '',
         sortDate: reportDate,
         displayDate,
+        netName: session.netName,
         number,
         stationOfOrigin,
         addresseePreview,
@@ -133,6 +136,9 @@ export default function RadiogramsPage() {
       switch (sortColumn) {
         case 'date':
           cmp = a.sortDate.getTime() - b.sortDate.getTime();
+          break;
+        case 'netName':
+          cmp = a.netName.localeCompare(b.netName);
           break;
         case 'type':
           cmp = a.type.localeCompare(b.type);
@@ -325,6 +331,12 @@ export default function RadiogramsPage() {
                   </th>
                   <th
                     className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
+                    onClick={() => handleSort('netName')}
+                  >
+                    Net Name{sortArrow('netName')}
+                  </th>
+                  <th
+                    className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => handleSort('type')}
                   >
                     Type{sortArrow('type')}
@@ -364,6 +376,7 @@ export default function RadiogramsPage() {
                     onClick={() => setSelectedItem(item)}
                   >
                     <td className="py-2 pr-4 whitespace-nowrap">{item.displayDate}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">{item.netName}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{item.type}</td>
                     <td className="py-2 pr-4 font-mono">{item.number}</td>
                     <td className="py-2 pr-4 font-mono">{item.stationOfOrigin}</td>
