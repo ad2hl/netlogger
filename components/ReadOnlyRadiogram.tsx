@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Radiogram, NetReport, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
 
@@ -289,6 +289,12 @@ function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }
 
 export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition, dispositionMethods }: ReadOnlyRadiogramProps) {
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const initDisposition = (): DispositionFields => {
     if (radiogram) {

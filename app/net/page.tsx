@@ -66,6 +66,12 @@ function NetPage() {
       router.push('/');
     }
   }, [user, loading, emailVerified, router]);
+  useEffect(() => {
+    if (!showAbandonModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowAbandonModal(false); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showAbandonModal]);
 
   // Load all stations for lookup on mount
   useEffect(() => {
