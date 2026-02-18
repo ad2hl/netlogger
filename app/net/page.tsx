@@ -541,7 +541,7 @@ function NetPage() {
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
     if (!user || !session?.id) return;
 
-    const radiogramWithTimestamp = { ...radiogram, savedAt: Timestamp.now() };
+    const radiogramWithTimestamp = { ...radiogram, savedAt: Timestamp.now(), sessionNetName: session.netName };
     const currentRadiograms = session.radiograms || [];
     const existingIndex = currentRadiograms.findIndex(r => r.id === radiogram.id);
     let updatedRadiograms: Radiogram[];
