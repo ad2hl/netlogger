@@ -35,8 +35,11 @@ Firebase Firestore with user-scoped subcollections:
 - **firestore.ts**: All database CRUD operations for stations, sessions, check-ins
 - **radiogram.ts**: Complex callsign compression algorithm for ARRL format reports. Orders output as NC → ANC → Liaisons → Regular stations. Compresses callsigns by prefix (e.g., W1AW, W1XYZ → W1AW, XYZ)
 - **auth.ts**: Firebase authentication functions
-- **auth-api.ts**: Server-side Firebase ID token verification for API routes
-- **firebase-admin.ts**: Firebase Admin SDK initialization (uses `GOOGLE_APPLICATION_CREDENTIALS`)
+- **auth-api.ts**: Server-side Firebase ID token verification for API routes (`verifyAuth`)
+- **appcheck-api.ts**: Server-side Firebase App Check token verification (`verifyAppCheck`)
+- **api-fetch.ts**: Client-side fetch wrapper that attaches App Check tokens to outgoing requests
+- **firebase.ts**: Client-side Firebase initialization (app, auth, Firestore, App Check)
+- **firebase-admin.ts**: Firebase Admin SDK initialization (uses `GOOGLE_APPLICATION_CREDENTIALS`); exports `getAdminApp()` and `getAdminAuth()`
 - **qrz.ts**: QRZ.com XML API client for operator lookups
 - **content.ts**: Markdown content loader with local override (`content/local/` → `content/default/` fallback)
 
@@ -51,10 +54,17 @@ The `isStatusTag()` and `getTagLabel()` utilities in `types/index.ts` differenti
 
 ### API Routes
 
-- **app/api/qrz/route.ts**: QRZ.com callsign lookups (authenticated via Firebase ID token)
-- **app/api/credentials/route.ts**: Password encryption (authenticated via Firebase ID token)
-- **app/api/login-banner/route.ts**: Serves markdown banner for login/signup pages
-- **app/api/header-message/route.ts**: Serves markdown message for page headers
+All API routes (except `/api/health`) are protected by Firebase App Check. Authenticated routes additionally verify Firebase ID tokens. Client code must use `apiFetch()` from `lib/api-fetch.ts` instead of `fetch()` for all API calls so the App Check token is attached.
+
+- **app/api/qrz/route.ts**: QRZ.com callsign lookups (App Check + auth)
+- **app/api/credentials/route.ts**: Password encryption (App Check + auth)
+- **app/api/login-banner/route.ts**: Serves markdown banner for login/signup pages (App Check only)
+- **app/api/login-background/route.ts**: Serves login background image (App Check only)
+- **app/api/header-message/route.ts**: Serves markdown message for page headers (App Check only)
+- **app/api/about/route.ts**: Serves about page content (App Check only)
+- **app/api/privacy-policy/route.ts**: Serves full privacy policy (App Check only)
+- **app/api/privacy-policy-summary/route.ts**: Serves privacy policy summary (App Check only)
+- **app/api/health/route.ts**: Health check endpoint (no protection — used by monitoring)
 
 ### Main Components
 
@@ -80,16 +90,32 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 NEXT_PUBLIC_FIREBASE_APP_ID
+NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
+```
+
+Optional for local development:
+```
+NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN    # Register in Firebase Console → App Check → Manage debug tokens
 ```
 
 QRZ credentials are stored per-user in Firestore, not in environment variables.
 
-### Server-Side Authentication
+### Server-Side Authentication & App Check
 
-API routes are protected by Firebase Admin SDK token verification. The client sends `Authorization: Bearer <token>` headers. On non-Google-Cloud hosts (e.g., AWS EC2), set:
+API routes are protected by two layers:
+1. **App Check** (`verifyAppCheck`): Verifies the request originates from the legitimate web app via `X-Firebase-AppCheck` header
+2. **Auth** (`verifyAuth`): Verifies the user's Firebase ID token via `Authorization: Bearer <token>` header
+
+On non-Google-Cloud hosts, set:
 ```
 GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 ```
+
+### Docker Deployment
+
+The app uses `output: 'standalone'` in `next.config.js` for Docker builds. **Important**: All `NEXT_PUBLIC_*` variables must be passed as build args (not runtime env vars) because Next.js inlines them into the client bundle at build time. The Dockerfile declares these as `ARG` entries, and `docker-compose.yml` maps them from `.env`.
+
+Runtime env vars (like `GOOGLE_APPLICATION_CREDENTIALS`) are passed via `env_file` in docker-compose. Secrets are mounted from `/etc/netlogger/secrets` and content overrides from `./content/local`.
 
 ## Color Scheme
 
