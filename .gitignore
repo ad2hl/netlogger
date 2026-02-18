@@ -24,7 +24,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env files
-.env*.local
+.env*.local*
 
 # Vercel
 .vercel
@@ -34,7 +34,7 @@ yarn-error.log*
 next-env.d.ts
 
 # Credentials
-service-account.json
+service-account*.json
 
 # Scripts
 scripts/delete_sessions.py
@@ -42,3 +42,6 @@ scripts/delete_sessions.py
 # Site-specific content overrides
 content/local/*
 !content/local/.gitkeep
+
+# Miscellaneous notes
+/doc-internal/
