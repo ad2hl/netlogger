@@ -31,17 +31,15 @@ export default function PrivacyPolicySummary({ content, fullPolicyContent, onClo
       onClick={handleOverlayClick}
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
-      <div className={`bg-white rounded-lg shadow-xl w-full max-h-[80vh] flex flex-col ${showFullPolicy ? 'max-w-4xl' : 'max-w-2xl'}`}>
-        <div className="flex items-center justify-end px-6 py-2">
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-2xl leading-none"
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
-        <div className="px-6 py-4 overflow-y-auto prose prose-sm max-w-none">
+      <div className={`bg-white rounded-lg shadow-xl w-full max-h-[80vh] flex flex-col relative ${showFullPolicy ? 'max-w-4xl' : 'max-w-2xl'}`}>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-4 text-slate-400 hover:text-slate-600 text-2xl leading-none z-10"
+          aria-label="Close"
+        >
+          &times;
+        </button>
+        <div className="px-6 pt-4 pb-4 overflow-y-auto prose prose-sm max-w-none">
           <ReactMarkdown>{showFullPolicy ? fullPolicyContent! : content}</ReactMarkdown>
           {showFullPolicy ? (
             <button

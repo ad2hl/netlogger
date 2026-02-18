@@ -9,7 +9,12 @@ export async function verifyAppCheck(request: NextRequest): Promise<true | NextR
   }
 
   try {
-    await getAppCheck(getAdminApp()).verifyToken(token);
+    var app = getAdminApp();
+    var options = app.options;
+    console.log("app name = " + app.name);
+    console.log("project id = " + options.projectId);
+    console.log("service account id " + options.serviceAccountId);
+    await getAppCheck(app).verifyToken(token);
     return true;
   } catch (error) {
     console.error('App Check verification failed:', error);
