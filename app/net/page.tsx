@@ -728,6 +728,13 @@ function NetPage() {
     router.push('/');
   };
 
+  const handleEndSession = async () => {
+    if (!session?.id || session.endTime) return;
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    await handleUpdateSession({ endTime: timeStr });
+  };
+
   const handleNewSession = () => {
     if (session && !session.report) {
       setShowAbandonModal(true);
@@ -841,80 +848,94 @@ function NetPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Row 1: Net Session + Session Summary */}
-          <div className="lg:col-span-2">
-            <SessionSetup
-              onCreateSession={handleCreateSession}
-              existingSession={session}
-              onUpdateSession={handleUpdateSession}
-              onShowReport={() => setShowReport(true)}
-              defaults={sessionDefaults}
-            />
-          </div>
-
-          {session && (
-            <div className="lg:self-stretch">
-              <SessionSummary
-                stationCount={session.checkIns.length}
-                reported={session.trafficReported}
-                cleared={session.trafficCleared}
-                onReportedChange={handleTrafficReportedChange}
-                onClearedChange={handleTrafficClearedChange}
-                startTime={session.startTime}
-                endTime={session.endTime}
-                ncCallsign={session.checkIns.find(c => c.tags.includes('NC'))?.callsign ?? null}
-                ancCallsigns={session.checkIns.filter(c => c.tags.includes('ANC')).map(c => c.callsign)}
+          {/* Row 1: Session form (no session) or Session Summary (session active) */}
+          {!session && (
+            <div className="lg:col-span-2">
+              <SessionSetup
+                onCreateSession={handleCreateSession}
+                defaults={sessionDefaults}
               />
             </div>
           )}
 
-          {/* Row 2: Check In + Checklist */}
           {session && (
-            <>
-              <div className="lg:col-span-2 space-y-2">
-                <CheckInForm
-                  ref={checkInFormRef}
-                  onCheckIn={handleCheckIn}
-                  disabled={isLookingUp}
-                  allStations={allStations}
-                  onTabToTraffic={handleTabToTraffic}
-                />
-                <CheckInList
-                  checkIns={session.checkIns}
-                  stations={stations}
-                  onRemove={handleRemoveCheckIn}
-                  onUpdateCallsign={handleUpdateCallsign}
-                  onUpdateNickname={handleUpdateNickname}
-                  onUpdateNote={handleUpdateNote}
-                  onUpdateLocation={handleUpdateLocation}
-                  lastAcknowledged={session.lastAcknowledged}
-                  onSetLastAcknowledged={handleSetLastAcknowledged}
-                />
-              </div>
+            <div className="lg:col-span-2 space-y-2">
+              <CheckInForm
+                ref={checkInFormRef}
+                onCheckIn={handleCheckIn}
+                disabled={isLookingUp}
+                allStations={allStations}
+                onTabToTraffic={handleTabToTraffic}
+              />
+              <CheckInList
+                checkIns={session.checkIns}
+                stations={stations}
+                onRemove={handleRemoveCheckIn}
+                onUpdateCallsign={handleUpdateCallsign}
+                onUpdateNickname={handleUpdateNickname}
+                onUpdateNote={handleUpdateNote}
+                onUpdateLocation={handleUpdateLocation}
+                lastAcknowledged={session.lastAcknowledged}
+                onSetLastAcknowledged={handleSetLastAcknowledged}
+              />
+            </div>
+          )}
 
-              <div className="space-y-4">
-                <Checklist
-                  checkIns={session.checkIns}
-                  trafficItems={session.trafficItems || []}
-                  checkedAnnouncements={session.checkedAnnouncements || []}
-                  checkedSecure={session.checkedSecure || []}
-                  onAddTrafficItem={handleAddTrafficItem}
-                  onToggleTrafficItem={handleToggleTrafficItem}
-                  onDeleteTrafficItem={handleDeleteTrafficItem}
-                  onToggleAnnouncement={handleToggleAnnouncement}
-                  onToggleSecure={handleToggleSecure}
-                  addingTrafficFor={addingTrafficFor}
-                  onAddingTrafficForChange={setAddingTrafficFor}
-                  onTrafficEntryDone={handleTrafficEntryDone}
+          {session && (
+            <div className="lg:col-start-3 space-y-4">
+              <div className="space-y-2">
+                <SessionSummary
+                  netName={session.netName}
+                  date={session.date.toDate()}
+                  stationCount={session.checkIns.length}
+                  reported={session.trafficReported}
+                  cleared={session.trafficCleared}
+                  onReportedChange={handleTrafficReportedChange}
+                  onClearedChange={handleTrafficClearedChange}
+                  startTime={session.startTime}
+                  endTime={session.endTime}
+                  ncCallsign={session.checkIns.find(c => c.tags.includes('NC'))?.callsign ?? null}
+                  ancCallsigns={session.checkIns.filter(c => c.tags.includes('ANC')).map(c => c.callsign)}
+                  onUpdateSession={handleUpdateSession}
                 />
-                <RadiogramList
-                  radiograms={session.radiograms || []}
-                  onSave={handleSaveRadiogram}
-                  onDelete={handleDeleteRadiogram}
-                  dispositionMethods={profile?.dispositionMethods}
-                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleEndSession}
+                    disabled={!!session.endTime}
+                    className="flex-1 bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    End Session
+                  </button>
+                  <button
+                    onClick={() => setShowReport(true)}
+                    disabled={!session.endTime}
+                    className="flex-1 bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    Show Report
+                  </button>
+                </div>
               </div>
-            </>
+              <Checklist
+                checkIns={session.checkIns}
+                trafficItems={session.trafficItems || []}
+                checkedAnnouncements={session.checkedAnnouncements || []}
+                checkedSecure={session.checkedSecure || []}
+                onAddTrafficItem={handleAddTrafficItem}
+                onToggleTrafficItem={handleToggleTrafficItem}
+                onDeleteTrafficItem={handleDeleteTrafficItem}
+                onToggleAnnouncement={handleToggleAnnouncement}
+                onToggleSecure={handleToggleSecure}
+                addingTrafficFor={addingTrafficFor}
+                onAddingTrafficForChange={setAddingTrafficFor}
+                onTrafficEntryDone={handleTrafficEntryDone}
+              />
+              <RadiogramList
+                radiograms={session.radiograms || []}
+                onSave={handleSaveRadiogram}
+                onDelete={handleDeleteRadiogram}
+                dispositionMethods={profile?.dispositionMethods}
+              />
+            </div>
           )}
         </div>
       </main>

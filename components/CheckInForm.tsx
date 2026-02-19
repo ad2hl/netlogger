@@ -142,9 +142,9 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   return (
     <>
     <div ref={formRef} className="bg-white rounded-lg shadow p-3">
-      <h2 className="text-lg font-semibold mb-2">Check In Station</h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="flex gap-2">
+      <form onSubmit={handleSubmit}>
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-semibold text-slate-900 whitespace-nowrap">Check In Station</span>
           <div className="flex-1 relative">
             <input
               ref={inputRef}
@@ -156,7 +156,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
                 setInput(val);
               }}
               onKeyDown={handleKeyDown}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
+              className="w-full px-2 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
               placeholder="e.g., AD2HL/NC/T or ?2HL to search"
               disabled={disabled || isSubmitting}
               autoComplete="off"
@@ -175,7 +175,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
           <button
             type="submit"
             disabled={disabled || isSubmitting || !input.trim() || isSearchMode}
-            className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
           >
             {isSubmitting ? '...' : 'Add'}
           </button>
