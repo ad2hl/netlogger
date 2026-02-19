@@ -4,8 +4,9 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { getAllSessions, deleteSession } from '@/lib/firestore';
+import { getAllSessions, deleteSession, createSession, updateSession } from '@/lib/firestore';
 import { NetSession } from '@/types';
+import { Timestamp } from 'firebase/firestore';
 import HeaderBanner from '@/components/HeaderBanner';
 
 type SortColumn = 'date' | 'startTime' | 'endTime' | 'netName' | 'ncs' | 'ancs' | 'duration' | 'stations' | 'trafficReported' | 'trafficCleared';
@@ -51,6 +52,11 @@ export default function SessionsPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [deleteTarget, setDeleteTarget] = useState<NetSession | null>(null);
+  const [showNewSessionModal, setShowNewSessionModal] = useState(false);
+  const [showActiveWarning, setShowActiveWarning] = useState(false);
+  const [newNetName, setNewNetName] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [newStartTime, setNewStartTime] = useState('');
 
   useEffect(() => {
     if (!loading && (!user || !emailVerified)) {
@@ -137,6 +143,71 @@ export default function SessionsPage() {
     setDeleteTarget(null);
   };
 
+  const openNewSessionModal = () => {
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setNewNetName(sessions[0]?.netName || '');
+    setNewDate(todayStr);
+    setNewStartTime(sessions[0]?.startTime || '');
+    setShowNewSessionModal(true);
+  };
+
+  const handleNewSessionClick = () => {
+    const active = sessions.find((s) => !s.endTime);
+    if (active) {
+      setShowActiveWarning(true);
+    } else {
+      openNewSessionModal();
+    }
+  };
+
+  const handleProceedFromWarning = async () => {
+    if (!user) return;
+    const active = sessions.find((s) => !s.endTime);
+    if (active?.id) {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      await updateSession(user.uid, active.id, { endTime: timeStr });
+      setSessions((prev) => prev.map((s) => s.id === active.id ? { ...s, endTime: timeStr } : s));
+    }
+    setShowActiveWarning(false);
+    openNewSessionModal();
+  };
+
+  const handleCreateNewSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    const [year, month, day] = newDate.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+    const sessionId = await createSession(user.uid, {
+      netName: newNetName,
+      date: Timestamp.fromDate(localDate),
+      startTime: newStartTime,
+      endTime: null,
+      trafficReported: 0,
+      trafficCleared: 0,
+      checkIns: [],
+      radiograms: [],
+    });
+    if (sessionId) {
+      router.push(`/net?session=${sessionId}`);
+    }
+  };
+
+  useEffect(() => {
+    if (!showNewSessionModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowNewSessionModal(false); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showNewSessionModal]);
+
+  useEffect(() => {
+    if (!showActiveWarning) return;
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowActiveWarning(false); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showActiveWarning]);
+
   if (loading || !user) {
     return null;
   }
@@ -170,7 +241,15 @@ export default function SessionsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-3">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Sessions</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-slate-900">Sessions</h2>
+          <button
+            onClick={handleNewSessionClick}
+            className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
+          >
+            New Session
+          </button>
+        </div>
 
         {fetching ? (
           <p className="text-slate-500">Loading...</p>
@@ -278,6 +357,110 @@ export default function SessionsPage() {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showActiveWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-gray-900">Session In Progress</h2>
+              <button
+                onClick={() => setShowActiveWarning(false)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-gray-600 mb-6">
+              A session is currently in progress. Starting a new session will end the active session. Do you want to proceed?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowActiveWarning(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleProceedFromWarning}
+                className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewSessionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">New Session</h2>
+              <button
+                onClick={() => setShowNewSessionModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleCreateNewSession} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Net Name</label>
+                <input
+                  type="text"
+                  value={newNetName}
+                  onChange={(e) => setNewNetName(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="e.g., SDN"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
+                <input
+                  type="time"
+                  value={newStartTime}
+                  onChange={(e) => setNewStartTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewSessionModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
+                >
+                  OK
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
