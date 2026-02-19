@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense, useEffect, useState, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { getAllSessions, deleteSession, createSession, updateSession } from '@/lib/firestore';
@@ -45,8 +45,18 @@ function formatDuration(minutes: number): string {
 }
 
 export default function SessionsPage() {
+  return (
+    <Suspense fallback={null}>
+      <SessionsContent />
+    </Suspense>
+  );
+}
+
+function SessionsContent() {
   const { user, loading, emailVerified, photoURL } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const openOnLoad = searchParams.get('new') === '1';
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('date');
@@ -69,8 +79,18 @@ export default function SessionsPage() {
       getAllSessions(user.uid).then((s) => {
         setSessions(s);
         setFetching(false);
+        if (openOnLoad) {
+          const now = new Date();
+          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          setNewNetName(s[0]?.netName || '');
+          setNewDate(todayStr);
+          setNewStartTime(s[0]?.startTime || '');
+          setShowNewSessionModal(true);
+        }
       });
     }
+  // openOnLoad is derived from URL params and stable for the lifetime of this page load
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const sortedSessions = useMemo(() => {

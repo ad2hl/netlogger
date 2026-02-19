@@ -12,6 +12,7 @@ import {
   resendVerificationEmail,
   signOut,
 } from '@/lib/auth';
+import { getActiveSession } from '@/lib/firestore';
 import { apiFetch } from '@/lib/api-fetch';
 
 type Tab = 'signin' | 'signup';
@@ -79,7 +80,13 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user && emailVerified) {
-      router.push('/net');
+      getActiveSession(user.uid).then((active) => {
+        if (active?.id) {
+          router.push(`/net?session=${active.id}`);
+        } else {
+          router.push('/sessions?new=1');
+        }
+      });
     }
     if (!loading && user && !emailVerified) {
       setView('verify');
@@ -164,7 +171,12 @@ export default function Home() {
     await refreshUser();
     setSubmitting(false);
     if (user.emailVerified) {
-      router.push('/net');
+      const active = await getActiveSession(user.uid);
+      if (active?.id) {
+        router.push(`/net?session=${active.id}`);
+      } else {
+        router.push('/sessions?new=1');
+      }
     } else {
       setError('Email not yet verified. Please check your inbox and click the verification link.');
     }
