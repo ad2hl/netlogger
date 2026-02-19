@@ -6,6 +6,8 @@ import { parseCallsignInput } from '@/lib/radiogram';
 import { searchStations } from '@/lib/stationSearch';
 import StationLookupDropdown from './StationLookupDropdown';
 
+const WHITMAN_IMG = 'https://upload.wikimedia.org/wikipedia/commons/8/85/Walt_Whitman_-_Brady-Handy_restored.png';
+
 interface CheckInFormProps {
   onCheckIn: (checkIn: CheckIn) => void;
   disabled?: boolean;
@@ -17,6 +19,8 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [showWhitman, setShowWhitman] = useState(false);
+  const whitmanArmed = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -97,13 +101,28 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
     }
   };
 
+  useEffect(() => {
+    if (!showWhitman) return;
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowWhitman(false); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showWhitman]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isSubmitting || isSearchMode) return;
 
-    setIsSubmitting(true);
-
     const { callsign, tags } = parseCallsignInput(input);
+
+    if (callsign?.toUpperCase() === 'P0ET' && !whitmanArmed.current) {
+      whitmanArmed.current = true;
+      setShowWhitman(true);
+      setTimeout(() => inputRef.current?.focus(), 0);
+      return;
+    }
+
+    whitmanArmed.current = false;
+    setIsSubmitting(true);
 
     if (callsign) {
       const checkIn: CheckIn = {
@@ -121,6 +140,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   };
 
   return (
+    <>
     <div ref={formRef} className="bg-white rounded-lg shadow p-3">
       <h2 className="text-lg font-semibold mb-2">Check In Station</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -130,7 +150,11 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               ref={inputRef}
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                const val = e.target.value.toUpperCase();
+                if (val !== 'P0ET') whitmanArmed.current = false;
+                setInput(val);
+              }}
               onKeyDown={handleKeyDown}
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
               placeholder="e.g., AD2HL/NC/T or ?2HL to search"
@@ -158,6 +182,28 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
         </div>
       </form>
     </div>
+
+    {showWhitman && (
+      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+        <div className="relative">
+          <button
+            onClick={() => setShowWhitman(false)}
+            className="absolute -top-3 -right-3 bg-white rounded-full p-1 text-gray-500 hover:text-gray-800 shadow"
+            aria-label="Close"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+            </svg>
+          </button>
+          <img
+            src={WHITMAN_IMG}
+            alt="Walt Whitman"
+            className="max-h-[80vh] max-w-[80vw] rounded shadow-xl"
+          />
+        </div>
+      </div>
+    )}
+    </>
   );
 });
 
