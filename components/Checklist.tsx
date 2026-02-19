@@ -138,8 +138,8 @@ export default function Checklist({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-3">
-      <h2 className="text-lg font-semibold mb-2">Checklist</h2>
+    <div className="bg-white rounded-lg shadow p-4">
+      <h2 className="text-lg font-semibold mb-3">Checklist</h2>
 
       {/* Request to Secure Section */}
       {stationsRequestingSecure.length > 0 && (
