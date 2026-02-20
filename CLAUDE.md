@@ -68,10 +68,16 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 
 ### Main Components
 
-- **app/net/page.tsx**: Main logging interface orchestrating all functionality
+- **app/net/page.tsx**: Main logging interface orchestrating all functionality; renders a three-column grid with CheckInForm+CheckInList on the left and SessionSummary+Checklist+RadiogramList on the right
+- **app/sessions/page.tsx**: Session history list with new-session creation modal; accepts `?new=1` to auto-open the modal on load
+- **app/radiograms/page.tsx**: Cross-session radiogram history, sortable by date, net name, type, and precedence
+- **components/SessionSummary.tsx**: Displays session metadata (Net Name, Date, Start/End, NC/ANC, station/traffic counts) with an inline Edit modal
+- **components/CheckInForm.tsx**: Single-line check-in input; supports callsign search (`?` prefix), tag parsing, and QRZ lookups; includes the Walt Whitman easter egg for callsign P0ET
+- **components/CheckInList.tsx**: Scrollable list of checked-in stations; auto-scrolls to bottom on new check-in
 - **components/Checklist.tsx**: Traffic and announcements checklist
+- **components/RadiogramList.tsx**: List of radiograms with inline RadiogramForm for creating and editing
 - **components/RadiogramForm.tsx**: ARRL standard radiogram entry form
-- **components/StationCard.tsx**: Individual station display with editing
+- **components/StationCard.tsx**: Individual station row with inline editing for callsign, name, location, and note
 - **components/AuthProvider.tsx**: Firebase auth context with Google profile photo caching
 - **components/HeaderBanner.tsx**: Inline markdown banner in page headers
 

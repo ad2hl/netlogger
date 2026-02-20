@@ -16,8 +16,10 @@ A web-based amateur radio net logging application for net control operators.
   - `/XXX` - Liaison to XXX net
 - **QRZ.com Integration**: Automatic callsign lookups for operator names
 - **Station Memory**: Remembers nicknames, notes, and last-seen dates across sessions
-- **Traffic Counting**: Track traffic reported and cleared
-- **Radiogram Report**: Generates formatted net report with callsign compression
+- **Traffic Checklist**: Track traffic and announcements per station with check-off items
+- **Radiogram Management**: Create and store ARRL-format radiograms during the net
+- **Net Report**: Generates formatted radiogram report with callsign compression
+- **Session History**: Browse and review past net sessions
 - **Firebase Backend**: Persistent storage with Google authentication
 
 ## Setup
@@ -93,7 +95,7 @@ Open http://localhost:3000
 
 ## Usage
 
-1. Sign in with Google
+1. Sign in with Google — you are taken directly to any active session, or prompted to start a new one
 2. Go to **Settings** to configure:
    - Your callsign
    - Your name (for report signature)
@@ -101,10 +103,12 @@ Open http://localhost:3000
    - Net manager callsign (report addressee)
    - QRZ.com credentials (optional)
 3. Start a new net session with name, date, and start time
-4. Check in stations by typing callsign with tags (e.g., `W1AW/NC/T`)
-5. Click station names or notes to edit them
-6. Use the traffic counter for traffic reported/cleared
-7. Click "End Net" and copy the generated radiogram report
+4. Check in stations by typing a callsign with tags (e.g., `W1AW/NC/T`)
+5. Click station names, locations, or notes to edit them inline
+6. Use the traffic checklist to track announcements and traffic per station
+7. Create radiograms as needed during the net
+8. Click **End Session**, then **Show Report** to view and copy the generated radiogram report
+9. Browse past sessions and radiograms from the **Sessions** and **Radiograms** pages
 
 ## Tech Stack
 
