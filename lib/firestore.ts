@@ -81,6 +81,35 @@ export async function updateStationLocation(
   }
 }
 
+export async function updateStationFields(
+  uid: string,
+  callsign: string,
+  fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null }
+): Promise<boolean> {
+  try {
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+    await updateDoc(stationRef, fields);
+    return true;
+  } catch (error) {
+    console.error('Error updating station fields:', error);
+    return false;
+  }
+}
+
+export async function deleteStation(
+  uid: string,
+  callsign: string
+): Promise<boolean> {
+  try {
+    const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+    await deleteDoc(stationRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting station:', error);
+    return false;
+  }
+}
+
 export async function updateStationNote(
   uid: string,
   callsign: string,
