@@ -807,6 +807,12 @@ function NetPage() {
             >
               Radiograms
             </Link>
+            <Link
+              href="/stations"
+              className="text-cyan-700 hover:text-cyan-900 text-sm"
+            >
+              Stations
+            </Link>
             {session && (
               <button
                 onClick={handleNewSession}
