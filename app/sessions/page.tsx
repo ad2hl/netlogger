@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { getAllSessions, deleteSession, createSession, updateSession } from '@/lib/firestore';
+import ProfileMenu from '@/components/ProfileMenu';
 import { NetSession } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import HeaderBanner from '@/components/HeaderBanner';
@@ -172,6 +173,15 @@ function SessionsContent() {
     setShowNewSessionModal(true);
   };
 
+  const handleSessionButton = () => {
+    const active = sessions.find((s) => !s.endTime);
+    if (active?.id) {
+      router.push(`/net?session=${active.id}`);
+    } else {
+      openNewSessionModal();
+    }
+  };
+
   const handleNewSessionClick = () => {
     const active = sessions.find((s) => !s.endTime);
     if (active) {
@@ -240,36 +250,23 @@ function SessionsContent() {
             <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
             <HeaderBanner />
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/net"
-              className="text-cyan-700 hover:text-cyan-900 text-sm"
+          <div className="flex items-center gap-4">
+            <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
+            <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
+            <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
+            <button
+              onClick={handleSessionButton}
+              className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
             >
-              Back to Net
-            </Link>
-            <Link href="/settings" title="Settings">
-              <img
-                src={photoURL || '/profile-head.png'}
-                alt="Settings"
-                className="w-7 h-7 rounded-full object-cover border border-slate-200"
-                referrerPolicy="no-referrer"
-                onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
-              />
-            </Link>
+              {sessions.find((s) => !s.endTime) ? 'Active Session' : 'New Session'}
+            </button>
+            <ProfileMenu photoURL={photoURL} />
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-slate-900">Sessions</h2>
-          <button
-            onClick={handleNewSessionClick}
-            className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
-          >
-            New Session
-          </button>
-        </div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Sessions</h2>
 
         {fetching ? (
           <p className="text-slate-500">Loading...</p>
