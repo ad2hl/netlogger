@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { updateUserProfile, changePassword } from '@/lib/auth';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
+import ProfileMenu from '@/components/ProfileMenu';
 import { apiFetch } from '@/lib/api-fetch';
 
 export default function SettingsPage() {
@@ -148,20 +149,11 @@ export default function SettingsPage() {
             <h1 className="text-xl font-bold text-slate-900">Settings</h1>
             <HeaderBanner />
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/net"
-              className="text-cyan-700 hover:text-cyan-900 text-sm"
-            >
-              Back to Net
-            </Link>
-            <img
-              src={photoURL || '/profile-head.png'}
-              alt="Profile"
-              className="w-7 h-7 rounded-full object-cover border border-slate-200"
-              referrerPolicy="no-referrer"
-              onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
-            />
+          <div className="flex items-center gap-4">
+            <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
+            <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
+            <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
+            <ProfileMenu photoURL={photoURL} />
           </div>
         </div>
       </header>

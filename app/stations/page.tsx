@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { getAllStations, getAllSessions, updateStationFields, deleteStation } from '@/lib/firestore';
 import HeaderBanner from '@/components/HeaderBanner';
+import ProfileMenu from '@/components/ProfileMenu';
 
 interface StationRow {
   callsign: string;
@@ -31,6 +32,7 @@ export default function StationsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [editTarget, setEditTarget] = useState<StationRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StationRow | null>(null);
+
 
   // Edit modal fields
   const [editNickname, setEditNickname] = useState('');
@@ -160,19 +162,11 @@ export default function StationsPage() {
             <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
             <HeaderBanner />
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/net" className="text-cyan-700 hover:text-cyan-900 text-sm">
-              Back to Net
-            </Link>
-            <Link href="/settings" title="Settings">
-              <img
-                src={photoURL || '/profile-head.png'}
-                alt="Settings"
-                className="w-7 h-7 rounded-full object-cover border border-slate-200"
-                referrerPolicy="no-referrer"
-                onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
-              />
-            </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
+            <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
+            <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
+            <ProfileMenu photoURL={photoURL} />
           </div>
         </div>
       </header>

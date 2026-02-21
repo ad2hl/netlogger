@@ -10,6 +10,7 @@ import { Timestamp, deleteField } from 'firebase/firestore';
 import ReadOnlyRadiogram from '@/components/ReadOnlyRadiogram';
 import RadiogramForm from '@/components/RadiogramForm';
 import HeaderBanner from '@/components/HeaderBanner';
+import ProfileMenu from '@/components/ProfileMenu';
 
 interface RadiogramListItem {
   type: 'Radiogram' | 'Net Report';
@@ -111,6 +112,7 @@ export default function RadiogramsPage() {
   const [selectedItem, setSelectedItem] = useState<RadiogramListItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<RadiogramListItem | null>(null);
+
 
   useEffect(() => {
     if (!loading && (!user || !emailVerified)) {
@@ -283,22 +285,11 @@ export default function RadiogramsPage() {
             <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
             <HeaderBanner />
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/net"
-              className="text-cyan-700 hover:text-cyan-900 text-sm"
-            >
-              Back to Net
-            </Link>
-            <Link href="/settings" title="Settings">
-              <img
-                src={photoURL || '/profile-head.png'}
-                alt="Settings"
-                className="w-7 h-7 rounded-full object-cover border border-slate-200"
-                referrerPolicy="no-referrer"
-                onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
-              />
-            </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
+            <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
+            <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
+            <ProfileMenu photoURL={photoURL} />
           </div>
         </div>
       </header>

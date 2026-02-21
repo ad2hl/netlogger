@@ -4,9 +4,7 @@ import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { signOut } from '@/lib/auth';
 import {
-  createSession,
   updateSession,
   addCheckIn,
   removeCheckIn,
@@ -21,14 +19,12 @@ import {
   getStations,
   getAllStations,
   saveReport,
-  deleteSession,
-  getRecentSessions,
 } from '@/lib/firestore';
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
 import HeaderBanner from '@/components/HeaderBanner';
-import SessionSetup from '@/components/SessionSetup';
+import ProfileMenu from '@/components/ProfileMenu';
 import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
 import SessionSummary from '@/components/SessionSummary';
@@ -58,20 +54,12 @@ function NetPage() {
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [addingTrafficFor, setAddingTrafficFor] = useState<string | null>(null);
-  const [showAbandonModal, setShowAbandonModal] = useState(false);
-  const [sessionDefaults, setSessionDefaults] = useState<{ netName: string; startTime: string } | undefined>();
   const checkInFormRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!loading && (!user || !emailVerified)) {
       router.push('/');
     }
   }, [user, loading, emailVerified, router]);
-  useEffect(() => {
-    if (!showAbandonModal) return;
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setShowAbandonModal(false); };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showAbandonModal]);
 
   // Load all stations for lookup on mount
   useEffect(() => {
@@ -106,28 +94,13 @@ function NetPage() {
           setStations(stationMap);
         }
       } else {
-        // No active session — pre-fill defaults from most recent session
-        const recent = await getRecentSessions(user.uid, 1);
-        if (recent.length > 0) {
-          setSessionDefaults({
-            netName: recent[0].netName || '',
-            startTime: recent[0].startTime || '',
-          });
-        }
+        // No session found — send user to Sessions page to start one
+        router.push('/sessions');
       }
     };
 
     loadSession();
-  }, [user, loading, session, sessionIdParam]);
-
-  const handleCreateSession = async (newSession: Omit<NetSession, 'id'>) => {
-    if (!user) return;
-
-    const sessionId = await createSession(user.uid, newSession);
-    if (sessionId) {
-      setSession({ ...newSession, id: sessionId });
-    }
-  };
+  }, [user, loading, session, sessionIdParam, router]);
 
   const handleUpdateSession = async (updates: Partial<NetSession>) => {
     if (!user || !session?.id) return;
@@ -723,50 +696,11 @@ function NetPage() {
     setTimeout(() => checkInFormRef.current?.focus(), 0);
   }, []);
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
-  };
-
   const handleEndSession = async () => {
     if (!session?.id || session.endTime) return;
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     await handleUpdateSession({ endTime: timeStr });
-  };
-
-  const handleNewSession = () => {
-    if (session && !session.report) {
-      setShowAbandonModal(true);
-    } else {
-      setSession(null);
-      setStations(new Map());
-    }
-  };
-
-  const handleConfirmAbandon = async () => {
-    if (!user || !session?.id) return;
-
-    // Move radiograms to the most recent other session
-    const radiograms = session.radiograms || [];
-    if (radiograms.length > 0) {
-      const recentSessions = await getRecentSessions(user.uid, 10);
-      const otherSession = recentSessions.find((s) => s.id !== session.id);
-      if (otherSession?.id) {
-        const existingRadiograms = otherSession.radiograms || [];
-        await updateSession(user.uid, otherSession.id!, {
-          radiograms: [...existingRadiograms, ...radiograms],
-        });
-      }
-    }
-
-    // Delete the abandoned session from Firestore
-    await deleteSession(user.uid, session.id);
-
-    // Clear local state
-    setSession(null);
-    setStations(new Map());
-    setShowAbandonModal(false);
   };
 
   if (loading) {
@@ -813,29 +747,7 @@ function NetPage() {
             >
               Stations
             </Link>
-            {session && (
-              <button
-                onClick={handleNewSession}
-                className="text-slate-600 hover:text-slate-800 text-sm"
-              >
-                New Session
-              </button>
-            )}
-            <button
-              onClick={handleSignOut}
-              className="text-slate-600 hover:text-slate-800 text-sm"
-            >
-              Sign Out
-            </button>
-            <Link href="/settings" title="Settings">
-              <img
-                src={photoURL || '/profile-head.png'}
-                alt="Settings"
-                className="w-7 h-7 rounded-full object-cover border border-slate-200"
-                referrerPolicy="no-referrer"
-                onError={(e) => { e.currentTarget.src = '/profile-head.png'; }}
-              />
-            </Link>
+            <ProfileMenu photoURL={photoURL} />
           </div>
         </div>
       </header>
@@ -854,16 +766,6 @@ function NetPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Row 1: Session form (no session) or Session Summary (session active) */}
-          {!session && (
-            <div className="lg:col-span-2">
-              <SessionSetup
-                onCreateSession={handleCreateSession}
-                defaults={sessionDefaults}
-              />
-            </div>
-          )}
-
           {session && (
             <div className="lg:col-span-2 space-y-2">
               <CheckInForm
@@ -955,30 +857,6 @@ function NetPage() {
         onClose={() => setShowReport(false)}
       />
 
-      {showAbandonModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Abandon Session?</h2>
-            <p className="text-gray-600 mb-6">
-              The current session will be ended and deleted. Any radiograms will be preserved. Station information will not be affected.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowAbandonModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmAbandon}
-                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium"
-              >
-                Abandon Session
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
