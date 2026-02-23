@@ -129,8 +129,8 @@ export default function Home() {
     setSubmitting(true);
     const result = await signInWithGoogle();
     setSubmitting(false);
-    if (!result) {
-      setError('Google sign-in failed. Please try again.');
+    if (!result.user) {
+      setError(result.error || 'Google sign-in failed. Please try again.');
     }
   };
 
@@ -480,27 +480,23 @@ export default function Home() {
           </form>
         )}
 
-        {/* Divider and Google Sign In - hidden when signup is disabled */}
-        {!signupDisabled && (
-          <>
-            <div className="flex items-center my-6">
-              <div className="flex-1 border-t border-slate-200" />
-              <span className="px-4 text-sm text-slate-400">OR</span>
-              <div className="flex-1 border-t border-slate-200" />
-            </div>
+        {/* Divider and Google Sign In */}
+        <div className="flex items-center my-6">
+          <div className="flex-1 border-t border-slate-200" />
+          <span className="px-4 text-sm text-slate-400">OR</span>
+          <div className="flex-1 border-t border-slate-200" />
+        </div>
 
-            <button
-              onClick={handleGoogleSignIn}
-              disabled={submitting}
-              className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg py-3 px-4 hover:bg-slate-50 transition-colors disabled:opacity-50"
-            >
-              <GoogleIcon />
-              <span className="text-slate-700 font-medium">
-                Sign in with Google
-              </span>
-            </button>
-          </>
-        )}
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={submitting}
+          className="w-full flex items-center justify-center gap-3 bg-white border border-slate-300 rounded-lg py-3 px-4 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        >
+          <GoogleIcon />
+          <span className="text-slate-700 font-medium">
+            Sign in with Google
+          </span>
+        </button>
 
         {signupDisabled ? (
           <p className="text-sm text-slate-500 text-center mt-6">
