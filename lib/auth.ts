@@ -19,7 +19,7 @@ import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 
 const googleProvider = new GoogleAuthProvider();
 
-export async function signInWithGoogle(): Promise<User | null> {
+export async function signInWithGoogle(): Promise<{ user: User | null; error?: string }> {
   try {
     const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
     const user = result.user;
@@ -28,6 +28,10 @@ export async function signInWithGoogle(): Promise<User | null> {
     const userDoc = await getDoc(userDocRef);
 
     if (!userDoc.exists()) {
+      if (process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true') {
+        await firebaseSignOut(getFirebaseAuth());
+        return { user: null, error: 'Account creation is disabled. Contact an administrator.' };
+      }
       const defaultProfile: UserProfile = {
         callsign: '',
         name: user.displayName?.split(' ')[0] || '',
@@ -40,10 +44,10 @@ export async function signInWithGoogle(): Promise<User | null> {
       await setDoc(userDocRef, defaultProfile);
     }
 
-    return user;
+    return { user };
   } catch (error) {
     console.error('Error signing in with Google:', error);
-    return null;
+    return { user: null };
   }
 }
 
