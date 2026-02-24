@@ -89,12 +89,12 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
         break;
       case 'Enter':
         e.preventDefault();
-        if (searchResults.length > 0 && selectedIndex >= 0) {
+        if (searchResults.length > 0) {
           handleSelectStation(searchResults[selectedIndex]);
         }
         break;
       case 'Tab':
-        if (searchResults.length > 0 && selectedIndex >= 0) {
+        if (searchResults.length > 0) {
           e.preventDefault();
           handleSelectStation(searchResults[selectedIndex]);
         }
@@ -123,13 +123,13 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   const handleTagClick = (tag: string) => {
     if (tag === 'NC' && hasTag('ANC')) {
       setInput(prev => prev.split('/').map(p => p === 'ANC' ? 'NC' : p).join('/'));
-      setTimeout(() => inputRef.current?.focus(), 0);
     } else if (tag === 'ANC' && hasTag('NC')) {
       setInput(prev => prev.split('/').map(p => p === 'NC' ? 'ANC' : p).join('/'));
-      setTimeout(() => inputRef.current?.focus(), 0);
     } else {
       appendTag(tag);
+      return;
     }
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleLiaisonClick = () => {
@@ -143,7 +143,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
 
     const { callsign, tags } = parseCallsignInput(input);
 
-    if (callsign?.toUpperCase() === 'P0ET' && !whitmanArmed.current) {
+    if (callsign.toUpperCase() === 'P0ET' && !whitmanArmed.current) {
       whitmanArmed.current = true;
       setShowWhitman(true);
       setTimeout(() => inputRef.current?.focus(), 0);
