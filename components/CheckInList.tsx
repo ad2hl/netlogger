@@ -54,7 +54,7 @@ export default function CheckInList({
 
       <div
         ref={scrollRef}
-        className="divide-y divide-slate-100 max-h-96 overflow-y-auto"
+        className="divide-y divide-slate-100 overflow-y-auto max-h-96 lg:min-h-[calc(100vh-14rem)] lg:max-h-[calc(100vh-14rem)]"
       >
         {checkIns.map((checkIn, index) => (
           <StationCard
