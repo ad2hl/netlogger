@@ -32,7 +32,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   const searchResults = isSearchMode ? searchStations(allStations, searchQuery) : [];
 
   const { callsign: enteredCallsign, tags: enteredTags } = parseCallsignInput(input);
-  const callsignEntered = enteredCallsign.length > 0;
+  const hasValidCallsign = /^[A-Z0-9]{1,2}[0-9][A-Z]{1,3}$/.test(enteredCallsign);
   const hasTag = (tag: string) => enteredTags.includes(tag.toUpperCase());
 
   // Re-focus input when it becomes enabled after a lookup
@@ -203,7 +203,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
 
           <button
             type="submit"
-            disabled={disabled || isSubmitting || !input.trim() || isSearchMode}
+            disabled={disabled || isSubmitting || !hasValidCallsign || isSearchMode}
             className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
           >
             {isSubmitting ? '...' : 'Add'}
@@ -221,7 +221,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               key={tag}
               type="button"
               onClick={() => handleTagClick(tag)}
-              disabled={disabled || isSubmitting || !callsignEntered || hasTag(tag)}
+              disabled={disabled || isSubmitting || !hasValidCallsign || hasTag(tag)}
               className="flex-1 py-1 text-xs font-medium rounded border border-slate-300 bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {label}
@@ -234,7 +234,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                if (callsignEntered && liaisonNet.trim().length >= 2 && !hasTag(liaisonNet.trim())) {
+                if (hasValidCallsign && liaisonNet.trim().length >= 2 && !hasTag(liaisonNet.trim())) {
                   handleLiaisonClick();
                 }
               }
@@ -247,7 +247,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
           <button
             type="button"
             onClick={handleLiaisonClick}
-            disabled={disabled || isSubmitting || !callsignEntered || liaisonNet.trim().length < 2 || hasTag(liaisonNet.trim())}
+            disabled={disabled || isSubmitting || !hasValidCallsign || liaisonNet.trim().length < 2 || hasTag(liaisonNet.trim())}
             className="flex-1 py-1 text-xs font-medium rounded border border-slate-300 bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Liaison
