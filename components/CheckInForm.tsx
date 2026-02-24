@@ -20,6 +20,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showWhitman, setShowWhitman] = useState(false);
+  const [liaisonNet, setLiaisonNet] = useState('');
   const whitmanArmed = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -29,6 +30,10 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   const isSearchMode = input.startsWith('?');
   const searchQuery = isSearchMode ? input.slice(1) : '';
   const searchResults = isSearchMode ? searchStations(allStations, searchQuery) : [];
+
+  const { callsign: enteredCallsign, tags: enteredTags } = parseCallsignInput(input);
+  const callsignEntered = enteredCallsign.length > 0;
+  const hasTag = (tag: string) => enteredTags.includes(tag.toUpperCase());
 
   // Re-focus input when it becomes enabled after a lookup
   useEffect(() => {
@@ -108,6 +113,30 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showWhitman]);
 
+  const appendTag = (tag: string) => {
+    const upper = tag.toUpperCase().trim();
+    if (!upper) return;
+    setInput(prev => prev + '/' + upper);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const handleTagClick = (tag: string) => {
+    if (tag === 'NC' && hasTag('ANC')) {
+      setInput(prev => prev.split('/').map(p => p === 'ANC' ? 'NC' : p).join('/'));
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else if (tag === 'ANC' && hasTag('NC')) {
+      setInput(prev => prev.split('/').map(p => p === 'NC' ? 'ANC' : p).join('/'));
+      setTimeout(() => inputRef.current?.focus(), 0);
+    } else {
+      appendTag(tag);
+    }
+  };
+
+  const handleLiaisonClick = () => {
+    appendTag(liaisonNet);
+    setLiaisonNet('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isSubmitting || isSearchMode) return;
@@ -178,6 +207,50 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
             className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
           >
             {isSubmitting ? '...' : 'Add'}
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 mt-2">
+          {[
+            { label: 'Net Control',     tag: 'NC'  },
+            { label: 'Alt Net Control', tag: 'ANC' },
+            { label: 'Traffic',         tag: 'T'   },
+            { label: 'Announcement',    tag: 'A'   },
+          ].map(({ label, tag }) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => handleTagClick(tag)}
+              disabled={disabled || isSubmitting || !callsignEntered || hasTag(tag)}
+              className="flex-1 py-1 text-xs font-medium rounded border border-slate-300 bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {label}
+            </button>
+          ))}
+          <input
+            type="text"
+            value={liaisonNet}
+            onChange={(e) => setLiaisonNet(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (callsignEntered && liaisonNet.trim().length >= 2 && !hasTag(liaisonNet.trim())) {
+                  handleLiaisonClick();
+                }
+              }
+            }}
+            className="w-24 ml-4 px-1.5 py-1 text-xs font-mono border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-sky-500"
+            placeholder="OC/HVN"
+            maxLength={12}
+            autoComplete="off"
+          />
+          <button
+            type="button"
+            onClick={handleLiaisonClick}
+            disabled={disabled || isSubmitting || !callsignEntered || liaisonNet.trim().length < 2 || hasTag(liaisonNet.trim())}
+            className="flex-1 py-1 text-xs font-medium rounded border border-slate-300 bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Liaison
           </button>
         </div>
       </form>
