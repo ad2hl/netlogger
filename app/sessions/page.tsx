@@ -58,6 +58,7 @@ function SessionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const openOnLoad = searchParams.get('new') === '1';
+  const isWelcome = searchParams.get('welcome') === '1';
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('date');
@@ -65,6 +66,8 @@ function SessionsContent() {
   const [deleteTarget, setDeleteTarget] = useState<NetSession | null>(null);
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [showActiveWarning, setShowActiveWarning] = useState(false);
+  const [showGettingStarted, setShowGettingStarted] = useState(false);
+  const [doNotShowAgain, setDoNotShowAgain] = useState(false);
   const [newNetName, setNewNetName] = useState('');
   const [newDate, setNewDate] = useState('');
   const [newStartTime, setNewStartTime] = useState('');
@@ -87,6 +90,8 @@ function SessionsContent() {
           setNewDate(todayStr);
           setNewStartTime(s[0]?.startTime || '');
           setShowNewSessionModal(true);
+        } else if (isWelcome && !localStorage.getItem('netlogger:hideGettingStarted')) {
+          setShowGettingStarted(true);
         }
       });
     }
@@ -237,6 +242,21 @@ function SessionsContent() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showActiveWarning]);
+
+  const handleDismissGettingStarted = () => {
+    if (doNotShowAgain) {
+      localStorage.setItem('netlogger:hideGettingStarted', '1');
+    }
+    setShowGettingStarted(false);
+  };
+
+  useEffect(() => {
+    if (!showGettingStarted) return;
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') handleDismissGettingStarted(); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showGettingStarted, doNotShowAgain]);
 
   if (loading || !user) {
     return null;
@@ -408,6 +428,45 @@ function SessionsContent() {
                 className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
               >
                 Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGettingStarted && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-gray-900">Welcome to NetLogger</h2>
+              <button
+                onClick={handleDismissGettingStarted}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-gray-600 mb-6">
+              To get started, click on the <strong>New Session</strong> button to create a new net session.
+            </p>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-sm text-gray-500 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={doNotShowAgain}
+                  onChange={(e) => setDoNotShowAgain(e.target.checked)}
+                  className="rounded"
+                />
+                Do not show this again
+              </label>
+              <button
+                onClick={handleDismissGettingStarted}
+                className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
+              >
+                OK
               </button>
             </div>
           </div>
