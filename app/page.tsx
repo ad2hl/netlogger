@@ -84,7 +84,7 @@ export default function Home() {
         if (active?.id) {
           router.push(`/net?session=${active.id}`);
         } else {
-          router.push('/sessions?new=1');
+          router.push('/sessions?welcome=1');
         }
       });
     }
@@ -175,7 +175,7 @@ export default function Home() {
       if (active?.id) {
         router.push(`/net?session=${active.id}`);
       } else {
-        router.push('/sessions?new=1');
+        router.push('/sessions?welcome=1');
       }
     } else {
       setError('Email not yet verified. Please check your inbox and click the verification link.');
