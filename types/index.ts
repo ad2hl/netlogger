@@ -1,6 +1,7 @@
 import { Timestamp } from 'firebase/firestore';
 
 export const DEFAULT_DISPOSITION_METHODS = ['VHF', 'SSB', 'CW', 'Digital', 'Delivered'];
+export const DEFAULT_RECEIVED_METHODS = ['VHF', 'SSB', 'CW', 'Digital', 'Originated'];
 
 export interface UserProfile {
   callsign: string;
@@ -10,6 +11,7 @@ export interface UserProfile {
   qrzUsername: string;
   qrzPassword: string;
   dispositionMethods?: string[];
+  receivedMethods?: string[];
 }
 
 export interface Station {
@@ -88,6 +90,8 @@ export interface NetReport {
 // ARRL Standard Radiogram
 export interface Radiogram {
   id: string;
+  // Net info
+  netName?: string;
   // Preamble
   number: string;
   precedence: string;
@@ -105,7 +109,12 @@ export interface Radiogram {
   // Signature
   signature: string;
   signatureOpNote: string;
-  // Disposition
+  // Received
+  receivedMethod?: string;
+  receivedDestination?: string;
+  receivedDate?: string;
+  receivedTime?: string;
+  // Sent (disposition)
   dispositionMethod?: string;
   dispositionDestination?: string;
   dispositionDate?: string;

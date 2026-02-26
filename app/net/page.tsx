@@ -841,7 +841,9 @@ function NetPage() {
                 radiograms={session.radiograms || []}
                 onSave={handleSaveRadiogram}
                 onDelete={handleDeleteRadiogram}
+                netName={session.netName}
                 dispositionMethods={profile?.dispositionMethods}
+                receivedMethods={profile?.receivedMethods}
               />
             </div>
           )}
