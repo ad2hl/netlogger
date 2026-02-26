@@ -5,8 +5,8 @@ const WORDS_PER_FORM = 25;
 
 // Font sizes:
 // RECEIVED AT section keeps a normal size; the rest of the form is slightly smaller.
-const FONT_SIZE_MAIN = 8;
-const FONT_SIZE_RECEIVED_AT = 10;
+const FONT_SIZE_MAIN = 10;
+const FONT_SIZE_RECEIVED_AT = 11;
 
 function formatPrintDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
