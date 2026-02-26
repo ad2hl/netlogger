@@ -3,8 +3,9 @@ import { Radiogram, UserProfile } from '@/types';
 
 const WORDS_PER_FORM = 25;
 
-const FONT_SIZE_WORDS = 12;   // message text words only
-const FONT_SIZE_OTHER = 9;    // preamble, address, signature, RECEIVED AT, REC'D/SENT
+const FONT_SIZE_WORDS = 11;   // message text words only
+const FONT_SIZE_ADDRESS = 10; // addressee name/address/phone
+const FONT_SIZE_OTHER = 9;    // preamble, signature, RECEIVED AT, REC'D/SENT
 
 function formatPrintDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
@@ -95,10 +96,10 @@ function fillHalf(
   }
 
   // Addressee
-  set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '');
-  set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '');
-  set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '');
-  set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '');
+  set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '', FONT_SIZE_ADDRESS);
+  set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '', FONT_SIZE_ADDRESS);
+  set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '', FONT_SIZE_ADDRESS);
+  set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '', FONT_SIZE_ADDRESS);
 
   // Message words — larger font
   for (let i = 0; i < WORDS_PER_FORM; i++) {
