@@ -1,7 +1,12 @@
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, PDFFont, StandardFonts } from 'pdf-lib';
 import { Radiogram, UserProfile } from '@/types';
 
 const WORDS_PER_FORM = 25;
+
+// Font sizes:
+// RECEIVED AT section keeps a normal size; the rest of the form is slightly smaller.
+const FONT_SIZE_MAIN = 8;
+const FONT_SIZE_RECEIVED_AT = 10;
 
 function formatPrintDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
@@ -15,10 +20,19 @@ function formatPrintTime(timeStr: string | undefined): string {
   return timeStr.replace(':', '');
 }
 
-function setField(form: ReturnType<PDFDocument['getForm']>, name: string, value: string): void {
+function setField(
+  form: ReturnType<PDFDocument['getForm']>,
+  font: PDFFont,
+  name: string,
+  value: string,
+  fontSize: number,
+): void {
   if (!value) return;
   try {
-    form.getTextField(name).setText(value);
+    const field = form.getTextField(name);
+    field.setText(value);
+    field.setFontSize(fontSize);
+    field.updateAppearances(font);
   } catch {
     // Field doesn't exist in this PDF — ignore
   }
@@ -60,57 +74,61 @@ interface HalfData {
 
 function fillHalf(
   form: ReturnType<PDFDocument['getForm']>,
+  font: PDFFont,
   suffix: 'Top' | 'Bottom',
   data: HalfData,
 ): void {
+  const set = (name: string, value: string, fontSize = FONT_SIZE_MAIN) =>
+    setField(form, font, name, value, fontSize);
+
   // Preamble
-  setField(form, `Number - ${suffix}`, data.number ?? '');
-  setField(form, `Station Of Origin - ${suffix}`, data.stationOfOrigin ?? '');
-  setField(form, `Check - ${suffix}`, data.check ?? '');
-  setField(form, `Place Of Origin - ${suffix}`, data.placeOfOrigin ?? '');
-  setField(form, `Time Filed - ${suffix}`, data.timeFiled ?? '');
-  setField(form, `Date Filed - ${suffix}`, data.dateFiled ?? '');
-  setField(form, `HX - ${suffix}`, data.hx ?? '');
+  set(`Number - ${suffix}`, data.number ?? '');
+  set(`Station Of Origin - ${suffix}`, data.stationOfOrigin ?? '');
+  set(`Check - ${suffix}`, data.check ?? '');
+  set(`Place Of Origin - ${suffix}`, data.placeOfOrigin ?? '');
+  set(`Time Filed - ${suffix}`, data.timeFiled ?? '');
+  set(`Date Filed - ${suffix}`, data.dateFiled ?? '');
+  set(`HX - ${suffix}`, data.hx ?? '');
   // The bottom form has a typo in the original PDF field name
   if (suffix === 'Top') {
-    setField(form, 'Precedence - Top', data.precedence ?? '');
+    set('Precedence - Top', data.precedence ?? '');
   } else {
-    setField(form, 'Precidence - Bottom', data.precedence ?? '');
+    set('Precidence - Bottom', data.precedence ?? '');
   }
 
   // Addressee
-  setField(form, `Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '');
-  setField(form, `Recipient Address - ${suffix}`, data.recipientAddress ?? '');
-  setField(form, `Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '');
-  setField(form, `Recipient Phone - ${suffix}`, data.recipientPhone ?? '');
+  set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '');
+  set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '');
+  set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '');
+  set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '');
 
   // Message words
   for (let i = 0; i < WORDS_PER_FORM; i++) {
     const num = String(i + 1).padStart(2, '0');
-    setField(form, `Word ${num} - ${suffix}`, data.words[i] ?? '');
+    set(`Word ${num} - ${suffix}`, data.words[i] ?? '');
   }
 
   // Signature (last form only)
-  setField(form, `Signature - ${suffix}`, data.signature ?? '');
+  set(`Signature - ${suffix}`, data.signature ?? '');
 
-  // REC'D / SENT (last form only)
-  setField(form, `Received From - ${suffix}`, data.receivedFrom ?? '');
-  setField(form, `Date Received - ${suffix}`, data.dateReceived ?? '');
-  setField(form, `Time Received - ${suffix}`, data.timeReceived ?? '');
-  setField(form, `Sent To - ${suffix}`, data.sentTo ?? '');
-  setField(form, `Date Sent - ${suffix}`, data.dateSent ?? '');
-  setField(form, `Time Sent - ${suffix}`, data.timeSent ?? '');
+  // REC'D / SENT (last form only) — RECEIVED AT size
+  set(`Received From - ${suffix}`, data.receivedFrom ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Date Received - ${suffix}`, data.dateReceived ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Time Received - ${suffix}`, data.timeReceived ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Sent To - ${suffix}`, data.sentTo ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Date Sent - ${suffix}`, data.dateSent ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Time Sent - ${suffix}`, data.timeSent ?? '', FONT_SIZE_RECEIVED_AT);
 
-  // Receiving station info (first form only)
-  setField(form, `Receiving Station - ${suffix}`, data.receivingStation ?? '');
-  setField(form, `Receiving Phone - ${suffix}`, data.receivingPhone ?? '');
-  setField(form, `Receiving Name - ${suffix}`, data.receivingName ?? '');
-  setField(form, `Receiving Address - ${suffix}`, data.receivingAddress ?? '');
+  // Receiving station info (first form only) — RECEIVED AT size
+  set(`Receiving Station - ${suffix}`, data.receivingStation ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Receiving Phone - ${suffix}`, data.receivingPhone ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Receiving Name - ${suffix}`, data.receivingName ?? '', FONT_SIZE_RECEIVED_AT);
+  set(`Receiving Address - ${suffix}`, data.receivingAddress ?? '', FONT_SIZE_RECEIVED_AT);
   // City/state/zip field name has slightly different punctuation between Top and Bottom in the PDF
   if (suffix === 'Top') {
-    setField(form, 'Receiving City, State & ZIP - Top', data.receivingCityStateZip ?? '');
+    set('Receiving City, State & ZIP - Top', data.receivingCityStateZip ?? '', FONT_SIZE_RECEIVED_AT);
   } else {
-    setField(form, 'Receiving City, State, & ZIP - Bottom', data.receivingCityStateZip ?? '');
+    set('Receiving City, State, & ZIP - Bottom', data.receivingCityStateZip ?? '', FONT_SIZE_RECEIVED_AT);
   }
 }
 
@@ -199,10 +217,11 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
 
   for (const pageData of pages) {
     const pdfDoc = await PDFDocument.load(formBytes);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const form = pdfDoc.getForm();
 
-    fillHalf(form, 'Top', pageData.top);
-    if (pageData.bottom) fillHalf(form, 'Bottom', pageData.bottom);
+    fillHalf(form, font, 'Top', pageData.top);
+    if (pageData.bottom) fillHalf(form, font, 'Bottom', pageData.bottom);
 
     // Flatten so the output contains static text, not interactive fields
     form.flatten();
