@@ -10,6 +10,11 @@ export interface UserProfile {
   netManagerCall: string;
   qrzUsername: string;
   qrzPassword: string;
+  phone?: string;
+  streetAddress?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   dispositionMethods?: string[];
   receivedMethods?: string[];
 }
