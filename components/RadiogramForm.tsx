@@ -36,6 +36,11 @@ function filterRadiogramCharsWithSpacesAndNewlines(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9/ \n]/g, '');
 }
 
+// Allow phone number characters: digits, spaces, +, -, (, )
+function filterPhoneChars(value: string): string {
+  return value.replace(/[^0-9() +\-]/g, '');
+}
+
 // Fields that allow spaces
 const FIELDS_WITH_SPACES = ['netName', 'placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote', 'receivedDestination', 'dispositionDestination'];
 
@@ -68,6 +73,7 @@ export default function RadiogramForm({
     timeFiled: '',
     date: '',
     address: '',
+    addressPhone: '',
     addressOpNote: '',
     textWords: createEmptyWords(INITIAL_LINES),
     signature: '',
@@ -113,10 +119,13 @@ export default function RadiogramForm({
     const el = e.target;
     const cursorPos = el.selectionStart;
     const isTextarea = e.target.tagName === 'TEXTAREA';
+    const isPhone = name === 'addressPhone';
     const allowsSpaces = FIELDS_WITH_SPACES.includes(name);
 
     let filtered: string;
-    if (isTextarea && allowsSpaces) {
+    if (isPhone) {
+      filtered = filterPhoneChars(value);
+    } else if (isTextarea && allowsSpaces) {
       filtered = filterRadiogramCharsWithSpacesAndNewlines(value);
     } else if (allowsSpaces) {
       filtered = filterRadiogramCharsWithSpaces(value);
@@ -128,7 +137,9 @@ export default function RadiogramForm({
     let adjustedCursor: number | null = null;
     if (cursorPos !== null) {
       const beforeCursor = value.slice(0, cursorPos);
-      if (isTextarea && allowsSpaces) {
+      if (isPhone) {
+        adjustedCursor = filterPhoneChars(beforeCursor).length;
+      } else if (isTextarea && allowsSpaces) {
         adjustedCursor = filterRadiogramCharsWithSpacesAndNewlines(beforeCursor).length;
       } else if (allowsSpaces) {
         adjustedCursor = filterRadiogramCharsWithSpaces(beforeCursor).length;
@@ -433,16 +444,29 @@ export default function RadiogramForm({
           {/* Address Section */}
           <div className="border-b pb-3">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
-                  required
-                />
+              <div className="space-y-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
+                  <input
+                    type="text"
+                    name="addressPhone"
+                    value={formData.addressPhone || ''}
+                    onChange={handleChange}
+                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
+                    placeholder="e.g., 555-867-5309"
+                  />
+                </div>
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-1">Op Note</h3>
