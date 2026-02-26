@@ -15,6 +15,7 @@ export interface UserProfile {
   city?: string;
   state?: string;
   zip?: string;
+  receivingStationName?: string;
   dispositionMethods?: string[];
   receivedMethods?: string[];
 }
@@ -106,8 +107,9 @@ export interface Radiogram {
   placeOfOrigin: string;
   timeFiled: string;
   date: string;
-  // Address (5 lines)
+  // Address
   address: string;
+  addressPhone?: string;
   addressOpNote: string;
   // Text (array of words, displayed 5 per line)
   textWords: string[];

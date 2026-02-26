@@ -38,18 +38,19 @@ interface HalfData {
   recipientNameCall?: string;
   recipientAddress?: string;
   recipientCityStateZip?: string;
-  // Message words (1–25 for this form)
+  recipientPhone?: string;
+  // Message words for this form (up to 25)
   words: string[];
   // Signature (last form only)
   signature?: string;
-  // Received / Sent (first form only)
+  // REC'D / SENT (last form only)
   receivedFrom?: string;
   dateReceived?: string;
   timeReceived?: string;
   sentTo?: string;
   dateSent?: string;
   timeSent?: string;
-  // Receiving station (first form only)
+  // Receiving station info (first form only)
   receivingStation?: string;
   receivingPhone?: string;
   receivingName?: string;
@@ -70,7 +71,7 @@ function fillHalf(
   setField(form, `Time Filed - ${suffix}`, data.timeFiled ?? '');
   setField(form, `Date Filed - ${suffix}`, data.dateFiled ?? '');
   setField(form, `HX - ${suffix}`, data.hx ?? '');
-  // The bottom form has a typo in the field name
+  // The bottom form has a typo in the original PDF field name
   if (suffix === 'Top') {
     setField(form, 'Precedence - Top', data.precedence ?? '');
   } else {
@@ -81,6 +82,7 @@ function fillHalf(
   setField(form, `Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '');
   setField(form, `Recipient Address - ${suffix}`, data.recipientAddress ?? '');
   setField(form, `Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '');
+  setField(form, `Recipient Phone - ${suffix}`, data.recipientPhone ?? '');
 
   // Message words
   for (let i = 0; i < WORDS_PER_FORM; i++) {
@@ -88,10 +90,10 @@ function fillHalf(
     setField(form, `Word ${num} - ${suffix}`, data.words[i] ?? '');
   }
 
-  // Signature
+  // Signature (last form only)
   setField(form, `Signature - ${suffix}`, data.signature ?? '');
 
-  // Received / Sent
+  // REC'D / SENT (last form only)
   setField(form, `Received From - ${suffix}`, data.receivedFrom ?? '');
   setField(form, `Date Received - ${suffix}`, data.dateReceived ?? '');
   setField(form, `Time Received - ${suffix}`, data.timeReceived ?? '');
@@ -99,12 +101,12 @@ function fillHalf(
   setField(form, `Date Sent - ${suffix}`, data.dateSent ?? '');
   setField(form, `Time Sent - ${suffix}`, data.timeSent ?? '');
 
-  // Receiving station info
+  // Receiving station info (first form only)
   setField(form, `Receiving Station - ${suffix}`, data.receivingStation ?? '');
   setField(form, `Receiving Phone - ${suffix}`, data.receivingPhone ?? '');
   setField(form, `Receiving Name - ${suffix}`, data.receivingName ?? '');
   setField(form, `Receiving Address - ${suffix}`, data.receivingAddress ?? '');
-  // The city/state/zip field has slightly different punctuation in top vs bottom
+  // City/state/zip field name has slightly different punctuation between Top and Bottom in the PDF
   if (suffix === 'Top') {
     setField(form, 'Receiving City, State & ZIP - Top', data.receivingCityStateZip ?? '');
   } else {
@@ -126,8 +128,8 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     .filter(Boolean)
     .join(', ');
 
-  // Common preamble / metadata that only appear on the first form
-  const firstFormData: Omit<HalfData, 'words'> = {
+  // Preamble data — appears on first form only
+  const preambleData = {
     number: radiogram.number,
     precedence: radiogram.precedence,
     hx: radiogram.handlingInstructions,
@@ -139,17 +141,22 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     recipientNameCall,
     recipientAddress,
     recipientCityStateZip,
+    recipientPhone: radiogram.addressPhone,
+    receivingStation: userProfile?.callsign,
+    receivingPhone: userProfile?.phone,
+    receivingName: userProfile?.receivingStationName,
+    receivingAddress: userProfile?.streetAddress,
+    receivingCityStateZip,
+  };
+
+  // Disposition data — appears on last form only
+  const dispositionData = {
     receivedFrom: radiogram.receivedDestination,
     dateReceived: formatPrintDate(radiogram.receivedDate),
     timeReceived: formatPrintTime(radiogram.receivedTime),
     sentTo: radiogram.dispositionDestination,
     dateSent: formatPrintDate(radiogram.dispositionDate),
     timeSent: formatPrintTime(radiogram.dispositionTime),
-    receivingStation: userProfile?.callsign,
-    receivingPhone: userProfile?.phone,
-    receivingName: userProfile?.name,
-    receivingAddress: userProfile?.streetAddress,
-    receivingCityStateZip,
   };
 
   // Split words into 25-word chunks, one chunk per form half
@@ -167,18 +174,15 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     const isFirst = idx === 0;
     const isLast = idx === chunks.length - 1;
     return {
-      ...(isFirst ? firstFormData : {}),
+      ...(isFirst ? preambleData : {}),
       words: chunk,
       signature: isLast ? radiogram.signature : undefined,
+      ...(isLast ? dispositionData : {}),
     };
   });
 
-  // If only one chunk (≤25 words), duplicate it for the bottom half so both copies are filled
-  if (halves.length === 1) {
-    halves.push({ ...halves[0] });
-  }
-
-  // Pair halves into pages (top + bottom per page)
+  // Pair halves into physical pages (Top + Bottom per page).
+  // If there is only one half, only the Top form is filled; Bottom is left blank.
   const pages: Array<{ top: HalfData; bottom: HalfData | null }> = [];
   for (let i = 0; i < halves.length; i += 2) {
     pages.push({ top: halves[i], bottom: halves[i + 1] ?? null });
@@ -189,7 +193,8 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
   const formBytes = await response.arrayBuffer();
 
   // Build the output PDF one page at a time.
-  // Each page is filled, flattened, and copied into the final document to avoid field-name conflicts.
+  // Each page is filled, flattened, then copied into the final document to
+  // avoid field-name conflicts across pages.
   let finalDoc: PDFDocument | null = null;
 
   for (const pageData of pages) {
@@ -199,10 +204,9 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     fillHalf(form, 'Top', pageData.top);
     if (pageData.bottom) fillHalf(form, 'Bottom', pageData.bottom);
 
-    // Flatten so fields become static text (no interactive elements in output)
+    // Flatten so the output contains static text, not interactive fields
     form.flatten();
 
-    // Re-load the flattened bytes to get a clean page for copying
     const flatBytes = await pdfDoc.save();
     const flatDoc = await PDFDocument.load(flatBytes);
 
@@ -221,6 +225,5 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
   const url = URL.createObjectURL(blob);
 
   window.open(url, '_blank');
-  // Release the object URL after the window has had time to load it
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
