@@ -20,7 +20,7 @@ export default function StationLookupDropdown({
 
   // Auto-scroll selected item into view
   useEffect(() => {
-    if (listRef.current && selectedIndex >= 0) {
+    if (listRef.current) {
       const selectedItem = listRef.current.children[selectedIndex] as HTMLElement;
       if (selectedItem) {
         selectedItem.scrollIntoView({ block: 'nearest' });

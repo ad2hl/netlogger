@@ -123,7 +123,6 @@ function NetPage() {
 
     const radiogram = generateRadiogram({
       session: sess,
-      stations,
       userCallsign: profile.callsign,
       userName: profile.name,
       userLocation: profile.location,

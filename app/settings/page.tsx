@@ -88,7 +88,7 @@ export default function SettingsPage() {
 
     if (dataToSave.qrzPassword) {
       try {
-        const token = await user!.getIdToken();
+        const token = await user.getIdToken();
         const res = await apiFetch('/api/credentials', {
           method: 'POST',
           headers: {

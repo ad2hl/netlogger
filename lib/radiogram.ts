@@ -1,8 +1,7 @@
-import { CheckIn, NetSession, Station, isStatusTag } from '@/types';
+import { CheckIn, NetSession, isStatusTag } from '@/types';
 
 interface RadiogramData {
   session: NetSession;
-  stations: Map<string, Station>;
   userCallsign: string;
   userName: string;
   userLocation: string;

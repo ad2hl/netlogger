@@ -125,14 +125,13 @@ export default function ReportGenerator({
 
     return generateRadiogram({
       session,
-      stations,
       userCallsign: profile.callsign,
       userName: profile.name,
       userLocation: profile.location,
       addresseeCallsign: profile.netManagerCall || '',
       messageNumber: messageNumber || undefined,
     });
-  }, [session, stations, profile, messageNumber]);
+  }, [session, profile, messageNumber]);
 
   // Check if report has changed from saved version
   const reportChanged = useMemo(() => {
