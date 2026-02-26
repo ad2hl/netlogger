@@ -178,15 +178,6 @@ function SessionsContent() {
     setShowNewSessionModal(true);
   };
 
-  const handleSessionButton = () => {
-    const active = sessions.find((s) => !s.endTime);
-    if (active?.id) {
-      router.push(`/net?session=${active.id}`);
-    } else {
-      openNewSessionModal();
-    }
-  };
-
   const handleNewSessionClick = () => {
     const active = sessions.find((s) => !s.endTime);
     if (active) {
@@ -274,19 +265,21 @@ function SessionsContent() {
             <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
             <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
             <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
-            <button
-              onClick={handleSessionButton}
-              className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
-            >
-              {sessions.find((s) => !s.endTime) ? 'Active Session' : 'New Session'}
-            </button>
             <ProfileMenu photoURL={photoURL} />
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-3">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Sessions</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-slate-900">Sessions</h2>
+          <button
+            onClick={handleNewSessionClick}
+            className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
+          >
+            New Session
+          </button>
+        </div>
 
         {fetching ? (
           <p className="text-slate-500">Loading...</p>
