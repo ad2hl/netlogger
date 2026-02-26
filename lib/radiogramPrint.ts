@@ -1,15 +1,10 @@
+import { PDFDocument } from 'pdf-lib';
 import { Radiogram, UserProfile } from '@/types';
 
-const WORDS_PER_PAGE = 25;
-const WORDS_PER_LINE = 5;
-
-function field(value: string | undefined, fallback = ''): string {
-  return value?.trim() || fallback;
-}
+const WORDS_PER_FORM = 25;
 
 function formatPrintDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
-  // dateStr from <input type="date"> is "YYYY-MM-DD"
   const parts = dateStr.split('-');
   if (parts.length === 3) return `${parts[1]}/${parts[2]}/${parts[0]}`;
   return dateStr;
@@ -17,304 +12,215 @@ function formatPrintDate(dateStr: string | undefined): string {
 
 function formatPrintTime(timeStr: string | undefined): string {
   if (!timeStr) return '';
-  // timeStr from <input type="time"> is "HH:MM"
   return timeStr.replace(':', '');
 }
 
-function esc(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function renderPreamble(r: Radiogram): string {
-  return `
-    <div class="section preamble-section">
-      <div class="title">AMATEUR RADIO RADIOGRAM</div>
-      <table class="preamble-table">
-        <tr>
-          <td class="preamble-cell"><span class="label">NR</span><span class="value">${esc(field(r.number))}</span></td>
-          <td class="preamble-cell"><span class="label">PREC</span><span class="value">${esc(field(r.precedence))}</span></td>
-          <td class="preamble-cell"><span class="label">HX</span><span class="value">${esc(field(r.handlingInstructions))}</span></td>
-          <td class="preamble-cell wide"><span class="label">STA OF ORIGIN</span><span class="value">${esc(field(r.stationOfOrigin))}</span></td>
-          <td class="preamble-cell"><span class="label">CHECK</span><span class="value">${esc(field(r.check))}</span></td>
-        </tr>
-        <tr>
-          <td class="preamble-cell wide" colspan="3"><span class="label">PLACE OF ORIGIN</span><span class="value">${esc(field(r.placeOfOrigin))}</span></td>
-          <td class="preamble-cell"><span class="label">TIME</span><span class="value">${esc(field(r.timeFiled))}</span></td>
-          <td class="preamble-cell"><span class="label">DATE</span><span class="value">${esc(field(r.date))}</span></td>
-        </tr>
-      </table>
-    </div>
-    <div class="section address-section">
-      <div class="to-label">TO:</div>
-      <div class="address-lines">
-        ${r.address.split('\n').filter(l => l.trim()).map(l => `<div class="address-line">${esc(l)}</div>`).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function renderWordGrid(pageWords: string[], startIndex: number): string {
-  let rows = '';
-  for (let line = 0; line < 5; line++) {
-    let cells = '';
-    for (let col = 0; col < WORDS_PER_LINE; col++) {
-      const idx = line * WORDS_PER_LINE + col;
-      const wordNum = startIndex + idx + 1;
-      const word = pageWords[idx] || '';
-      cells += `<td class="word-cell"><span class="word-num">${wordNum}</span><span class="word-val">${esc(word)}</span></td>`;
-    }
-    rows += `<tr>${cells}</tr>`;
+function setField(form: ReturnType<PDFDocument['getForm']>, name: string, value: string): void {
+  if (!value) return;
+  try {
+    form.getTextField(name).setText(value);
+  } catch {
+    // Field doesn't exist in this PDF — ignore
   }
-  return `<table class="word-table"><tbody>${rows}</tbody></table>`;
 }
 
-function renderSignature(r: Radiogram): string {
-  return `
-    <div class="section sig-section">
-      <span class="label">SIG</span>
-      <span class="sig-value">${esc(field(r.signature))}</span>
-      ${r.signatureOpNote ? `<span class="sig-opnote">${esc(r.signatureOpNote)}</span>` : ''}
-    </div>
-  `;
+interface HalfData {
+  // Preamble (first form only)
+  number?: string;
+  precedence?: string;
+  hx?: string;
+  stationOfOrigin?: string;
+  check?: string;
+  placeOfOrigin?: string;
+  timeFiled?: string;
+  dateFiled?: string;
+  // Addressee (first form only)
+  recipientNameCall?: string;
+  recipientAddress?: string;
+  recipientCityStateZip?: string;
+  // Message words (1–25 for this form)
+  words: string[];
+  // Signature (last form only)
+  signature?: string;
+  // Received / Sent (first form only)
+  receivedFrom?: string;
+  dateReceived?: string;
+  timeReceived?: string;
+  sentTo?: string;
+  dateSent?: string;
+  timeSent?: string;
+  // Receiving station (first form only)
+  receivingStation?: string;
+  receivingPhone?: string;
+  receivingName?: string;
+  receivingAddress?: string;
+  receivingCityStateZip?: string;
 }
 
-function renderReceivedAt(r: Radiogram, profile: UserProfile | undefined): string {
-  const callsign = field(profile?.callsign);
-  const phone = field(profile?.phone);
-  const street = field(profile?.streetAddress);
-  const city = field(profile?.city);
-  const state = field(profile?.state);
-  const zip = field(profile?.zip);
-  const date = formatPrintDate(r.receivedDate);
-  const time = formatPrintTime(r.receivedTime);
-  const from = field(r.receivedDestination);
+function fillHalf(
+  form: ReturnType<PDFDocument['getForm']>,
+  suffix: 'Top' | 'Bottom',
+  data: HalfData,
+): void {
+  // Preamble
+  setField(form, `Number - ${suffix}`, data.number ?? '');
+  setField(form, `Station Of Origin - ${suffix}`, data.stationOfOrigin ?? '');
+  setField(form, `Check - ${suffix}`, data.check ?? '');
+  setField(form, `Place Of Origin - ${suffix}`, data.placeOfOrigin ?? '');
+  setField(form, `Time Filed - ${suffix}`, data.timeFiled ?? '');
+  setField(form, `Date Filed - ${suffix}`, data.dateFiled ?? '');
+  setField(form, `HX - ${suffix}`, data.hx ?? '');
+  // The bottom form has a typo in the field name
+  if (suffix === 'Top') {
+    setField(form, 'Precedence - Top', data.precedence ?? '');
+  } else {
+    setField(form, 'Precidence - Bottom', data.precedence ?? '');
+  }
 
-  return `
-    <div class="received-at">
-      <div class="received-at-title">REC&apos;D AT</div>
-      <table class="received-table">
-        <tr>
-          <td><span class="label">PHONE</span><span class="recv-value">${esc(phone)}</span></td>
-          <td colspan="2"><span class="label">STREET ADDRESS</span><span class="recv-value">${esc(street)}</span></td>
-        </tr>
-        <tr>
-          <td><span class="label">CITY</span><span class="recv-value">${esc(city)}</span></td>
-          <td><span class="label">STATE</span><span class="recv-value">${esc(state)}</span></td>
-          <td><span class="label">ZIP</span><span class="recv-value">${esc(zip)}</span></td>
-        </tr>
-        <tr>
-          <td><span class="label">BY (CALL)</span><span class="recv-value">${esc(callsign)}</span></td>
-          <td><span class="label">DATE</span><span class="recv-value">${esc(date)}</span></td>
-          <td><span class="label">TIME</span><span class="recv-value">${esc(time)}</span></td>
-        </tr>
-        ${from ? `<tr><td colspan="3"><span class="label">RECEIVED FROM</span><span class="recv-value">${esc(from)}</span></td></tr>` : ''}
-      </table>
-    </div>
-  `;
+  // Addressee
+  setField(form, `Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '');
+  setField(form, `Recipient Address - ${suffix}`, data.recipientAddress ?? '');
+  setField(form, `Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '');
+
+  // Message words
+  for (let i = 0; i < WORDS_PER_FORM; i++) {
+    const num = String(i + 1).padStart(2, '0');
+    setField(form, `Word ${num} - ${suffix}`, data.words[i] ?? '');
+  }
+
+  // Signature
+  setField(form, `Signature - ${suffix}`, data.signature ?? '');
+
+  // Received / Sent
+  setField(form, `Received From - ${suffix}`, data.receivedFrom ?? '');
+  setField(form, `Date Received - ${suffix}`, data.dateReceived ?? '');
+  setField(form, `Time Received - ${suffix}`, data.timeReceived ?? '');
+  setField(form, `Sent To - ${suffix}`, data.sentTo ?? '');
+  setField(form, `Date Sent - ${suffix}`, data.dateSent ?? '');
+  setField(form, `Time Sent - ${suffix}`, data.timeSent ?? '');
+
+  // Receiving station info
+  setField(form, `Receiving Station - ${suffix}`, data.receivingStation ?? '');
+  setField(form, `Receiving Phone - ${suffix}`, data.receivingPhone ?? '');
+  setField(form, `Receiving Name - ${suffix}`, data.receivingName ?? '');
+  setField(form, `Receiving Address - ${suffix}`, data.receivingAddress ?? '');
+  // The city/state/zip field has slightly different punctuation in top vs bottom
+  if (suffix === 'Top') {
+    setField(form, 'Receiving City, State & ZIP - Top', data.receivingCityStateZip ?? '');
+  } else {
+    setField(form, 'Receiving City, State, & ZIP - Bottom', data.receivingCityStateZip ?? '');
+  }
 }
 
-function getStyles(): string {
-  return `
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    @page { size: letter; margin: 0.5in; }
-    body { font-family: 'Courier New', Courier, monospace; font-size: 9pt; color: #000; background: #fff; }
-    .page { width: 100%; }
-    .page-break { page-break-after: always; }
-    .section { margin-bottom: 6pt; }
-    .title {
-      text-align: center;
-      font-size: 13pt;
-      font-weight: bold;
-      letter-spacing: 2px;
-      border: 2px solid #000;
-      padding: 4pt;
-      margin-bottom: 4pt;
-    }
-    .preamble-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .preamble-cell {
-      border: 1px solid #000;
-      padding: 2pt 4pt;
-      vertical-align: top;
-      white-space: nowrap;
-    }
-    .preamble-cell.wide { width: auto; }
-    .label {
-      display: block;
-      font-size: 7pt;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #444;
-    }
-    .value {
-      display: block;
-      font-size: 10pt;
-      font-weight: bold;
-      min-height: 14pt;
-    }
-    .address-section {
-      border: 1px solid #000;
-      padding: 4pt;
-      display: flex;
-      gap: 8pt;
-      align-items: flex-start;
-    }
-    .to-label { font-weight: bold; font-size: 11pt; white-space: nowrap; }
-    .address-line { font-size: 10pt; min-height: 13pt; }
-    .word-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .word-cell {
-      border: 1px solid #000;
-      padding: 1pt 2pt;
-      width: 20%;
-    }
-    .word-num {
-      display: block;
-      font-size: 7pt;
-      color: #666;
-      line-height: 1;
-    }
-    .word-val {
-      display: block;
-      font-size: 10pt;
-      font-weight: bold;
-      min-height: 13pt;
-    }
-    .sig-section {
-      border: 1px solid #000;
-      padding: 4pt;
-      display: flex;
-      gap: 8pt;
-      align-items: baseline;
-    }
-    .sig-value {
-      font-size: 10pt;
-      font-weight: bold;
-      flex: 1;
-    }
-    .sig-opnote {
-      font-size: 9pt;
-      color: #333;
-    }
-    .continuation {
-      text-align: center;
-      font-size: 10pt;
-      font-style: italic;
-      border: 1px solid #000;
-      padding: 4pt;
-      margin-bottom: 6pt;
-    }
-    .continued {
-      text-align: center;
-      font-size: 9pt;
-      font-style: italic;
-      margin-top: 4pt;
-    }
-    .received-at {
-      border: 2px solid #000;
-      margin-top: 10pt;
-      padding: 4pt;
-    }
-    .received-at-title {
-      font-size: 10pt;
-      font-weight: bold;
-      text-align: center;
-      letter-spacing: 2px;
-      margin-bottom: 4pt;
-      border-bottom: 1px solid #000;
-      padding-bottom: 2pt;
-    }
-    .received-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .received-table td {
-      border: 1px solid #000;
-      padding: 2pt 4pt;
-    }
-    .recv-value {
-      display: block;
-      font-size: 10pt;
-      font-weight: bold;
-      min-height: 13pt;
-    }
-    .no-print { display: none; }
-    @media screen {
-      body { background: #f0f0f0; }
-      .page { background: #fff; max-width: 7.5in; margin: 0.25in auto; padding: 0.5in; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-      .no-print { display: block; }
-      .print-btn {
-        display: block;
-        margin: 0.5in auto;
-        padding: 8pt 24pt;
-        font-size: 12pt;
-        background: #0e7490;
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      .print-btn:hover { background: #0c5f75; }
-    }
-  `;
-}
-
-export function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): void {
+export async function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
   const words = radiogram.textWords.filter(w => w.length > 0);
 
-  // Build pages: each page holds up to 25 words
-  const pageWordChunks: string[][] = [];
+  // Parse addressee lines into the form's separate fields
+  const addressLines = radiogram.address.split('\n').map(l => l.trim()).filter(Boolean);
+  const recipientNameCall = addressLines[0] ?? '';
+  const recipientAddress = addressLines[1] ?? '';
+  const recipientCityStateZip = addressLines.slice(2).join(' ') ?? '';
+
+  // Receiving station info from user profile
+  const receivingCityStateZip = [userProfile?.city, userProfile?.state, userProfile?.zip]
+    .filter(Boolean)
+    .join(', ');
+
+  // Common preamble / metadata that only appear on the first form
+  const firstFormData: Omit<HalfData, 'words'> = {
+    number: radiogram.number,
+    precedence: radiogram.precedence,
+    hx: radiogram.handlingInstructions,
+    stationOfOrigin: radiogram.stationOfOrigin,
+    check: radiogram.check,
+    placeOfOrigin: radiogram.placeOfOrigin,
+    timeFiled: radiogram.timeFiled,
+    dateFiled: radiogram.date,
+    recipientNameCall,
+    recipientAddress,
+    recipientCityStateZip,
+    receivedFrom: radiogram.receivedDestination,
+    dateReceived: formatPrintDate(radiogram.receivedDate),
+    timeReceived: formatPrintTime(radiogram.receivedTime),
+    sentTo: radiogram.dispositionDestination,
+    dateSent: formatPrintDate(radiogram.dispositionDate),
+    timeSent: formatPrintTime(radiogram.dispositionTime),
+    receivingStation: userProfile?.callsign,
+    receivingPhone: userProfile?.phone,
+    receivingName: userProfile?.name,
+    receivingAddress: userProfile?.streetAddress,
+    receivingCityStateZip,
+  };
+
+  // Split words into 25-word chunks, one chunk per form half
+  const chunks: string[][] = [];
   if (words.length === 0) {
-    pageWordChunks.push([]);
+    chunks.push([]);
   } else {
-    for (let i = 0; i < words.length; i += WORDS_PER_PAGE) {
-      pageWordChunks.push(words.slice(i, i + WORDS_PER_PAGE));
+    for (let i = 0; i < words.length; i += WORDS_PER_FORM) {
+      chunks.push(words.slice(i, i + WORDS_PER_FORM));
     }
   }
 
-  let pagesHtml = '';
-  pageWordChunks.forEach((pageWords, pageIdx) => {
-    const isFirst = pageIdx === 0;
-    const isLast = pageIdx === pageWordChunks.length - 1;
-    const wordStartIdx = pageIdx * WORDS_PER_PAGE;
-    const hasMore = !isLast;
-
-    pagesHtml += `
-      <div class="${hasMore ? 'page page-break' : 'page'}">
-        ${isFirst ? renderPreamble(radiogram) : `<div class="continuation">NR ${esc(field(radiogram.number))} (CONTINUATION ${pageIdx + 1})</div>`}
-        ${renderWordGrid(pageWords, wordStartIdx)}
-        ${isLast ? renderSignature(radiogram) : '<div class="continued">&mdash; continued on next page &mdash;</div>'}
-        ${isFirst ? renderReceivedAt(radiogram, userProfile) : ''}
-      </div>
-    `;
+  // Build a HalfData for each chunk
+  const halves: HalfData[] = chunks.map((chunk, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === chunks.length - 1;
+    return {
+      ...(isFirst ? firstFormData : {}),
+      words: chunk,
+      signature: isLast ? radiogram.signature : undefined,
+    };
   });
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Radiogram Nr ${esc(field(radiogram.number, '?'))}</title>
-  <style>${getStyles()}</style>
-</head>
-<body>
-  <button class="no-print print-btn" onclick="window.print()">Print / Save as PDF</button>
-  ${pagesHtml}
-  <script>window.onload = function() { window.print(); };<\/script>
-</body>
-</html>`;
-
-  const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
+  // If only one chunk (≤25 words), duplicate it for the bottom half so both copies are filled
+  if (halves.length === 1) {
+    halves.push({ ...halves[0] });
   }
+
+  // Pair halves into pages (top + bottom per page)
+  const pages: Array<{ top: HalfData; bottom: HalfData | null }> = [];
+  for (let i = 0; i < halves.length; i += 2) {
+    pages.push({ top: halves[i], bottom: halves[i + 1] ?? null });
+  }
+
+  // Fetch the blank form PDF
+  const response = await fetch('/radiogram-form.pdf');
+  const formBytes = await response.arrayBuffer();
+
+  // Build the output PDF one page at a time.
+  // Each page is filled, flattened, and copied into the final document to avoid field-name conflicts.
+  let finalDoc: PDFDocument | null = null;
+
+  for (const pageData of pages) {
+    const pdfDoc = await PDFDocument.load(formBytes);
+    const form = pdfDoc.getForm();
+
+    fillHalf(form, 'Top', pageData.top);
+    if (pageData.bottom) fillHalf(form, 'Bottom', pageData.bottom);
+
+    // Flatten so fields become static text (no interactive elements in output)
+    form.flatten();
+
+    // Re-load the flattened bytes to get a clean page for copying
+    const flatBytes = await pdfDoc.save();
+    const flatDoc = await PDFDocument.load(flatBytes);
+
+    if (!finalDoc) {
+      finalDoc = flatDoc;
+    } else {
+      const [page] = await finalDoc.copyPages(flatDoc, [0]);
+      finalDoc.addPage(page);
+    }
+  }
+
+  if (!finalDoc) return;
+
+  const pdfBytes = await finalDoc.save();
+  const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+
+  window.open(url, '_blank');
+  // Release the object URL after the window has had time to load it
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
