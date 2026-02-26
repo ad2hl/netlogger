@@ -95,14 +95,9 @@ function fillHalf(
     set('Precidence - Bottom', data.precedence ?? '');
   }
 
-  // Addressee — lines 1-3 go into Name/Call (multiline); line 4 into City/State/ZIP
-  try {
-    const toField = form.getTextField(`Recipient Name / Call - ${suffix}`);
-    toField.enableMultiline();
-    toField.setText(data.recipientNameCall ?? '');
-    toField.setFontSize(FONT_SIZE_ADDRESS);
-    toField.updateAppearances(font);
-  } catch { /* ignore */ }
+  // Addressee — one line per field
+  set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '', FONT_SIZE_ADDRESS);
+  set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '', FONT_SIZE_ADDRESS);
 
@@ -139,12 +134,11 @@ function fillHalf(
 export async function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
   const words = radiogram.textWords.filter(w => w.length > 0);
 
-  // Parse addressee lines into the form's separate fields.
-  // Lines 0-2 → Name/Call (multiline); line 3 → City/State/ZIP.
+  // Map the first 3 address lines to the 3 TO fields in the PDF, one line per field.
   const addressLines = radiogram.address.split('\n').map(l => l.trim()).filter(Boolean);
-  const recipientNameCall = addressLines.slice(0, 3).join('\r');
-  const recipientAddress = '';
-  const recipientCityStateZip = addressLines[3] ?? '';
+  const recipientNameCall = addressLines[0] ?? '';
+  const recipientAddress = addressLines[1] ?? '';
+  const recipientCityStateZip = addressLines[2] ?? '';
 
   // Receiving station info from user profile
   const receivingCityStateZip = [userProfile?.city, userProfile?.state, userProfile?.zip]
