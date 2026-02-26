@@ -339,9 +339,9 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (radiogram) {
-      printRadiogram(radiogram, userProfile);
+      await printRadiogram(radiogram, userProfile);
       return;
     }
     if (!netReport) return;
@@ -376,7 +376,7 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
       signature: parsed.signature,
       signatureOpNote: '',
     };
-    printRadiogram(r, userProfile);
+    await printRadiogram(r, userProfile);
   };
 
   const title = netReport ? 'Net Report' : 'Radiogram';

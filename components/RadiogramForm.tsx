@@ -237,7 +237,7 @@ export default function RadiogramForm({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const trimmedWords = [...formData.textWords];
     while (trimmedWords.length > 0 && trimmedWords[trimmedWords.length - 1] === '') {
       trimmedWords.pop();
@@ -247,7 +247,7 @@ export default function RadiogramForm({
       textWords: trimmedWords,
       id: existingRadiogram?.id || '',
     };
-    printRadiogram(radiogram, userProfile);
+    await printRadiogram(radiogram, userProfile);
   };
 
   useEffect(() => {
