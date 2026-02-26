@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Radiogram, DEFAULT_DISPOSITION_METHODS } from '@/types';
+import { Radiogram, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
 
 interface RadiogramFormProps {
@@ -10,7 +10,9 @@ interface RadiogramFormProps {
   onSave: (radiogram: Radiogram) => void;
   onDelete?: (id: string) => void;
   existingRadiogram?: Radiogram | null;
+  netName?: string;
   dispositionMethods?: string[];
+  receivedMethods?: string[];
 }
 
 function generateId(): string {
@@ -33,7 +35,7 @@ function filterRadiogramCharsWithSpacesAndNewlines(value: string): string {
 }
 
 // Fields that allow spaces
-const FIELDS_WITH_SPACES = ['placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote', 'dispositionDestination'];
+const FIELDS_WITH_SPACES = ['netName', 'placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote', 'receivedDestination', 'dispositionDestination'];
 
 const WORDS_PER_LINE = 5;
 const INITIAL_LINES = 5;
@@ -44,12 +46,16 @@ export default function RadiogramForm({
   onSave,
   onDelete,
   existingRadiogram,
+  netName,
   dispositionMethods,
+  receivedMethods,
 }: RadiogramFormProps) {
-  const methods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
+  const sentMethods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
+  const rcvdMethods = receivedMethods ?? DEFAULT_RECEIVED_METHODS;
   const createEmptyWords = (lines: number) => Array(lines * WORDS_PER_LINE).fill('');
 
   const emptyForm: Omit<Radiogram, 'id'> = {
+    netName: netName || '',
     number: '',
     precedence: '',
     handlingInstructions: '',
@@ -63,6 +69,10 @@ export default function RadiogramForm({
     textWords: createEmptyWords(INITIAL_LINES),
     signature: '',
     signatureOpNote: '',
+    receivedMethod: '',
+    receivedDestination: '',
+    receivedDate: '',
+    receivedTime: '',
     dispositionMethod: '',
     dispositionDestination: '',
     dispositionDate: '',
@@ -85,7 +95,7 @@ export default function RadiogramForm({
       }
       setFormData({ ...rest, textWords });
     } else {
-      setFormData(emptyForm);
+      setFormData({ ...emptyForm, netName: netName || '' });
     }
   }, [existingRadiogram, isOpen]);
 
@@ -281,6 +291,18 @@ export default function RadiogramForm({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          {/* Net Name */}
+          <div className="border-b pb-3">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Net Name</label>
+            <input
+              type="text"
+              name="netName"
+              value={formData.netName || ''}
+              onChange={handleChange}
+              className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+            />
+          </div>
+
           {/* Preamble Section */}
           <div className="border-b pb-3">
             <div className="grid grid-cols-12 gap-3">
@@ -459,29 +481,73 @@ export default function RadiogramForm({
             </div>
           </div>
 
-          {/* Disposition Section */}
+          {/* Received Section */}
           <div className="border-t pt-3">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">Disposition</h3>
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Received</h3>
             <div className="grid grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Method
-                </label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Method</label>
+                <select
+                  value={formData.receivedMethod || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, receivedMethod: e.target.value }))}
+                  className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
+                >
+                  <option value=""></option>
+                  {rcvdMethods.map((m) => (
+                    <option key={m} value={m.toUpperCase()}>{m}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">From</label>
+                <input
+                  type="text"
+                  name="receivedDestination"
+                  value={formData.receivedDestination || ''}
+                  onChange={handleChange}
+                  className="w-full px-2 border border-slate-300 rounded text-sm uppercase h-[30px]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={formData.receivedDate || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, receivedDate: e.target.value }))}
+                  className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Time</label>
+                <input
+                  type="time"
+                  value={formData.receivedTime || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, receivedTime: e.target.value }))}
+                  className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sent Section */}
+          <div className="border-t pt-3">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Sent</h3>
+            <div className="grid grid-cols-4 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Method</label>
                 <select
                   value={formData.dispositionMethod || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, dispositionMethod: e.target.value }))}
                   className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
                 >
                   <option value=""></option>
-                  {methods.map((m) => (
+                  {sentMethods.map((m) => (
                     <option key={m} value={m.toUpperCase()}>{m}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Destination
-                </label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">To</label>
                 <input
                   type="text"
                   name="dispositionDestination"
@@ -491,9 +557,7 @@ export default function RadiogramForm({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Date
-                </label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Date</label>
                 <input
                   type="date"
                   value={formData.dispositionDate || ''}
@@ -502,9 +566,7 @@ export default function RadiogramForm({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Time
-                </label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Time</label>
                 <input
                   type="time"
                   value={formData.dispositionTime || ''}

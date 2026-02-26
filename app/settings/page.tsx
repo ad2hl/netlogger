@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { updateUserProfile, changePassword } from '@/lib/auth';
-import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
+import { UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
 import ProfileMenu from '@/components/ProfileMenu';
 import { apiFetch } from '@/lib/api-fetch';
@@ -24,6 +24,8 @@ export default function SettingsPage() {
   });
   const [dispositionMethods, setDispositionMethods] = useState<string[]>(DEFAULT_DISPOSITION_METHODS);
   const [newMethod, setNewMethod] = useState('');
+  const [receivedMethods, setReceivedMethods] = useState<string[]>(DEFAULT_RECEIVED_METHODS);
+  const [newReceivedMethod, setNewReceivedMethod] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -51,6 +53,7 @@ export default function SettingsPage() {
         qrzPassword: '',
       });
       setDispositionMethods(profile.dispositionMethods ?? DEFAULT_DISPOSITION_METHODS);
+      setReceivedMethods(profile.receivedMethods ?? DEFAULT_RECEIVED_METHODS);
     }
   }, [profile]);
 
@@ -69,7 +72,7 @@ export default function SettingsPage() {
     setSaving(true);
     setMessage(null);
 
-    const dataToSave = { ...formData, dispositionMethods };
+    const dataToSave = { ...formData, dispositionMethods, receivedMethods };
 
     if (dataToSave.qrzPassword) {
       try {
@@ -260,9 +263,9 @@ export default function SettingsPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4">Disposition Methods</h2>
+            <h2 className="text-lg font-semibold mb-4">Sent Methods</h2>
             <p className="text-sm text-slate-600 mb-4">
-              Customize the disposition methods available in radiogram forms.
+              Customize the methods available in the Sent section of radiogram forms.
             </p>
 
             <div className="space-y-2 mb-4">
@@ -314,6 +317,70 @@ export default function SettingsPage() {
                   if (trimmed && !dispositionMethods.includes(trimmed)) {
                     setDispositionMethods([...dispositionMethods, trimmed]);
                     setNewMethod('');
+                  }
+                }}
+                className="bg-slate-200 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-300 text-sm"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4">Received Methods</h2>
+            <p className="text-sm text-slate-600 mb-4">
+              Customize the methods available in the Received section of radiogram forms.
+            </p>
+
+            <div className="space-y-2 mb-4">
+              {receivedMethods.map((method, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={method}
+                    onChange={(e) => {
+                      const updated = [...receivedMethods];
+                      updated[index] = e.target.value;
+                      setReceivedMethods(updated);
+                    }}
+                    className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setReceivedMethods(receivedMethods.filter((_, i) => i !== index))}
+                    className="text-red-500 hover:text-red-700 px-2 py-1 text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newReceivedMethod}
+                onChange={(e) => setNewReceivedMethod(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const trimmed = newReceivedMethod.trim();
+                    if (trimmed && !receivedMethods.includes(trimmed)) {
+                      setReceivedMethods([...receivedMethods, trimmed]);
+                      setNewReceivedMethod('');
+                    }
+                  }
+                }}
+                className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                placeholder="New method name"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const trimmed = newReceivedMethod.trim();
+                  if (trimmed && !receivedMethods.includes(trimmed)) {
+                    setReceivedMethods([...receivedMethods, trimmed]);
+                    setNewReceivedMethod('');
                   }
                 }}
                 className="bg-slate-200 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-300 text-sm"
