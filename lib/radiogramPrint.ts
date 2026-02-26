@@ -4,7 +4,7 @@ import { Radiogram, UserProfile } from '@/types';
 const WORDS_PER_FORM = 25;
 
 const FONT_SIZE_WORDS = 12;   // message text words only
-const FONT_SIZE_OTHER = 10;   // preamble, address, signature, RECEIVED AT, REC'D/SENT
+const FONT_SIZE_OTHER = 9;    // preamble, address, signature, RECEIVED AT, REC'D/SENT
 
 function formatPrintDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
