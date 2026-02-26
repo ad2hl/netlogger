@@ -95,8 +95,9 @@ function fillHalf(
     set('Precidence - Bottom', data.precedence ?? '');
   }
 
-  // Addressee
+  // Addressee — Recipient Address is multiline to accommodate street + apt/suite lines
   set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '', FONT_SIZE_ADDRESS);
+  try { form.getTextField(`Recipient Address - ${suffix}`).enableMultiline(); } catch { /* ignore */ }
   set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '', FONT_SIZE_ADDRESS);
@@ -134,11 +135,12 @@ function fillHalf(
 export async function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
   const words = radiogram.textWords.filter(w => w.length > 0);
 
-  // Parse addressee lines into the form's separate fields
+  // Parse addressee lines into the form's separate fields.
+  // Line 0 → Name/Call; last line → City/State/ZIP; middle lines → Address (multiline).
   const addressLines = radiogram.address.split('\n').map(l => l.trim()).filter(Boolean);
   const recipientNameCall = addressLines[0] ?? '';
-  const recipientAddress = addressLines[1] ?? '';
-  const recipientCityStateZip = addressLines.slice(2).join(' ') ?? '';
+  const recipientAddress = addressLines.length >= 3 ? addressLines.slice(1, -1).join('\n') : (addressLines[1] ?? '');
+  const recipientCityStateZip = addressLines.length >= 3 ? (addressLines[addressLines.length - 1] ?? '') : '';
 
   // Receiving station info from user profile
   const receivingCityStateZip = [userProfile?.city, userProfile?.state, userProfile?.zip]
