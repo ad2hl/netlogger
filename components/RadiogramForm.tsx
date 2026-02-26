@@ -388,14 +388,22 @@ export default function RadiogramForm({
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   Check
                 </label>
-                <input
-                  type="text"
-                  name="check"
-                  value={formData.check}
-                  onChange={handleChange}
-                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
-                  required
-                />
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    name="check"
+                    value={formData.check}
+                    onChange={handleChange}
+                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+                    required
+                  />
+                  {formData.check && (
+                    <>
+                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount === parseInt(formData.check) ? 'text-green-600' : 'hidden'}`}>✓</span>
+                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount !== parseInt(formData.check) ? 'text-red-600' : 'hidden'}`}>✗</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
