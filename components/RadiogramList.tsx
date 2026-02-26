@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Radiogram } from '@/types';
+import { Radiogram, UserProfile } from '@/types';
 import RadiogramForm from './RadiogramForm';
 
 interface RadiogramListProps {
@@ -11,6 +11,7 @@ interface RadiogramListProps {
   netName?: string;
   dispositionMethods?: string[];
   receivedMethods?: string[];
+  userProfile?: UserProfile;
 }
 
 export default function RadiogramList({
@@ -20,6 +21,7 @@ export default function RadiogramList({
   netName,
   dispositionMethods,
   receivedMethods,
+  userProfile,
 }: RadiogramListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRadiogram, setEditingRadiogram] = useState<Radiogram | null>(null);
@@ -81,6 +83,7 @@ export default function RadiogramList({
         netName={netName}
         dispositionMethods={dispositionMethods}
         receivedMethods={receivedMethods}
+        userProfile={userProfile}
       />
     </div>
   );

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Radiogram, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
+import { Radiogram, UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
+import { printRadiogram } from '@/lib/radiogramPrint';
 
 interface RadiogramFormProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface RadiogramFormProps {
   netName?: string;
   dispositionMethods?: string[];
   receivedMethods?: string[];
+  userProfile?: UserProfile;
 }
 
 function generateId(): string {
@@ -49,6 +51,7 @@ export default function RadiogramForm({
   netName,
   dispositionMethods,
   receivedMethods,
+  userProfile,
 }: RadiogramFormProps) {
   const sentMethods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
   const rcvdMethods = receivedMethods ?? DEFAULT_RECEIVED_METHODS;
@@ -232,6 +235,19 @@ export default function RadiogramForm({
     await navigator.clipboard.writeText(formatRadiogramAsText(radiogram));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePrint = () => {
+    const trimmedWords = [...formData.textWords];
+    while (trimmedWords.length > 0 && trimmedWords[trimmedWords.length - 1] === '') {
+      trimmedWords.pop();
+    }
+    const radiogram: Radiogram = {
+      ...formData,
+      textWords: trimmedWords,
+      id: existingRadiogram?.id || '',
+    };
+    printRadiogram(radiogram, userProfile);
   };
 
   useEffect(() => {
@@ -591,6 +607,13 @@ export default function RadiogramForm({
               )}
             </div>
             <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
+              >
+                Print
+              </button>
               <button
                 type="button"
                 onClick={handleCopy}
