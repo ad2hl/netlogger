@@ -24,6 +24,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {/* Auto-reload on ChunkLoadError (e.g. after a dev server restart or deploy) */}
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && e.reason.name === 'ChunkLoadError') {
+              window.location.reload();
+            }
+          });
+          window.addEventListener('error', function(e) {
+            if (e.message && e.message.indexOf('Loading chunk') !== -1) {
+              window.location.reload();
+            }
+          });
+        `}} />
+      </head>
       <body className={inter.className}>
         <AuthProvider>
           <div className="min-h-screen bg-slate-100 flex flex-col">
