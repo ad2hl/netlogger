@@ -369,8 +369,8 @@ export default function RadiogramsPage() {
                     <td className="py-2 pr-4 whitespace-nowrap">{item.displayDate}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{item.netName}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{item.type}</td>
-                    <td className="py-2 pr-4 font-mono">{item.number}</td>
-                    <td className="py-2 pr-4 font-mono">{item.stationOfOrigin}</td>
+                    <td className="py-2 pr-4">{item.number}</td>
+                    <td className="py-2 pr-4">{item.stationOfOrigin}</td>
                     <td className="py-2 pr-4 truncate max-w-xs">{item.addresseePreview}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{item.disposition}</td>
                     <td className="py-2">

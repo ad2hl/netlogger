@@ -212,13 +212,13 @@ export default function StationsPage() {
               <tbody>
                 {sortedRows.map((row) => (
                   <tr key={row.callsign} className="border-b hover:bg-slate-50 group">
-                    <td className="py-2 pr-4 font-mono font-semibold whitespace-nowrap">{row.callsign}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">{row.callsign}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{row.firstName}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{row.nickname}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{row.location}</td>
                     <td className="py-2 pr-4 italic text-slate-500">{row.note}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{row.lastSeenDisplay}</td>
-                    <td className="py-2 pr-4 text-right font-mono">{row.checkIns || ''}</td>
+                    <td className="py-2 pr-4 text-right">{row.checkIns || ''}</td>
                     <td className="py-2">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
                         <button
