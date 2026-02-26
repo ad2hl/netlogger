@@ -354,7 +354,7 @@ export default function RadiogramsPage() {
                     className="py-2 pr-4 cursor-pointer select-none whitespace-nowrap"
                     onClick={() => handleSort('disposition')}
                   >
-                    Disposition{sortArrow('disposition')}
+                    Sent{sortArrow('disposition')}
                   </th>
                   <th className="py-2 w-8"></th>
                 </tr>
