@@ -127,7 +127,7 @@ function parseNetReportText(text: string): {
   };
 }
 
-function RadiogramFormView({ fields, dispositionSection }: {
+function RadiogramFormView({ fields, receivedSection, sentSection }: {
   fields: {
     number: string;
     precedence: string;
@@ -143,7 +143,8 @@ function RadiogramFormView({ fields, dispositionSection }: {
     signature: string;
     signatureOpNote?: string;
   };
-  dispositionSection?: React.ReactNode;
+  receivedSection?: React.ReactNode;
+  sentSection?: React.ReactNode;
 }) {
   return (
     <div className="space-y-3">
@@ -194,7 +195,8 @@ function RadiogramFormView({ fields, dispositionSection }: {
         )}
       </div>
 
-      {dispositionSection}
+      {receivedSection}
+      {sentSection}
     </div>
   );
 }
@@ -210,7 +212,7 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
   const inputClass = "w-full px-2 border border-slate-300 rounded text-sm h-[30px]";
   return (
     <div className="border-t pt-3">
-      <h3 className="text-sm font-semibold text-slate-700 mb-1">Disposition</h3>
+      <h3 className="text-sm font-semibold text-slate-700 mb-1">Sent</h3>
       <div className="grid grid-cols-4 gap-3">
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Method</label>
@@ -226,7 +228,7 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Destination</label>
+          <label className="block text-xs font-medium text-slate-600 mb-1">To</label>
           <input
             type="text"
             value={disposition.dispositionDestination}
@@ -272,18 +274,28 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
 }
 
 function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }) {
-  if (!disposition.dispositionMethod && !disposition.dispositionDestination &&
-      !disposition.dispositionDate && !disposition.dispositionTime) {
-    return null;
-  }
   return (
     <div className="border-t pt-3">
-      <h3 className="text-sm font-semibold text-slate-700 mb-1">Disposition</h3>
+      <h3 className="text-sm font-semibold text-slate-700 mb-1">Sent</h3>
       <div className="grid grid-cols-4 gap-3">
         <ReadOnlyField label="Method" value={disposition.dispositionMethod} />
-        <ReadOnlyField label="Destination" value={disposition.dispositionDestination} />
+        <ReadOnlyField label="To" value={disposition.dispositionDestination} />
         <ReadOnlyField label="Date" value={disposition.dispositionDate} />
         <ReadOnlyField label="Time" value={disposition.dispositionTime} />
+      </div>
+    </div>
+  );
+}
+
+function ReadOnlyReceived({ method, from, date, time }: { method: string; from: string; date: string; time: string }) {
+  return (
+    <div className="border-t pt-3">
+      <h3 className="text-sm font-semibold text-slate-700 mb-1">Received</h3>
+      <div className="grid grid-cols-4 gap-3">
+        <ReadOnlyField label="Method" value={method} />
+        <ReadOnlyField label="From" value={from} />
+        <ReadOnlyField label="Date" value={date} />
+        <ReadOnlyField label="Time" value={time} />
       </div>
     </div>
   );
@@ -418,9 +430,18 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
     }
   }
 
-  const dispositionSection = onUpdateDisposition
+  const sentSection = onUpdateDisposition
     ? <EditableDisposition disposition={disposition} onChange={setDisposition} onSave={handleSaveDisposition} onCancel={onClose} dispositionMethods={dispositionMethods} />
     : <ReadOnlyDisposition disposition={disposition} />;
+
+  const receivedSection = radiogram
+    ? <ReadOnlyReceived
+        method={radiogram.receivedMethod || ''}
+        from={radiogram.receivedDestination || ''}
+        date={radiogram.receivedDate || ''}
+        time={radiogram.receivedTime || ''}
+      />
+    : undefined;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -448,7 +469,7 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
             </button>
           </div>
         </div>
-        {fields && <RadiogramFormView fields={fields} dispositionSection={dispositionSection} />}
+        {fields && <RadiogramFormView fields={fields} receivedSection={receivedSection} sentSection={sentSection} />}
       </div>
     </div>
   );
