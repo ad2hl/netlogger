@@ -3,10 +3,8 @@ import { Radiogram, UserProfile } from '@/types';
 
 const WORDS_PER_FORM = 25;
 
-// Font sizes:
-// RECEIVED AT section keeps a normal size; the rest of the form is slightly smaller.
-const FONT_SIZE_MAIN = 10;
-const FONT_SIZE_RECEIVED_AT = 11;
+const FONT_SIZE_WORDS = 12;   // message text words only
+const FONT_SIZE_OTHER = 8;    // preamble, address, signature, RECEIVED AT, REC'D/SENT
 
 function formatPrintDate(dateStr: string | undefined): string {
   if (!dateStr) return '';
@@ -78,7 +76,7 @@ function fillHalf(
   suffix: 'Top' | 'Bottom',
   data: HalfData,
 ): void {
-  const set = (name: string, value: string, fontSize = FONT_SIZE_MAIN) =>
+  const set = (name: string, value: string, fontSize = FONT_SIZE_OTHER) =>
     setField(form, font, name, value, fontSize);
 
   // Preamble
@@ -102,33 +100,33 @@ function fillHalf(
   set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '');
   set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '');
 
-  // Message words
+  // Message words — larger font
   for (let i = 0; i < WORDS_PER_FORM; i++) {
     const num = String(i + 1).padStart(2, '0');
-    set(`Word ${num} - ${suffix}`, data.words[i] ?? '');
+    set(`Word ${num} - ${suffix}`, data.words[i] ?? '', FONT_SIZE_WORDS);
   }
 
   // Signature (last form only)
   set(`Signature - ${suffix}`, data.signature ?? '');
 
-  // REC'D / SENT (last form only) — RECEIVED AT size
-  set(`Received From - ${suffix}`, data.receivedFrom ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Date Received - ${suffix}`, data.dateReceived ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Time Received - ${suffix}`, data.timeReceived ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Sent To - ${suffix}`, data.sentTo ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Date Sent - ${suffix}`, data.dateSent ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Time Sent - ${suffix}`, data.timeSent ?? '', FONT_SIZE_RECEIVED_AT);
+  // REC'D / SENT (last form only)
+  set(`Received From - ${suffix}`, data.receivedFrom ?? '');
+  set(`Date Received - ${suffix}`, data.dateReceived ?? '');
+  set(`Time Received - ${suffix}`, data.timeReceived ?? '');
+  set(`Sent To - ${suffix}`, data.sentTo ?? '');
+  set(`Date Sent - ${suffix}`, data.dateSent ?? '');
+  set(`Time Sent - ${suffix}`, data.timeSent ?? '');
 
-  // Receiving station info (first form only) — RECEIVED AT size
-  set(`Receiving Station - ${suffix}`, data.receivingStation ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Receiving Phone - ${suffix}`, data.receivingPhone ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Receiving Name - ${suffix}`, data.receivingName ?? '', FONT_SIZE_RECEIVED_AT);
-  set(`Receiving Address - ${suffix}`, data.receivingAddress ?? '', FONT_SIZE_RECEIVED_AT);
+  // Receiving station info (first form only)
+  set(`Receiving Station - ${suffix}`, data.receivingStation ?? '');
+  set(`Receiving Phone - ${suffix}`, data.receivingPhone ?? '');
+  set(`Receiving Name - ${suffix}`, data.receivingName ?? '');
+  set(`Receiving Address - ${suffix}`, data.receivingAddress ?? '');
   // City/state/zip field name has slightly different punctuation between Top and Bottom in the PDF
   if (suffix === 'Top') {
-    set('Receiving City, State & ZIP - Top', data.receivingCityStateZip ?? '', FONT_SIZE_RECEIVED_AT);
+    set('Receiving City, State & ZIP - Top', data.receivingCityStateZip ?? '');
   } else {
-    set('Receiving City, State, & ZIP - Bottom', data.receivingCityStateZip ?? '', FONT_SIZE_RECEIVED_AT);
+    set('Receiving City, State, & ZIP - Bottom', data.receivingCityStateZip ?? '');
   }
 }
 
