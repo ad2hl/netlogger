@@ -139,7 +139,7 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
   // Line 0 → Name/Call; last line → City/State/ZIP; middle lines → Address (multiline).
   const addressLines = radiogram.address.split('\n').map(l => l.trim()).filter(Boolean);
   const recipientNameCall = addressLines[0] ?? '';
-  const recipientAddress = addressLines.length >= 3 ? addressLines.slice(1, -1).join('\n') : (addressLines[1] ?? '');
+  const recipientAddress = addressLines.length >= 3 ? addressLines.slice(1, -1).join('\r') : (addressLines[1] ?? '');
   const recipientCityStateZip = addressLines.length >= 3 ? (addressLines[addressLines.length - 1] ?? '') : '';
 
   // Receiving station info from user profile
