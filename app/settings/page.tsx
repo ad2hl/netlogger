@@ -19,6 +19,11 @@ export default function SettingsPage() {
     name: '',
     location: '',
     netManagerCall: '',
+    phone: '',
+    streetAddress: '',
+    city: '',
+    state: '',
+    zip: '',
     qrzUsername: '',
     qrzPassword: '',
   });
@@ -49,6 +54,11 @@ export default function SettingsPage() {
         name: profile.name || '',
         location: profile.location || '',
         netManagerCall: profile.netManagerCall || '',
+        phone: profile.phone || '',
+        streetAddress: profile.streetAddress || '',
+        city: profile.city || '',
+        state: profile.state || '',
+        zip: profile.zip || '',
         qrzUsername: profile.qrzUsername || '',
         qrzPassword: '',
       });
@@ -221,6 +231,86 @@ export default function SettingsPage() {
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                   placeholder="e.g., W3XYZ"
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-1">Receiving Station</h2>
+            <p className="text-sm text-slate-600 mb-4">
+              Used to complete the &ldquo;This Radio Message Was Received At&rdquo; section of the ARRL radiogram form.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="e.g., 410-555-1234"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Street Address
+                </label>
+                <input
+                  type="text"
+                  name="streetAddress"
+                  value={formData.streetAddress}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="e.g., 123 Main St"
+                />
+              </div>
+
+              <div className="grid grid-cols-6 gap-3">
+                <div className="col-span-3">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    placeholder="e.g., Baltimore"
+                  />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    placeholder="MD"
+                    maxLength={2}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    ZIP
+                  </label>
+                  <input
+                    type="text"
+                    name="zip"
+                    value={formData.zip}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    placeholder="21201"
+                  />
+                </div>
               </div>
             </div>
           </div>
