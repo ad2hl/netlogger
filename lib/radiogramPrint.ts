@@ -97,8 +97,13 @@ function fillHalf(
 
   // Addressee — Recipient Address is multiline to accommodate street + apt/suite lines
   set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '', FONT_SIZE_ADDRESS);
-  try { form.getTextField(`Recipient Address - ${suffix}`).enableMultiline(); } catch { /* ignore */ }
-  set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '', FONT_SIZE_ADDRESS);
+  try {
+    const addrField = form.getTextField(`Recipient Address - ${suffix}`);
+    addrField.enableMultiline();
+    addrField.setText(data.recipientAddress ?? '');
+    addrField.setFontSize(FONT_SIZE_ADDRESS);
+    addrField.updateAppearances(font);
+  } catch { /* ignore */ }
   set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '', FONT_SIZE_ADDRESS);
 
