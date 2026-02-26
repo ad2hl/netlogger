@@ -451,8 +451,8 @@ export default function RadiogramForm({
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    rows={4}
-                    className="w-full px-2 py-0.5 border border-slate-300 rounded text-sm uppercase leading-tight"
+                    rows={3}
+                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                     required
                   />
                 </div>
