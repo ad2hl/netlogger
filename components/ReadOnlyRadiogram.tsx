@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Radiogram, NetReport, DEFAULT_DISPOSITION_METHODS } from '@/types';
+import { Radiogram, NetReport, UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
+import { printRadiogram } from '@/lib/radiogramPrint';
 
 interface DispositionFields {
   dispositionMethod: string;
@@ -17,6 +18,7 @@ interface ReadOnlyRadiogramProps {
   onClose: () => void;
   onUpdateDisposition?: (disposition: DispositionFields) => Promise<void> | void;
   dispositionMethods?: string[];
+  userProfile?: UserProfile;
 }
 
 const WORDS_PER_LINE = 5;
@@ -287,7 +289,7 @@ function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }
   );
 }
 
-export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition, dispositionMethods }: ReadOnlyRadiogramProps) {
+export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition, dispositionMethods, userProfile }: ReadOnlyRadiogramProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -335,6 +337,46 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePrint = () => {
+    if (radiogram) {
+      printRadiogram(radiogram, userProfile);
+      return;
+    }
+    if (!netReport) return;
+    const parsed = netReport.parts
+      ? {
+          number: netReport.parts.number,
+          precedence: netReport.parts.precedence,
+          hx: '',
+          stationOfOrigin: netReport.parts.stationOfOrigin,
+          check: netReport.parts.check,
+          placeOfOrigin: netReport.parts.placeOfOrigin,
+          timeFiled: '',
+          date: netReport.parts.date,
+          addressee: netReport.parts.addressee,
+          bodyWords: netReport.parts.bodyWords,
+          signature: netReport.parts.signature,
+        }
+      : parseNetReportText(netReport.radiogram);
+    const r: Radiogram = {
+      id: '',
+      number: parsed.number,
+      precedence: parsed.precedence,
+      handlingInstructions: parsed.hx,
+      stationOfOrigin: parsed.stationOfOrigin,
+      check: parsed.check,
+      placeOfOrigin: parsed.placeOfOrigin,
+      timeFiled: parsed.timeFiled,
+      date: parsed.date,
+      address: parsed.addressee,
+      addressOpNote: '',
+      textWords: parsed.bodyWords,
+      signature: parsed.signature,
+      signatureOpNote: '',
+    };
+    printRadiogram(r, userProfile);
   };
 
   const title = netReport ? 'Net Report' : 'Radiogram';
@@ -386,6 +428,12 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">{title}</h2>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
+            >
+              Print
+            </button>
             <button
               onClick={handleCopy}
               className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"

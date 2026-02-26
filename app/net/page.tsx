@@ -844,6 +844,7 @@ function NetPage() {
                 netName={session.netName}
                 dispositionMethods={profile?.dispositionMethods}
                 receivedMethods={profile?.receivedMethods}
+                userProfile={profile ?? undefined}
               />
             </div>
           )}

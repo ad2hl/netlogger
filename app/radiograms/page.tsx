@@ -404,6 +404,7 @@ export default function RadiogramsPage() {
               : (d) => handleUpdateDisposition(selectedItem, d)
           }
           dispositionMethods={profile?.dispositionMethods}
+          userProfile={profile ?? undefined}
         />
       )}
 
@@ -412,6 +413,7 @@ export default function RadiogramsPage() {
         onClose={() => setIsFormOpen(false)}
         onSave={handleSaveRadiogram}
         dispositionMethods={profile?.dispositionMethods}
+        userProfile={profile ?? undefined}
       />
 
       {deleteTarget && (
