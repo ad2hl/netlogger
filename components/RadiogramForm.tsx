@@ -398,9 +398,10 @@ export default function RadiogramForm({
                     required
                   />
                   {formData.check && (
-                    wordCount === parseInt(formData.check)
-                      ? <span className="text-green-600 text-xl italic font-bold leading-none select-none">✓</span>
-                      : <span className="text-red-600 text-xl italic font-bold leading-none select-none">✗</span>
+                    <>
+                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount === parseInt(formData.check) ? 'text-green-600' : 'hidden'}`}>✓</span>
+                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount !== parseInt(formData.check) ? 'text-red-600' : 'hidden'}`}>✗</span>
+                    </>
                   )}
                 </div>
               </div>
