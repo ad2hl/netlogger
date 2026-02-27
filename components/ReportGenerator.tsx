@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { NetSession, Station, UserProfile } from '@/types';
+import { NetSession, Radiogram, Station, UserProfile } from '@/types';
 import { generateRadiogram, RadiogramResult } from '@/lib/radiogram';
+import { printRadiogram } from '@/lib/radiogramPrint';
 
 interface ReportGeneratorProps {
   session: NetSession | null;
@@ -155,6 +156,27 @@ export default function ReportGenerator({
     setSaving(false);
   };
 
+  const handlePrint = async () => {
+    if (!radiogram) return;
+    const r: Radiogram = {
+      id: '',
+      number: radiogram.parts.number,
+      precedence: radiogram.parts.precedence,
+      handlingInstructions: '',
+      stationOfOrigin: radiogram.parts.stationOfOrigin,
+      check: radiogram.parts.check,
+      placeOfOrigin: radiogram.parts.placeOfOrigin,
+      timeFiled: '',
+      date: radiogram.parts.date,
+      address: radiogram.parts.addressee,
+      addressOpNote: '',
+      textWords: radiogram.parts.bodyWords,
+      signature: radiogram.parts.signature,
+      signatureOpNote: '',
+    };
+    await printRadiogram(r, profile ?? undefined);
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -205,6 +227,14 @@ export default function ReportGenerator({
                 className="bg-green-600 text-white py-1 px-3 rounded-md hover:bg-green-700 text-sm disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Update Report'}
+              </button>
+            )}
+            {radiogram && (
+              <button
+                onClick={handlePrint}
+                className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
+              >
+                Print
               </button>
             )}
             {radiogram && (
