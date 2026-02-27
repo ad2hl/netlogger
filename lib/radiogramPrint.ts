@@ -140,10 +140,14 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
   const recipientAddress = addressLines[1] ?? '';
   const recipientCityStateZip = addressLines[2] ?? '';
 
-  // Receiving station info from user profile
-  const receivingCityStateZip = [userProfile?.city, userProfile?.state, userProfile?.zip]
-    .filter(Boolean)
-    .join(', ');
+  // Receiving station info from user profile.
+  // Skip if the local station is the originator — they sent it, not received it.
+  const isOriginator = userProfile?.callsign &&
+    radiogram.stationOfOrigin.toUpperCase() === userProfile.callsign.toUpperCase();
+
+  const receivingCityStateZip = isOriginator
+    ? undefined
+    : [userProfile?.city, userProfile?.state, userProfile?.zip].filter(Boolean).join(', ') || undefined;
 
   // Preamble data — appears on first form only
   const preambleData = {
@@ -159,10 +163,10 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     recipientAddress,
     recipientCityStateZip,
     recipientPhone: radiogram.addressPhone,
-    receivingStation: userProfile?.callsign,
-    receivingPhone: userProfile?.phone,
-    receivingName: userProfile?.receivingStationName,
-    receivingAddress: userProfile?.streetAddress,
+    receivingStation: isOriginator ? undefined : userProfile?.callsign,
+    receivingPhone: isOriginator ? undefined : userProfile?.phone,
+    receivingName: isOriginator ? undefined : userProfile?.receivingStationName,
+    receivingAddress: isOriginator ? undefined : userProfile?.streetAddress,
     receivingCityStateZip,
   };
 
