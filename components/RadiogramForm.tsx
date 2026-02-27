@@ -47,6 +47,13 @@ const FIELDS_WITH_SPACES = ['netName', 'placeOfOrigin', 'timeFiled', 'date', 'ad
 const WORDS_PER_LINE = 5;
 const INITIAL_LINES = 5;
 
+// Parse the CHECK field value: handles plain numbers and ARLnn (e.g. "ARL5")
+function parseCheck(check: string): number {
+  const arlMatch = check.match(/^ARL(\d+)$/i);
+  if (arlMatch) return parseInt(arlMatch[1], 10);
+  return parseInt(check, 10);
+}
+
 export default function RadiogramForm({
   isOpen,
   onClose,
@@ -399,8 +406,8 @@ export default function RadiogramForm({
                   />
                   {formData.check && (
                     <>
-                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount === parseInt(formData.check) ? 'text-green-600' : 'hidden'}`}>✓</span>
-                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount !== parseInt(formData.check) ? 'text-red-600' : 'hidden'}`}>✗</span>
+                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount === parseCheck(formData.check) ? 'text-green-600' : 'hidden'}`}>✓</span>
+                      <span className={`text-xl italic leading-none select-none ml-1 ${wordCount !== parseCheck(formData.check) ? 'text-red-600' : 'hidden'}`}>✗</span>
                     </>
                   )}
                 </div>
@@ -495,9 +502,9 @@ export default function RadiogramForm({
             <div className="space-y-2">
               {renderWordGrid()}
             </div>
-            <p className={`text-xs mt-2 ${formData.check && wordCount !== parseInt(formData.check) ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>
+            <p className={`text-xs mt-2 ${formData.check && wordCount !== parseCheck(formData.check) ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>
               Word count: {wordCount}
-              {formData.check && wordCount !== parseInt(formData.check) && ' (does not match check)'}
+              {formData.check && wordCount !== parseCheck(formData.check) && ' (does not match check)'}
             </p>
           </div>
 
