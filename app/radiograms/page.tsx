@@ -212,6 +212,21 @@ export default function RadiogramsPage() {
     }
   };
 
+  const handleUpdateAddress = async (item: RadiogramListItem, address: string) => {
+    if (!user || !item.sessionId || !item.radiogram) return;
+    const session = sessions.find(s => s.id === item.sessionId);
+    if (!session) return;
+    const updatedRadiograms = (session.radiograms || []).map(r =>
+      r.id === item.radiogram!.id ? { ...r, address } : r
+    );
+    const success = await updateSession(user.uid, item.sessionId, { radiograms: updatedRadiograms });
+    if (success) {
+      setSessions(prev => prev.map(s =>
+        s.id === item.sessionId ? { ...s, radiograms: updatedRadiograms } : s
+      ));
+    }
+  };
+
   const handleDeleteItem = async () => {
     if (!user || !deleteTarget) return;
 
@@ -402,6 +417,11 @@ export default function RadiogramsPage() {
             selectedItem.netReport && !selectedItem.netReport.parts
               ? undefined
               : (d) => handleUpdateDisposition(selectedItem, d)
+          }
+          onUpdateAddress={
+            selectedItem.radiogram
+              ? (address) => handleUpdateAddress(selectedItem, address)
+              : undefined
           }
           dispositionMethods={profile?.dispositionMethods}
           userProfile={profile ?? undefined}
