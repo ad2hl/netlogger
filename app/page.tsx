@@ -330,10 +330,6 @@ export default function Home() {
       {bgUrl && <div className="absolute inset-0 bg-black/40" />}
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 relative z-10">
         <h1 className="text-3xl font-bold text-center mb-2">NetLogger</h1>
-        <p className="text-slate-600 text-center mb-6">
-          Amateur radio net logging made easy
-        </p>
-
         {/* Tabs */}
         {signupDisabled ? (
           <div className="border-b border-slate-200 mb-6 pb-3">
