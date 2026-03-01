@@ -99,6 +99,7 @@ export default function RadiogramForm({
 
   const [formData, setFormData] = useState<Omit<Radiogram, 'id'>>(emptyForm);
   const [copied, setCopied] = useState(false);
+  const [showCountWarning, setShowCountWarning] = useState(false);
   const wordInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const signatureRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -219,9 +220,7 @@ export default function RadiogramForm({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Trim empty words from the end
+  const doSave = () => {
     const trimmedWords = [...formData.textWords];
     while (trimmedWords.length > 0 && trimmedWords[trimmedWords.length - 1] === '') {
       trimmedWords.pop();
@@ -233,6 +232,15 @@ export default function RadiogramForm({
     };
     onSave(radiogram);
     onClose();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.check && wordCount !== parseCheck(formData.check)) {
+      setShowCountWarning(true);
+      return;
+    }
+    doSave();
   };
 
   const handleDelete = () => {
@@ -679,6 +687,31 @@ export default function RadiogramForm({
           </div>
         </form>
       </div>
+
+      {showCountWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-base font-semibold text-slate-900 mb-2">Word Count Mismatch</h3>
+            <p className="text-sm text-slate-700 mb-4">
+              The actual word count ({wordCount}) does not match the check field ({formData.check}). Do you want to go back and fix it, or save the radiogram as-is?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowCountWarning(false)}
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={() => { setShowCountWarning(false); doSave(); }}
+                className="bg-slate-300 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-400 text-sm"
+              >
+                Save Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
