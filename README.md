@@ -1,4 +1,4 @@
-# NetLogger
+# AD2HL Net Logger
 
 A web-based amateur radio net logging application for net control operators.
 
@@ -26,14 +26,14 @@ A web-based amateur radio net logging application for net control operators.
 
 ## Availability
 
-The latest stable version of NetLogger is available to all amateur radio operators at **https://netlogger.ad2hl.net**.
+The latest stable version of AD2HL Net Logger is available to all amateur radio operators at **https://netlogger.ad2hl.net**.
 
-You do **not** need the source code to use NetLogger. You need it only if you want to modify it and/or deploy it
+You do **not** need the source code to use AD2HL Net Logger. You need it only if you want to modify it and/or deploy it
 on your own server (which you are welcome to do, as long as you observe the terms of the license agreement).
 Instructions for installing from source are below.
 
-If you need help with NetLogger, you can email support /a≥t/ ad2hl ° net. (Unusual punctuation added in attempt
-to thwart email scrapers.) If you find a bug in NetLogger, or have an idea for an enhancement, please open a GitHub
+If you need help with AD2HL Net Logger, you can email support /a≥t/ ad2hl ° net. (Unusual punctuation added in attempt
+to thwart email scrapers.) If you find a bug in AD2HL Net Logger, or have an idea for an enhancement, please open a GitHub
 issue.
 
 ## Setup
