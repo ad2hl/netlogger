@@ -14,6 +14,7 @@ import {
 } from '@/lib/auth';
 import { getActiveSession } from '@/lib/firestore';
 import { apiFetch } from '@/lib/api-fetch';
+import Image from 'next/image';
 
 type Tab = 'signin' | 'signup';
 type View = 'auth' | 'forgot' | 'verify';
@@ -208,7 +209,7 @@ export default function Home() {
       <div className="flex-1 flex items-center justify-center relative" style={bgStyle}>
         {bgUrl && <div className="absolute inset-0 bg-black/40" />}
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 relative z-10">
-          <h1 className="text-3xl font-bold text-center mb-2">NetLogger</h1>
+          <h1 className="text-3xl font-bold text-center mb-2">AD2HL Net Logger</h1>
           <h2 className="text-lg font-semibold text-center mb-4">Verify Your Email</h2>
           <p className="text-slate-600 text-center mb-4">
             A verification email has been sent to <strong>{user.email}</strong>.
@@ -267,7 +268,7 @@ export default function Home() {
       <div className="flex-1 flex items-center justify-center relative" style={bgStyle}>
         {bgUrl && <div className="absolute inset-0 bg-black/40" />}
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 relative z-10">
-          <h1 className="text-3xl font-bold text-center mb-2">NetLogger</h1>
+          <h1 className="text-3xl font-bold text-center mb-2">AD2HL Net Logger</h1>
           <h2 className="text-lg font-semibold text-center mb-4">Reset Password</h2>
           <p className="text-slate-600 text-center mb-6">
             Enter your email and we&apos;ll send you a reset link.
@@ -329,7 +330,10 @@ export default function Home() {
     <div className="flex-1 flex items-center justify-center relative" style={bgStyle}>
       {bgUrl && <div className="absolute inset-0 bg-black/40" />}
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 relative z-10">
-        <h1 className="text-3xl font-bold text-center mb-6">NetLogger</h1>
+        <div className="flex items-center justify-center gap-3" style={{ marginBottom: '23px' }}>
+          <Image src="/icon.png" alt="NetLogger icon" width={40} height={40} />
+          <h1 className="text-3xl font-bold">AD2HL Net Logger</h1>
+        </div>
         {/* Tabs */}
         {signupDisabled ? (
           <div className="border-b border-slate-200 mb-6 pb-3">
