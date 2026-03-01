@@ -9,6 +9,7 @@ export default function Footer() {
   const [aboutContent, setAboutContent] = useState<string | null>(null);
   const [summaryContent, setSummaryContent] = useState<string | null>(null);
   const [fullPolicyContent, setFullPolicyContent] = useState<string | null>(null);
+  const [footerCredit, setFooterCredit] = useState<string | null>(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -25,23 +26,32 @@ export default function Footer() {
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.content) setFullPolicyContent(data.content); })
       .catch(() => {});
+    apiFetch('/api/footer-credit')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.content) setFooterCredit(data.content); })
+      .catch(() => {});
   }, []);
 
   return (
     <>
       <footer className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-4 text-sm">
-          <span className="text-slate-600">
-            Created and maintained by{' '}
-            <a
-              href="https://www.qrz.com/db/AD2HL"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-700 hover:text-cyan-900"
-            >
-              AD2HL
-            </a>
-          </span>
+          {footerCredit && (
+            <span className="text-slate-600">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <>{children}</>,
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900">
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {footerCredit}
+              </ReactMarkdown>
+            </span>
+          )}
           {aboutContent && (
             <button
               onClick={() => setShowAbout(true)}
