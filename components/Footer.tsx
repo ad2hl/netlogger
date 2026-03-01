@@ -10,6 +10,7 @@ export default function Footer() {
   const [summaryContent, setSummaryContent] = useState<string | null>(null);
   const [fullPolicyContent, setFullPolicyContent] = useState<string | null>(null);
   const [footerCredit, setFooterCredit] = useState<string | null>(null);
+  const [localModalContent, setLocalModalContent] = useState<string | null>(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
@@ -41,11 +42,29 @@ export default function Footer() {
               <ReactMarkdown
                 components={{
                   p: ({ children }) => <>{children}</>,
-                  a: ({ href, children }) => (
-                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900">
-                      {children}
-                    </a>
-                  ),
+                  a: ({ href, children }) => {
+                    if (href?.startsWith('local:')) {
+                      const file = href.slice('local:'.length);
+                      return (
+                        <button
+                          onClick={() => {
+                            apiFetch(`/api/local-content?file=${encodeURIComponent(file)}`)
+                              .then(res => res.ok ? res.json() : null)
+                              .then(data => { if (data?.content) setLocalModalContent(data.content); })
+                              .catch(() => {});
+                          }}
+                          className="text-cyan-700 hover:text-cyan-900 underline"
+                        >
+                          {children}
+                        </button>
+                      );
+                    }
+                    return (
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900">
+                        {children}
+                      </a>
+                    );
+                  },
                 }}
               >
                 {footerCredit}
@@ -71,6 +90,9 @@ export default function Footer() {
         </div>
       </footer>
 
+      {localModalContent && (
+        <AboutModal content={localModalContent} onClose={() => setLocalModalContent(null)} />
+      )}
       {showAbout && aboutContent && (
         <AboutModal content={aboutContent} onClose={() => setShowAbout(false)} />
       )}
