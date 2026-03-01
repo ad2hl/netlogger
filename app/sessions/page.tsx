@@ -258,7 +258,7 @@ function SessionsContent() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-slate-900">NetLogger</h1>
+            <h1 className="text-xl font-bold text-slate-900">AD2HL Net Logger</h1>
             <HeaderBanner />
           </div>
           <div className="flex items-center gap-4">
@@ -431,7 +431,7 @@ function SessionsContent() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-gray-900">Welcome to NetLogger</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Welcome to AD2HL Net Logger</h2>
               <button
                 onClick={handleDismissGettingStarted}
                 className="text-gray-400 hover:text-gray-600"

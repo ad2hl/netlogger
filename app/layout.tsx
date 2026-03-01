@@ -13,7 +13,7 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'NetLogger',
+  title: 'AD2HL Net Logger',
   description: 'Amateur radio net logging application',
 };
 

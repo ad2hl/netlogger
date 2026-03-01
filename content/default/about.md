@@ -1,6 +1,6 @@
-# About NetLogger
+# About AD2HL Net Logger
 
-NetLogger is a web-based amateur radio net logging application for net control operators.
+AD2HL Net Logger is a web-based amateur radio net logging application for net control operators.
 
 ## Features
 
