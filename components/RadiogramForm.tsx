@@ -49,6 +49,8 @@ const INITIAL_LINES = 5;
 
 // Parse the CHECK field value: handles plain numbers and ARLnn (e.g. "ARL5")
 function parseCheck(check: string): number {
+  const correctedMatch = check.match(/^\d+\/(\d+)$/);
+  if (correctedMatch) return parseInt(correctedMatch[1], 10);
   const arlMatch = check.match(/^ARL(\d+)$/i);
   if (arlMatch) return parseInt(arlMatch[1], 10);
   return parseInt(check, 10);
