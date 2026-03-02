@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { updateUserProfile, changePassword } from '@/lib/auth';
+import { changePassword } from '@/lib/auth';
+import { updateUserProfile } from '@/lib/firestore';
+
+const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
 import ProfileMenu from '@/components/ProfileMenu';
@@ -41,7 +44,7 @@ export default function SettingsPage() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || !emailVerified)) {
+    if (!isDesktop && !loading && (!user || !emailVerified)) {
       router.push('/');
     }
   }, [user, loading, emailVerified, router]);
@@ -86,7 +89,7 @@ export default function SettingsPage() {
 
     const dataToSave = { ...formData, dispositionMethods, receivedMethods };
 
-    if (dataToSave.qrzPassword) {
+    if (dataToSave.qrzPassword && !isDesktop) {
       try {
         const token = await user.getIdToken();
         const res = await apiFetch('/api/credentials', {
@@ -105,7 +108,7 @@ export default function SettingsPage() {
         setSaving(false);
         return;
       }
-    } else {
+    } else if (!dataToSave.qrzPassword) {
       delete dataToSave.qrzPassword;
     }
 
@@ -152,7 +155,7 @@ export default function SettingsPage() {
     );
   }
 
-  if (!user) {
+  if (!isDesktop && !user) {
     return null;
   }
 
@@ -517,7 +520,7 @@ export default function SettingsPage() {
           </button>
         </form>
 
-        {isPasswordUser && (
+        {isPasswordUser && !isDesktop && (
           <form onSubmit={handleChangePassword} className="mt-6 space-y-6">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold mb-4">Change Password</h2>

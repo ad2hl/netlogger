@@ -2,6 +2,11 @@ import { getToken } from 'firebase/app-check';
 import { getFirebaseAppCheck } from './firebase';
 
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  // Desktop mode: no App Check token needed
+  if (process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true') {
+    return fetch(input, init);
+  }
+
   const headers = new Headers(init?.headers);
 
   const appCheck = getFirebaseAppCheck();

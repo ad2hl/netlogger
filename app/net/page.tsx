@@ -176,21 +176,31 @@ function NetPage() {
       }
 
       try {
-        const token = await user.getIdToken();
-        const response = await apiFetch('/api/qrz', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            callsign,
-            username: profile.qrzUsername,
-            password: profile.qrzPassword,
-          }),
-        });
+        let data: Record<string, string>;
 
-        const data = await response.json();
+        if (typeof window !== 'undefined' && (window as any).electron) {
+          // Desktop mode: QRZ lookup via Electron IPC (bypasses CORS)
+          data = await (window as any).electron.lookupQrz(
+            callsign,
+            profile.qrzUsername,
+            profile.qrzPassword
+          );
+        } else {
+          const token = await user.getIdToken();
+          const response = await apiFetch('/api/qrz', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              callsign,
+              username: profile.qrzUsername,
+              password: profile.qrzPassword,
+            }),
+          });
+          data = await response.json();
+        }
 
         if (data.error) {
           console.error('QRZ lookup error:', data.error);

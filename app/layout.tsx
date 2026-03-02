@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { AuthProvider } from '@/components/AuthProvider';
+import { DesktopAuthProvider } from '@/components/DesktopAuthProvider';
 import Footer from '@/components/Footer';
+
+const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
+const ActiveAuthProvider = isDesktop ? DesktopAuthProvider : AuthProvider;
 
 const inter = localFont({
   src: [
@@ -40,14 +44,14 @@ export default function RootLayout({
         `}} />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
+        <ActiveAuthProvider>
           <div className="min-h-screen bg-slate-100 flex flex-col">
             <div className="flex-1 flex flex-col">
               {children}
             </div>
             <Footer />
           </div>
-        </AuthProvider>
+        </ActiveAuthProvider>
       </body>
     </html>
   );
