@@ -40,6 +40,7 @@ export default function Footer() {
           {footerCredit && (
             <span className="text-slate-600">
               <ReactMarkdown
+                urlTransform={(url) => url}
                 components={{
                   p: ({ children }) => <>{children}</>,
                   a: ({ href, children }) => {
