@@ -38,6 +38,10 @@ async function getOrCreateSession(username: string, password: string): Promise<s
 }
 
 export async function POST(request: NextRequest) {
+  if (process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true') {
+    return NextResponse.json({ error: 'Use IPC in desktop mode' }, { status: 400 });
+  }
+
   const appCheckResult = await verifyAppCheck(request);
   if (appCheckResult !== true) return appCheckResult;
 

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+
+const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
 import ReactMarkdown from 'react-markdown';
 import {
   signInWithGoogle,
@@ -45,6 +47,17 @@ const GoogleIcon = () => (
 export default function Home() {
   const { user, loading, emailVerified, refreshUser } = useAuth();
   const router = useRouter();
+
+  // Desktop mode: no sign-in needed — redirect immediately
+  useEffect(() => {
+    if (isDesktop) {
+      router.replace('/sessions');
+    }
+  }, [router]);
+
+  if (isDesktop) {
+    return null;
+  }
 
   const [tab, setTab] = useState<Tab>('signin');
   const [view, setView] = useState<View>('auth');
