@@ -756,6 +756,14 @@ function NetPage() {
             >
               Stations
             </Link>
+            <a
+              href="/help?page=net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-700 hover:text-cyan-900 text-sm"
+            >
+              Help
+            </a>
             <ProfileMenu photoURL={photoURL} />
           </div>
         </div>
