@@ -1,11 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { readContent } from '@/lib/content';
-import { verifyAppCheck } from '@/lib/appcheck-api';
 
-export async function GET(request: NextRequest) {
-  const appCheckResult = await verifyAppCheck(request);
-  if (appCheckResult !== true) return appCheckResult;
-
+export async function GET() {
   const content = await readContent('footer-credit.md');
   if (content === null) {
     return NextResponse.json({ content: null }, { status: 404 });
