@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
 import { getAllSessions, updateSession } from '@/lib/firestore';
 import { NetSession, Radiogram, NetReport } from '@/types';
@@ -297,7 +298,10 @@ export default function RadiogramsPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/home" className="text-xl font-bold text-slate-900 hover:text-cyan-700 transition-colors">AD2HL Net Logger</Link>
+            <Link href="/home" className="flex items-center gap-2 text-xl font-bold text-slate-900 hover:text-cyan-700 transition-colors">
+              <Image src="/icon.png" alt="NetLogger logo" width={28} height={28} />
+              AD2HL Net Logger
+            </Link>
             <HeaderBanner />
           </div>
           <div className="flex items-center gap-4">
