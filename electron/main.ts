@@ -7,6 +7,7 @@ const isDev = process.env.NODE_ENV === 'development' || process.env.ELECTRON_DEV
 
 let mainWindow: BrowserWindow | null = null;
 let serverProcess: ChildProcess | null = null;
+let serverPort: number | null = null;
 
 // Find a free port starting from the given one
 async function findFreePort(startPort: number): Promise<number> {
@@ -55,6 +56,7 @@ async function startNextServer(port: number): Promise<void> {
   serverProcess = spawn(process.execPath, [serverScript], {
     env: {
       ...process.env,
+      ELECTRON_RUN_AS_NODE: '1',
       PORT: String(port),
       HOSTNAME: '127.0.0.1',
       NODE_ENV: 'production',
@@ -164,6 +166,7 @@ app.on('ready', async () => {
     } else {
       // In production, spawn the standalone Next.js server
       const port = await findFreePort(3000);
+      serverPort = port;
       await startNextServer(port);
       await waitForServer(port, 60000);
       await createWindow(`http://localhost:${port}`);
@@ -184,7 +187,7 @@ app.on('activate', async () => {
   if (mainWindow === null) {
     const port = isDev
       ? parseInt(process.env.NEXT_DEV_PORT || '3000', 10)
-      : await findFreePort(3001);
+      : serverPort!;
     await createWindow(`http://localhost:${port}`);
   }
 });
