@@ -3,6 +3,7 @@ import { readContent } from '@/lib/content';
 
 const PAGE_FILES: Record<string, string> = {
   net: 'help-net.md',
+  overview: 'help-overview.md',
   sessions: 'help-sessions.md',
   radiograms: 'help-radiograms.md',
   settings: 'help-settings.md',
