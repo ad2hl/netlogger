@@ -42,7 +42,7 @@ function filterPhoneChars(value: string): string {
 }
 
 // Fields that allow spaces
-const FIELDS_WITH_SPACES = ['netName', 'placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote', 'receivedDestination', 'dispositionDestination'];
+const FIELDS_WITH_SPACES = ['placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote', 'receivedDestination', 'dispositionDestination'];
 
 const WORDS_PER_LINE = 5;
 const INITIAL_LINES = 5;
@@ -335,17 +335,15 @@ export default function RadiogramForm({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          {/* Net Name */}
-          <div className="border-b pb-3">
-            <label className="block text-xs font-medium text-slate-600 mb-1">Net Name</label>
-            <input
-              type="text"
-              name="netName"
-              value={formData.netName || ''}
-              onChange={handleChange}
-              className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
-            />
-          </div>
+          {/* Net Name - only shown when in a net session */}
+          {netName !== undefined && (
+            <div className="border-b pb-3">
+              <label className="block text-xs font-medium text-slate-600 mb-1">Net Name</label>
+              <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700">
+                {formData.netName || '\u00A0'}
+              </div>
+            </div>
+          )}
 
           {/* Preamble Section */}
           <div className="border-b pb-3">
