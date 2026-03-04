@@ -71,7 +71,7 @@ export default function Home() {
   const [bannerContent, setBannerContent] = useState<string | null>(null);
 
   useEffect(() => {
-    apiFetch('/api/login-background')
+    fetch('/api/login-background')
       .then((res) => {
         if (res.ok) return res.blob();
         return null;
