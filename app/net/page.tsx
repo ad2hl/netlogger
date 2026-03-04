@@ -729,7 +729,7 @@ function NetPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-slate-900">AD2HL Net Logger</h1>
+            <Link href="/home" className="text-xl font-bold text-slate-900 hover:text-cyan-700 transition-colors">AD2HL Net Logger</Link>
             <HeaderBanner />
           </div>
           <div className="flex items-center gap-4">
