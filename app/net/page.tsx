@@ -310,6 +310,11 @@ function NetPage() {
           lastAcknowledged: checkIn.callsign.toUpperCase(),
         });
       }
+
+      // Auto-update saved report when check-in is added after session has ended
+      if (session.endTime && profile) {
+        handleSaveReport(undefined, { ...session, checkIns: [...session.checkIns, checkIn] });
+      }
     }
 
     setIsLookingUp(false);
