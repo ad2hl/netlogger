@@ -40,6 +40,7 @@ const child_process_1 = require("child_process");
 const isDev = process.env.NODE_ENV === 'development' || process.env.ELECTRON_DEV === '1';
 let mainWindow = null;
 let serverProcess = null;
+let serverPort = null;
 // Find a free port starting from the given one
 async function findFreePort(startPort) {
     return new Promise((resolve, reject) => {
@@ -85,6 +86,7 @@ async function startNextServer(port) {
     serverProcess = (0, child_process_1.spawn)(process.execPath, [serverScript], {
         env: {
             ...process.env,
+            ELECTRON_RUN_AS_NODE: '1',
             PORT: String(port),
             HOSTNAME: '127.0.0.1',
             NODE_ENV: 'production',
@@ -94,6 +96,10 @@ async function startNextServer(port) {
     });
     serverProcess.on('error', (err) => {
         console.error('Failed to start Next.js server:', err);
+    });
+    serverProcess.on('exit', (code) => {
+        console.log(`Next.js server exited with code ${code}`);
+        serverProcess = null;
     });
 }
 async function createWindow(url) {
@@ -181,6 +187,7 @@ electron_1.app.on('ready', async () => {
         else {
             // In production, spawn the standalone Next.js server
             const port = await findFreePort(3000);
+            serverPort = port;
             await startNextServer(port);
             await waitForServer(port, 60000);
             await createWindow(`http://localhost:${port}`);
@@ -198,10 +205,33 @@ electron_1.app.on('window-all-closed', () => {
 });
 electron_1.app.on('activate', async () => {
     if (mainWindow === null) {
-        const port = isDev
-            ? parseInt(process.env.NEXT_DEV_PORT || '3000', 10)
-            : await findFreePort(3001);
-        await createWindow(`http://localhost:${port}`);
+        try {
+            if (isDev) {
+                const port = parseInt(process.env.NEXT_DEV_PORT || '3000', 10);
+                await createWindow(`http://localhost:${port}`);
+            }
+            else if (serverPort !== null) {
+                // Check if the server is still alive; restart it if not
+                try {
+                    await waitForServer(serverPort, 3000);
+                }
+                catch {
+                    console.log('Server not responding — restarting...');
+                    if (serverProcess) {
+                        serverProcess.kill();
+                        serverProcess = null;
+                    }
+                    const port = await findFreePort(3000);
+                    serverPort = port;
+                    await startNextServer(port);
+                    await waitForServer(port, 30000);
+                }
+                await createWindow(`http://localhost:${serverPort}`);
+            }
+        }
+        catch (err) {
+            console.error('Failed to reopen window:', err);
+        }
     }
 });
 electron_1.app.on('will-quit', () => {
