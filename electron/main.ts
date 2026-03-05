@@ -68,6 +68,11 @@ async function startNextServer(port: number): Promise<void> {
   serverProcess.on('error', (err) => {
     console.error('Failed to start Next.js server:', err);
   });
+
+  serverProcess.on('exit', (code) => {
+    console.log(`Next.js server exited with code ${code}`);
+    serverProcess = null;
+  });
 }
 
 async function createWindow(url: string): Promise<void> {
@@ -185,10 +190,30 @@ app.on('window-all-closed', () => {
 
 app.on('activate', async () => {
   if (mainWindow === null) {
-    const port = isDev
-      ? parseInt(process.env.NEXT_DEV_PORT || '3000', 10)
-      : serverPort!;
-    await createWindow(`http://localhost:${port}`);
+    try {
+      if (isDev) {
+        const port = parseInt(process.env.NEXT_DEV_PORT || '3000', 10);
+        await createWindow(`http://localhost:${port}`);
+      } else if (serverPort !== null) {
+        // Check if the server is still alive; restart it if not
+        try {
+          await waitForServer(serverPort, 3000);
+        } catch {
+          console.log('Server not responding — restarting...');
+          if (serverProcess) {
+            serverProcess.kill();
+            serverProcess = null;
+          }
+          const port = await findFreePort(3000);
+          serverPort = port;
+          await startNextServer(port);
+          await waitForServer(port, 30000);
+        }
+        await createWindow(`http://localhost:${serverPort}`);
+      }
+    } catch (err) {
+      console.error('Failed to reopen window:', err);
+    }
   }
 });
 
