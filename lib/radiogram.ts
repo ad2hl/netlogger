@@ -227,6 +227,127 @@ export function formatRadiogramAsText(radiogram: import('@/types').Radiogram): s
   ].join('\n');
 }
 
+const MONTH_NAMES = new Set([
+  'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+]);
+
+function parsePreambleLine(line: string): {
+  number: string;
+  precedence: string;
+  handlingInstructions: string;
+  stationOfOrigin: string;
+  check: string;
+  placeOfOrigin: string;
+  timeFiled: string;
+  date: string;
+} {
+  const tokens = line.toUpperCase().trim().split(/\s+/);
+  let i = 0;
+
+  // Skip non-digit prefix tokens (e.g., "NR", "NBR", "MSG NBR")
+  while (i < tokens.length && !/^\d+$/.test(tokens[i])) i++;
+
+  const number = tokens[i++] ?? '';
+  const precedence = tokens[i++] ?? '';
+
+  // Optional handling instructions (token starting with HX)
+  let handlingInstructions = '';
+  if (i < tokens.length && tokens[i].startsWith('HX')) {
+    handlingInstructions = tokens[i++];
+  }
+
+  const stationOfOrigin = tokens[i++] ?? '';
+  const check = tokens[i++] ?? '';
+
+  // Remaining: PLACE_OF_ORIGIN [TIME] MONTH DAY
+  const remaining = tokens.slice(i);
+  let placeEnd = remaining.length;
+  let date = '';
+  let timeFiled = '';
+
+  if (remaining.length >= 2) {
+    const last = remaining[remaining.length - 1];
+    const secondLast = remaining[remaining.length - 2];
+    if (/^\d{1,2}$/.test(last) && MONTH_NAMES.has(secondLast)) {
+      date = `${secondLast} ${last}`;
+      placeEnd = remaining.length - 2;
+      // Optional TIME (4-digit HHMM) immediately before month
+      if (placeEnd > 0 && /^\d{4}$/.test(remaining[placeEnd - 1])) {
+        timeFiled = remaining[placeEnd - 1];
+        placeEnd--;
+      }
+    }
+  }
+
+  return {
+    number,
+    precedence,
+    handlingInstructions,
+    stationOfOrigin,
+    check,
+    placeOfOrigin: remaining.slice(0, placeEnd).join(' '),
+    timeFiled,
+    date,
+  };
+}
+
+function parseAddressBlock(lines: string[]): {
+  address: string;
+  addressPhone: string;
+  addressOpNote: string;
+} {
+  // A phone line contains only digits, spaces, +, -, (, )
+  const phoneIdx = lines.findIndex(l => /^[\d\s()\-+]+$/.test(l) && l.trim().length > 0);
+
+  let addressLines: string[];
+  let addressPhone = '';
+  let opNoteLines: string[];
+
+  if (phoneIdx >= 0) {
+    addressLines = lines.slice(0, phoneIdx);
+    addressPhone = lines[phoneIdx].trim();
+    opNoteLines = lines.slice(phoneIdx + 1);
+  } else {
+    addressLines = lines;
+    opNoteLines = [];
+  }
+
+  return {
+    address: addressLines.join('\n').toUpperCase(),
+    addressPhone,
+    addressOpNote: opNoteLines.join('\n').toUpperCase(),
+  };
+}
+
+export function parseDtnRadiogram(raw: string): Partial<Omit<import('@/types').Radiogram, 'id'>> {
+  const lines = raw.trim().split(/\r?\n/).map(l => l.trim());
+
+  const btIndices: number[] = [];
+  lines.forEach((l, i) => { if (l.toUpperCase() === 'BT') btIndices.push(i); });
+
+  if (btIndices.length < 2) {
+    throw new Error('Could not find two BT separators in the pasted text.');
+  }
+
+  const [bt1, bt2] = btIndices;
+  const preamble = parsePreambleLine(lines[0]);
+  const { address, addressPhone, addressOpNote } = parseAddressBlock(lines.slice(1, bt1));
+  const textWords = lines.slice(bt1 + 1, bt2)
+    .flatMap(l => l.toUpperCase().split(/\s+/).filter(Boolean));
+  const signature = lines.slice(bt2 + 1).filter(l => l.length > 0).join('\n').toUpperCase().trim();
+
+  return {
+    ...preamble,
+    address,
+    addressPhone,
+    addressOpNote,
+    textWords,
+    signature,
+    signatureOpNote: '',
+  };
+}
+
 export function parseCallsignInput(input: string): {
   callsign: string;
   tags: string[];

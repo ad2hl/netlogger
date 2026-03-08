@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Radiogram, UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
-import { formatRadiogramAsText } from '@/lib/radiogram';
+import { formatRadiogramAsText, parseDtnRadiogram } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
 
 interface RadiogramFormProps {
@@ -100,6 +100,9 @@ export default function RadiogramForm({
   const [formData, setFormData] = useState<Omit<Radiogram, 'id'>>(emptyForm);
   const [copied, setCopied] = useState(false);
   const [showCountWarning, setShowCountWarning] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importError, setImportError] = useState('');
   const wordInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const signatureRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -278,6 +281,32 @@ export default function RadiogramForm({
     await printRadiogram(radiogram, userProfile);
   };
 
+  const isFormEmpty = () =>
+    !formData.number && !formData.precedence && !formData.stationOfOrigin &&
+    !formData.check && !formData.placeOfOrigin && !formData.date &&
+    !formData.address && !formData.signature &&
+    formData.textWords.every(w => !w);
+
+  const handleImportConfirm = () => {
+    try {
+      const parsed = parseDtnRadiogram(importText);
+      const minWords = INITIAL_LINES * WORDS_PER_LINE;
+      const textWords = [...(parsed.textWords ?? [])];
+      while (textWords.length < minWords) textWords.push('');
+      setFormData(prev => ({
+        ...emptyForm,
+        netName: prev.netName,
+        ...parsed,
+        textWords,
+      }));
+      setShowImportDialog(false);
+      setImportText('');
+      setImportError('');
+    } catch (e) {
+      setImportError(e instanceof Error ? e.message : 'Failed to parse radiogram.');
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -326,12 +355,21 @@ export default function RadiogramForm({
           <h2 className="text-lg font-semibold">
             {existingRadiogram ? 'Edit Radiogram' : 'New Radiogram'}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-500 hover:text-slate-700 text-xl px-2"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowImportDialog(true)}
+              className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded hover:bg-slate-200"
+            >
+              Import
+            </button>
+            <button
+              onClick={onClose}
+              className="text-slate-500 hover:text-slate-700 text-xl px-2"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -685,6 +723,47 @@ export default function RadiogramForm({
           </div>
         </form>
       </div>
+
+      {showImportDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full mx-4">
+            <h3 className="text-base font-semibold text-slate-900 mb-2">Import DTN Radiogram</h3>
+            {!isFormEmpty() && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mb-3">
+                Importing will clear the current form contents.
+              </p>
+            )}
+            <textarea
+              value={importText}
+              onChange={e => { setImportText(e.target.value); setImportError(''); }}
+              rows={10}
+              className="w-full px-2 py-1 border border-slate-300 rounded text-sm font-mono"
+              placeholder="Paste raw DTN radiogram here..."
+              autoFocus
+            />
+            {importError && (
+              <p className="text-sm text-red-600 mt-2">{importError}</p>
+            )}
+            <div className="flex justify-end gap-2 mt-3">
+              <button
+                type="button"
+                onClick={() => { setShowImportDialog(false); setImportText(''); setImportError(''); }}
+                className="bg-slate-300 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-400 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleImportConfirm}
+                disabled={!importText.trim()}
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm disabled:opacity-50"
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCountWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
