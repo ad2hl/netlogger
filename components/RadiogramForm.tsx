@@ -512,7 +512,7 @@ export default function RadiogramForm({
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    rows={3}
+                    rows={5}
                     className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                     required
                   />

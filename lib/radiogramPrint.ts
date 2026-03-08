@@ -134,11 +134,36 @@ function fillHalf(
 export async function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
   const words = radiogram.textWords.filter(w => w.length > 0);
 
-  // Map the first 3 address lines to the 3 TO fields in the PDF, one line per field.
+  // Parse address lines: fill the 3 TO fields in order, then detect phone and email
+  // in the remaining lines (or in any position for phone/email-looking lines).
+  const isPhoneLine = (l: string) => /^[\d\s()\-+]+$/.test(l) && l.trim().length > 0;
+  const isEmailLine = (l: string) => /ATSIGN/i.test(l) && /DOT/i.test(l);
+
   const addressLines = radiogram.address.split('\n').map(l => l.trim()).filter(Boolean);
-  const recipientNameCall = addressLines[0] ?? '';
-  const recipientAddress = addressLines[1] ?? '';
-  const recipientCityStateZip = addressLines[2] ?? '';
+  const mainLines: string[] = [];
+  let phoneFromAddress = '';
+  let emailFromAddress = '';
+
+  for (const line of addressLines) {
+    if (!phoneFromAddress && isPhoneLine(line)) {
+      phoneFromAddress = line;
+    } else if (!emailFromAddress && isEmailLine(line)) {
+      emailFromAddress = line;
+    } else if (mainLines.length < 3) {
+      mainLines.push(line);
+    }
+    // Lines beyond 3 regular + 1 phone + 1 email are rare; they remain in the
+    // address textarea for display but the ARRL form has no additional fields.
+  }
+
+  const recipientNameCall = mainLines[0] ?? '';
+  const recipientAddress = mainLines[1] ?? '';
+  const recipientCityStateZip = mainLines[2] ?? '';
+
+  // Phone field: prefer the explicit addressPhone field; fall back to address-extracted phone.
+  // Email (if present) goes on a second line below the phone number.
+  const phone = radiogram.addressPhone || phoneFromAddress;
+  const recipientPhone = [phone, emailFromAddress].filter(Boolean).join('\n');
 
   // Receiving station info from user profile.
   // Skip if the local station is the originator — they sent it, not received it.
@@ -162,7 +187,7 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     recipientNameCall,
     recipientAddress,
     recipientCityStateZip,
-    recipientPhone: radiogram.addressPhone,
+    recipientPhone,
     receivingStation: isOriginator ? undefined : userProfile?.callsign,
     receivingPhone: isOriginator ? undefined : userProfile?.phone,
     receivingName: isOriginator ? undefined : userProfile?.receivingStationName,

@@ -297,26 +297,13 @@ function parseAddressBlock(lines: string[]): {
   addressPhone: string;
   addressOpNote: string;
 } {
-  // A phone line contains only digits, spaces, +, -, (, )
-  const phoneIdx = lines.findIndex(l => /^[\d\s()\-+]+$/.test(l) && l.trim().length > 0);
-
-  let addressLines: string[];
-  let addressPhone = '';
-  let opNoteLines: string[];
-
-  if (phoneIdx >= 0) {
-    addressLines = lines.slice(0, phoneIdx);
-    addressPhone = lines[phoneIdx].trim();
-    opNoteLines = lines.slice(phoneIdx + 1);
-  } else {
-    addressLines = lines;
-    opNoteLines = [];
-  }
-
+  // All lines go into address verbatim. Nothing is separated into addressPhone or
+  // addressOpNote, because those fields are not printed on the ARRL form.
+  // The print function handles phone/email detection from within the address lines.
   return {
-    address: addressLines.join('\n').toUpperCase(),
-    addressPhone,
-    addressOpNote: opNoteLines.join('\n').toUpperCase(),
+    address: lines.join('\n').toUpperCase(),
+    addressPhone: '',
+    addressOpNote: '',
   };
 }
 
