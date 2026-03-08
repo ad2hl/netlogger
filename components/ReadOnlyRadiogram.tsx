@@ -203,7 +203,7 @@ function RadiogramFormView({ fields, receivedSection, sentSection, onUpdateAddre
             <textarea
               value={addressDraft}
               onChange={(e) => setAddressDraft(e.target.value.toUpperCase())}
-              rows={3}
+              rows={5}
               className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
               autoFocus
             />
@@ -228,7 +228,12 @@ function RadiogramFormView({ fields, receivedSection, sentSection, onUpdateAddre
           </div>
         )}
         {fields.addressOpNote && (
-          <div className="mt-1 text-xs text-slate-500">Op Note: {fields.addressOpNote}</div>
+          <div className="mt-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Op Note</label>
+            <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700 whitespace-pre-line">
+              {fields.addressOpNote}
+            </div>
+          </div>
         )}
       </div>
 
@@ -248,7 +253,12 @@ function RadiogramFormView({ fields, receivedSection, sentSection, onUpdateAddre
           {fields.signature || '\u00A0'}
         </div>
         {fields.signatureOpNote && (
-          <div className="mt-1 text-xs text-slate-500">Op Note: {fields.signatureOpNote}</div>
+          <div className="mt-2">
+            <label className="block text-xs font-medium text-slate-600 mb-1">Op Note</label>
+            <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700 whitespace-pre-line">
+              {fields.signatureOpNote}
+            </div>
+          </div>
         )}
       </div>
 
