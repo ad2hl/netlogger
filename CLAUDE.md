@@ -110,7 +110,7 @@ NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN    # Register in Firebase Console → App Check
 
 QRZ credentials are stored per-user in Firestore, not in environment variables.
 
-App Check is optional at the client level — if `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is absent, App Check is skipped and API requests are sent without a token. However, all server-side API routes (except `/api/health`) enforce App Check and will return HTTP 401 without a valid token. See `APPCHECK.md` for details on running without App Check.
+App Check is enforced at two levels: **Firestore** (via Firebase Console enforcement) rejects all direct client SDK reads and writes without a valid token, and all **server-side API routes** (except `/api/health`) call `verifyAppCheck` and return HTTP 401 without a valid token. If `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is absent, App Check is not initialized and the app will be non-functional. See `APPCHECK.md` for details on running without App Check.
 
 ### Server-Side Authentication & App Check
 

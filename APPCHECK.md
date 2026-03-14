@@ -9,26 +9,28 @@ The server verifies the token before processing the request.
 
 ## Is App Check Required?
 
-It depends on which features you use.
+Yes — App Check is required for all core functionality.
 
-NetLogger's core logging functionality — sessions, check-ins, radiograms, net reports — operates
-through direct Firestore calls from the browser and does not involve App Check at all. App Check
-only applies to the server-side API routes.
+App Check is enforced at two levels:
 
-| Feature | Protected by App Check? | Effect if App Check is absent |
+1. **Firebase Console (Firestore)** — Firestore itself rejects all reads and writes that lack a
+   valid App Check token. This covers sessions, check-ins, radiograms, and all other direct
+   Firestore operations from the browser.
+2. **Server-side API routes** — Each Next.js API route (except `/api/health`) calls `verifyAppCheck`
+   and returns HTTP 401 if the token is missing or invalid.
+
+| Feature | Enforced by | Effect if App Check is absent |
 |---|---|---|
-| Sessions, check-ins, radiograms | No — direct Firestore | Works normally |
-| Net report generation | No — client-side | Works normally |
-| QRZ callsign lookups | Yes | Fails with HTTP 401 |
-| Login/signup page banner | Yes | Banner not displayed |
-| Page header message | Yes | Message not displayed |
-| About page content | Yes | Content not displayed |
-| Privacy policy | Yes | Content not displayed |
-| QRZ credential encryption | Yes | Fails with HTTP 401 |
+| Sessions, check-ins, radiograms | Firestore (Firebase Console) | Fails — Firestore rejects all reads/writes |
+| Net report generation | Firestore (Firebase Console) | Fails — cannot read session data |
+| QRZ callsign lookups | API route | Fails with HTTP 401 |
+| Login/signup page banner | API route | Banner not displayed |
+| Page header message | API route | Message not displayed |
+| About page content | API route | Content not displayed |
+| Privacy policy | API route | Content not displayed |
+| QRZ credential encryption | API route | Fails with HTTP 401 |
 
-The only functionally significant impact of running without App Check is that **QRZ callsign lookups
-will not work**. The banner and content routes serve optional customization text; their failure is
-cosmetic.
+Without a valid App Check token the app cannot read or write any data.
 
 ## App Check and the Firebase Free Tier
 
@@ -64,14 +66,20 @@ Then enable App Check in Firebase Console using the reCAPTCHA v3 provider.
 
 ### Option 2: Remove App Check entirely
 
-If you are running a private instance and are comfortable without this protection layer, you can
-remove App Check enforcement from the API routes by deleting the `verifyAppCheck` calls at the top
-of each file in `app/api/` (except `app/api/health/route.ts`, which is already unprotected).
+If you are running a private instance and are comfortable without this protection layer:
+
+1. In the Firebase Console, go to **App Check → APIs** and disable enforcement for **Cloud Firestore**.
+2. Delete the `verifyAppCheck` calls at the top of each file in `app/api/` (except
+   `app/api/health/route.ts`, which is already unprotected).
+
+Both steps are required — disabling enforcement only in the API routes will still leave Firestore
+rejecting direct client SDK calls.
 
 ## Summary for Self-Hosters
 
-- **Core logging works on the free Spark plan** with no App Check configuration.
-- **QRZ lookups require App Check.** Use reCAPTCHA Enterprise (Blaze plan, free up to 1M/month),
-  reCAPTCHA v3 (free, code change needed), or remove App Check enforcement if you don't need QRZ.
+- **App Check is required for all functionality**, including core logging. Without it, Firestore
+  rejects every read and write.
+- Use reCAPTCHA Enterprise (Blaze plan, free up to 1M/month), reCAPTCHA v3 (free, code change
+  needed), or remove App Check enforcement entirely (Firebase Console + API route changes).
 - **reCAPTCHA Enterprise** is what the hosted instance at netlogger.ad2hl.net uses. It requires
   billing to be enabled but costs nothing within the free quota.
