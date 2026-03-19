@@ -14,3 +14,22 @@ export async function readContent(filename: string): Promise<string | null> {
 
   return null;
 }
+
+export async function readContentWithType(
+  basename: string
+): Promise<{ content: string; type: 'html' | 'md' } | null> {
+  const base = join(process.cwd(), 'content');
+
+  for (const dir of ['local', 'default']) {
+    for (const type of ['html', 'md'] as const) {
+      try {
+        const content = await readFile(join(base, dir, `${basename}.${type}`), 'utf-8');
+        return { content, type };
+      } catch {
+        // File not found, try next
+      }
+    }
+  }
+
+  return null;
+}

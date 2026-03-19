@@ -9,7 +9,7 @@ export default function Footer() {
   const [aboutContent, setAboutContent] = useState<string | null>(null);
   const [summaryContent, setSummaryContent] = useState<string | null>(null);
   const [fullPolicyContent, setFullPolicyContent] = useState<string | null>(null);
-  const [footerCredit, setFooterCredit] = useState<string | null>(null);
+  const [footerCredit, setFooterCredit] = useState<{ content: string; type: 'html' | 'md' } | null>(null);
   const [localModalContent, setLocalModalContent] = useState<string | null>(null);
   const [showAbout, setShowAbout] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -29,7 +29,7 @@ export default function Footer() {
       .catch(() => {});
     apiFetch('/api/footer-credit')
       .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.content) setFooterCredit(data.content); })
+      .then(data => { if (data?.content) setFooterCredit({ content: data.content, type: data.type ?? 'md' }); })
       .catch(() => {});
   }, []);
 
@@ -39,37 +39,41 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-4 text-sm">
           {footerCredit && (
             <span className="text-slate-600">
-              <ReactMarkdown
-                urlTransform={(url) => url}
-                components={{
-                  p: ({ children }) => <>{children}</>,
-                  a: ({ href, children }) => {
-                    if (href?.startsWith('local:')) {
-                      const file = href.slice('local:'.length);
+              {footerCredit.type === 'html' ? (
+                <div dangerouslySetInnerHTML={{ __html: footerCredit.content }} />
+              ) : (
+                <ReactMarkdown
+                  urlTransform={(url) => url}
+                  components={{
+                    p: ({ children }) => <>{children}</>,
+                    a: ({ href, children }) => {
+                      if (href?.startsWith('local:')) {
+                        const file = href.slice('local:'.length);
+                        return (
+                          <button
+                            onClick={() => {
+                              apiFetch(`/api/local-content?file=${encodeURIComponent(file)}`)
+                                .then(res => res.ok ? res.json() : null)
+                                .then(data => { if (data?.content) setLocalModalContent(data.content); })
+                                .catch(() => {});
+                            }}
+                            className="text-cyan-700 hover:text-cyan-900 underline"
+                          >
+                            {children}
+                          </button>
+                        );
+                      }
                       return (
-                        <button
-                          onClick={() => {
-                            apiFetch(`/api/local-content?file=${encodeURIComponent(file)}`)
-                              .then(res => res.ok ? res.json() : null)
-                              .then(data => { if (data?.content) setLocalModalContent(data.content); })
-                              .catch(() => {});
-                          }}
-                          className="text-cyan-700 hover:text-cyan-900 underline"
-                        >
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900">
                           {children}
-                        </button>
+                        </a>
                       );
-                    }
-                    return (
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900">
-                        {children}
-                      </a>
-                    );
-                  },
-                }}
-              >
-                {footerCredit}
-              </ReactMarkdown>
+                    },
+                  }}
+                >
+                  {footerCredit.content}
+                </ReactMarkdown>
+              )}
             </span>
           )}
           {aboutContent && (
