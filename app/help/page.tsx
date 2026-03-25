@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import ReactMarkdown from 'react-markdown';
+import ContentRenderer from '@/components/ContentRenderer';
 
 export default function HelpPageWrapper() {
   return (
@@ -15,7 +15,7 @@ export default function HelpPageWrapper() {
 function HelpPage() {
   const searchParams = useSearchParams();
   const page = searchParams.get('page');
-  const [content, setContent] = useState<string | null>(null);
+  const [content, setContent] = useState<{ content: string; type: 'html' | 'md' } | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ function HelpPage() {
         return res.json();
       })
       .then((data) => {
-        if (data?.content) setContent(data.content);
+        if (data?.content) setContent({ content: data.content, type: data.type ?? 'md' });
         else setError(true);
       })
       .catch(() => setError(true));
@@ -43,7 +43,7 @@ function HelpPage() {
         <p className="text-slate-500">Loading...</p>
       ) : (
         <div className="prose prose-slate prose-sm max-w-none">
-          <ReactMarkdown>{content}</ReactMarkdown>
+          <ContentRenderer content={content.content} type={content.type} />
         </div>
       )}
     </div>
