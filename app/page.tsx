@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 
 const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
-import ReactMarkdown from 'react-markdown';
+import ContentRenderer from '@/components/ContentRenderer';
 import {
   signInWithGoogle,
   signInWithEmail,
@@ -67,7 +67,7 @@ export default function Home() {
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [bgUrl, setBgUrl] = useState<string | null>(null);
-  const [bannerContent, setBannerContent] = useState<string | null>(null);
+  const [bannerContent, setBannerContent] = useState<{ content: string; type: 'html' | 'md' } | null>(null);
 
   useEffect(() => {
     fetch('/api/login-background')
@@ -86,7 +86,7 @@ export default function Home() {
         return null;
       })
       .then((data) => {
-        if (data?.content) setBannerContent(data.content);
+        if (data?.content) setBannerContent({ content: data.content, type: data.type ?? 'md' });
       })
       .catch(() => {});
   }, []);
@@ -255,8 +255,8 @@ export default function Home() {
           </div>
         </div>
         {bannerContent && (
-          <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900">
-            {bannerContent}
+          <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900 prose prose-sm prose-amber">
+            <ContentRenderer content={bannerContent.content} type={bannerContent.type} />
           </div>
         )}
       </div>
@@ -318,8 +318,8 @@ export default function Home() {
           </button>
         </div>
         {bannerContent && (
-          <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900">
-            {bannerContent}
+          <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900 prose prose-sm prose-amber">
+            <ContentRenderer content={bannerContent.content} type={bannerContent.type} />
           </div>
         )}
       </div>
@@ -511,7 +511,7 @@ export default function Home() {
       </div>
       {bannerContent && (
         <div className="max-w-md w-full mx-4 mt-4 relative z-10 bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 text-sm text-amber-900 prose prose-sm prose-amber">
-          <ReactMarkdown>{bannerContent}</ReactMarkdown>
+          <ContentRenderer content={bannerContent.content} type={bannerContent.type} />
         </div>
       )}
     </div>

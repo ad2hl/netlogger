@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ContentRenderer from '@/components/ContentRenderer';
 
 interface PrivacyPolicySummaryProps {
   content: string;
+  contentType?: 'html' | 'md';
   fullPolicyContent?: string;
+  fullPolicyType?: 'html' | 'md';
   onClose: () => void;
 }
 
-export default function PrivacyPolicySummary({ content, fullPolicyContent, onClose }: PrivacyPolicySummaryProps) {
+export default function PrivacyPolicySummary({ content, contentType = 'md', fullPolicyContent, fullPolicyType = 'md', onClose }: PrivacyPolicySummaryProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [showFullPolicy, setShowFullPolicy] = useState(false);
 
@@ -40,7 +42,11 @@ export default function PrivacyPolicySummary({ content, fullPolicyContent, onClo
           &times;
         </button>
         <div className="px-6 pt-4 pb-4 overflow-y-auto prose prose-sm max-w-none">
-          <ReactMarkdown>{showFullPolicy ? fullPolicyContent! : content}</ReactMarkdown>
+          {showFullPolicy && fullPolicyContent ? (
+            <ContentRenderer content={fullPolicyContent} type={fullPolicyType} />
+          ) : (
+            <ContentRenderer content={content} type={contentType} />
+          )}
           {showFullPolicy ? (
             <button
               onClick={() => setShowFullPolicy(false)}

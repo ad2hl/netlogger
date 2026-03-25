@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { readContent } from '@/lib/content';
+import { readContentWithType } from '@/lib/content';
 
 export async function GET() {
-  const content = await readContent('login-banner.md');
-  if (content === null) {
+  const result = await readContentWithType('login-banner');
+  if (result === null) {
     return NextResponse.json({ content: null }, { status: 404 });
   }
-  return NextResponse.json({ content });
+  return NextResponse.json({ content: result.content, type: result.type });
 }
