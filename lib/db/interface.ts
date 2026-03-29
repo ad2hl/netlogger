@@ -1,4 +1,4 @@
-import { Station, NetSession, CheckIn, NetReport, UserProfile } from '@/types';
+import { Station, NetSession, CheckIn, NetReport, UserProfile, Radiogram } from '@/types';
 
 export interface NetLoggerDB {
   // Stations
@@ -26,6 +26,14 @@ export interface NetLoggerDB {
   addCheckIn(uid: string, sessionId: string, checkIn: CheckIn, currentCheckIns: CheckIn[]): Promise<boolean>;
   updateCheckInTags(uid: string, sessionId: string, callsign: string, newTags: string[], currentCheckIns: CheckIn[]): Promise<CheckIn[] | null>;
   removeCheckIn(uid: string, sessionId: string, callsign: string, currentCheckIns: CheckIn[]): Promise<boolean>;
+
+  // Radiograms (independent collection)
+  addRadiogram(uid: string, radiogram: Radiogram): Promise<boolean>;
+  getRadiogram(uid: string, radiogramId: string): Promise<Radiogram | null>;
+  updateRadiogram(uid: string, radiogramId: string, updates: Partial<Radiogram>): Promise<boolean>;
+  deleteRadiogram(uid: string, radiogramId: string): Promise<boolean>;
+  getAllRadiograms(uid: string): Promise<Radiogram[]>;
+  getRadiogramsBySession(uid: string, sessionId: string): Promise<Radiogram[]>;
 
   // Profile
   getUserProfile(uid: string): Promise<UserProfile | null>;

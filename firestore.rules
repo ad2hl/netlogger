@@ -8,14 +8,11 @@ service cloud.firestore {
       }
 
       match /sessions/{sessionId} {
-        allow read, delete: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
 
-        allow create, update: if request.auth != null
-          && request.auth.uid == userId
-          && (
-            !('radiograms' in request.resource.data)
-            || request.resource.data.radiograms.size() <= 100
-          );
+      match /radiograms/{radiogramId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
   }

@@ -102,7 +102,7 @@ export default function HomePage() {
       trafficReported: 0,
       trafficCleared: 0,
       checkIns: [],
-      radiograms: [],
+      radiogramIds: [],
     });
     if (sessionId) {
       router.push(`/net?session=${sessionId}`);

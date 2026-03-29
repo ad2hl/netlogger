@@ -23,7 +23,7 @@ interface StoredSession {
   trafficReported: number;
   trafficCleared: number;
   checkIns: CheckIn[];
-  radiograms: StoredRadiogram[];
+  radiogramIds: string[];
   report?: StoredNetReport;
   lastAcknowledged?: string | null;
   trafficItems?: NetSession['trafficItems'];
@@ -33,6 +33,7 @@ interface StoredSession {
 
 interface StoredRadiogram extends Omit<Radiogram, 'savedAt'> {
   savedAt?: string; // ISO string
+  sessionId?: string;
 }
 
 interface StoredNetReport extends Omit<NetReport, 'startDateTime' | 'savedAt'> {
@@ -48,6 +49,7 @@ class NetLoggerDexie extends Dexie {
   stations!: Table<StoredStation, string>;
   sessions!: Table<StoredSession, string>;
   profile!: Table<StoredProfile, string>;
+  radiograms!: Table<StoredRadiogram, string>;
 
   constructor() {
     super('netlogger-desktop');
@@ -55,6 +57,32 @@ class NetLoggerDexie extends Dexie {
       stations: 'callsign, lastSeen',
       sessions: 'id, date',
       profile: 'id',
+    });
+    this.version(2).stores({
+      stations: 'callsign, lastSeen',
+      sessions: 'id, date',
+      profile: 'id',
+      radiograms: 'id, sessionId, savedAt',
+    }).upgrade(async (tx) => {
+      // Migrate embedded radiograms out of session documents
+      const allSessions = await tx.table('sessions').toArray();
+      for (const s of allSessions) {
+        const oldRadiograms: StoredRadiogram[] = (s as Record<string, unknown>).radiograms as StoredRadiogram[] | undefined ?? [];
+        if (oldRadiograms.length > 0 && !s.radiogramIds) {
+          for (const r of oldRadiograms) {
+            await tx.table('radiograms').put({
+              ...r,
+              sessionId: s.id,
+              sessionNetName: s.netName,
+              savedAt: r.savedAt || new Date().toISOString(),
+            });
+          }
+        }
+        await tx.table('sessions').update(s.id, {
+          radiogramIds: s.radiogramIds ?? oldRadiograms.map((r) => r.id),
+          radiograms: undefined,
+        });
+      }
     });
   }
 }
@@ -100,11 +128,6 @@ function stationFromStored(s: StoredStation): Station {
 
 // Convert stored session to NetSession type
 function sessionFromStored(s: StoredSession): NetSession {
-  const radiograms: Radiogram[] = (s.radiograms || []).map((r) => ({
-    ...r,
-    savedAt: r.savedAt ? toTimestamp(r.savedAt) : undefined,
-  }));
-
   let report: NetReport | undefined;
   if (s.report) {
     report = {
@@ -123,7 +146,7 @@ function sessionFromStored(s: StoredSession): NetSession {
     trafficReported: s.trafficReported,
     trafficCleared: s.trafficCleared,
     checkIns: s.checkIns || [],
-    radiograms,
+    radiogramIds: s.radiogramIds || [],
     report,
     lastAcknowledged: s.lastAcknowledged,
     trafficItems: s.trafficItems,
@@ -134,11 +157,6 @@ function sessionFromStored(s: StoredSession): NetSession {
 
 // Convert NetSession to stored format
 function sessionToStored(id: string, session: Omit<NetSession, 'id'>): StoredSession {
-  const radiograms: StoredRadiogram[] = (session.radiograms || []).map((r) => ({
-    ...r,
-    savedAt: r.savedAt ? toIso(r.savedAt) : undefined,
-  }));
-
   let report: StoredNetReport | undefined;
   if (session.report) {
     report = {
@@ -157,7 +175,7 @@ function sessionToStored(id: string, session: Omit<NetSession, 'id'>): StoredSes
     trafficReported: session.trafficReported,
     trafficCleared: session.trafficCleared,
     checkIns: session.checkIns || [],
-    radiograms,
+    radiogramIds: session.radiogramIds || [],
     report,
     lastAcknowledged: session.lastAcknowledged,
     trafficItems: session.trafficItems,
@@ -316,15 +334,8 @@ class DexieDB implements NetLoggerDB {
       if (updates.trafficItems !== undefined) merged.trafficItems = updates.trafficItems;
       if (updates.checkedAnnouncements !== undefined) merged.checkedAnnouncements = updates.checkedAnnouncements;
       if (updates.checkedSecure !== undefined) merged.checkedSecure = updates.checkedSecure;
-
       if (updates.checkIns !== undefined) merged.checkIns = updates.checkIns;
-
-      if (updates.radiograms !== undefined) {
-        merged.radiograms = updates.radiograms.map((r) => ({
-          ...r,
-          savedAt: r.savedAt ? toIso(r.savedAt) : undefined,
-        }));
-      }
+      if (updates.radiogramIds !== undefined) merged.radiogramIds = updates.radiogramIds;
 
       if (updates.report !== undefined) {
         if (updates.report) {
@@ -464,6 +475,87 @@ class DexieDB implements NetLoggerDB {
     } catch (error) {
       console.error('Error removing check-in:', error);
       return false;
+    }
+  }
+
+  async addRadiogram(_uid: string, radiogram: Radiogram): Promise<boolean> {
+    try {
+      const stored: StoredRadiogram = {
+        ...radiogram,
+        savedAt: new Date().toISOString(),
+      };
+      await getDb().radiograms.put(stored);
+      if (radiogram.sessionId) {
+        await getDb().sessions.where('id').equals(radiogram.sessionId).modify((s) => {
+          s.radiogramIds = Array.from(new Set([...(s.radiogramIds || []), radiogram.id]));
+        });
+      }
+      return true;
+    } catch (error) {
+      console.error('Error adding radiogram:', error);
+      return false;
+    }
+  }
+
+  async getRadiogram(_uid: string, radiogramId: string): Promise<Radiogram | null> {
+    try {
+      const stored = await getDb().radiograms.get(radiogramId);
+      if (!stored) return null;
+      return { ...stored, savedAt: stored.savedAt ? toTimestamp(stored.savedAt) : undefined };
+    } catch (error) {
+      console.error('Error getting radiogram:', error);
+      return null;
+    }
+  }
+
+  async updateRadiogram(_uid: string, radiogramId: string, updates: Partial<Radiogram>): Promise<boolean> {
+    try {
+      const { savedAt, ...rest } = updates;
+      const storedUpdates: Partial<StoredRadiogram> = {
+        ...rest,
+        ...(savedAt ? { savedAt: toIso(savedAt) } : {}),
+      };
+      await getDb().radiograms.update(radiogramId, storedUpdates);
+      return true;
+    } catch (error) {
+      console.error('Error updating radiogram:', error);
+      return false;
+    }
+  }
+
+  async deleteRadiogram(_uid: string, radiogramId: string): Promise<boolean> {
+    try {
+      const stored = await getDb().radiograms.get(radiogramId);
+      if (stored?.sessionId) {
+        await getDb().sessions.where('id').equals(stored.sessionId).modify((s) => {
+          s.radiogramIds = (s.radiogramIds || []).filter((id) => id !== radiogramId);
+        });
+      }
+      await getDb().radiograms.delete(radiogramId);
+      return true;
+    } catch (error) {
+      console.error('Error deleting radiogram:', error);
+      return false;
+    }
+  }
+
+  async getAllRadiograms(_uid: string): Promise<Radiogram[]> {
+    try {
+      const stored = await getDb().radiograms.orderBy('savedAt').reverse().toArray();
+      return stored.map((r) => ({ ...r, savedAt: r.savedAt ? toTimestamp(r.savedAt) : undefined }));
+    } catch (error) {
+      console.error('Error getting all radiograms:', error);
+      return [];
+    }
+  }
+
+  async getRadiogramsBySession(_uid: string, sessionId: string): Promise<Radiogram[]> {
+    try {
+      const stored = await getDb().radiograms.where('sessionId').equals(sessionId).sortBy('savedAt');
+      return stored.map((r) => ({ ...r, savedAt: r.savedAt ? toTimestamp(r.savedAt) : undefined }));
+    } catch (error) {
+      console.error('Error getting radiograms by session:', error);
+      return [];
     }
   }
 

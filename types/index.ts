@@ -129,6 +129,7 @@ export interface Radiogram {
   // Metadata
   savedAt?: Timestamp;
   sessionNetName?: string;
+  sessionId?: string;       // set when radiogram belongs to a session; absent for standalone
 }
 
 // Traffic item for the checklist (e.g., KM2I -> WM2C)
@@ -148,7 +149,7 @@ export interface NetSession {
   trafficReported: number;
   trafficCleared: number;
   checkIns: CheckIn[];
-  radiograms: Radiogram[];
+  radiogramIds: string[];
   report?: NetReport;
   lastAcknowledged?: string | null; // Callsign of last acknowledged station
   // Checklist data
