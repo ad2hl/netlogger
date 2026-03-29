@@ -5,7 +5,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
-import { getAllSessions, updateSession } from '@/lib/firestore';
+import {
+  getAllSessions,
+  getAllRadiograms,
+  addRadiogram,
+  updateRadiogram,
+  deleteRadiogram,
+  updateSession,
+} from '@/lib/firestore';
 import { NetSession, Radiogram, NetReport } from '@/types';
 import { Timestamp, deleteField } from 'firebase/firestore';
 import ReadOnlyRadiogram from '@/components/ReadOnlyRadiogram';
@@ -29,35 +36,31 @@ interface RadiogramListItem {
 
 type SortColumn = 'date' | 'netName' | 'type' | 'number' | 'stationOfOrigin' | 'addressee' | 'disposition';
 
-function buildItems(sessions: NetSession[]): RadiogramListItem[] {
+function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramListItem[] {
   const items: RadiogramListItem[] = [];
 
+  // User-created radiograms from the independent collection
+  for (const radiogram of radiograms) {
+    const itemDate = radiogram.savedAt ? radiogram.savedAt.toDate() : new Date();
+    const displayDate = itemDate.toLocaleDateString() + ' ' +
+      itemDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    items.push({
+      type: 'Radiogram',
+      sessionId: radiogram.sessionId || '',
+      sortDate: itemDate,
+      displayDate,
+      netName: radiogram.sessionNetName ?? '',
+      number: radiogram.number,
+      stationOfOrigin: radiogram.stationOfOrigin,
+      addresseePreview: (radiogram.address || '').split('\n')[0],
+      disposition: radiogram.dispositionMethod || '',
+      radiogram,
+    });
+  }
+
+  // Net reports (still embedded in sessions)
   for (const session of sessions) {
-    // User-created radiograms
-    if (session.radiograms) {
-      for (const radiogram of session.radiograms) {
-        const itemDate = radiogram.savedAt
-          ? radiogram.savedAt.toDate()
-          : session.date.toDate();
-        const displayDate = itemDate.toLocaleDateString() + ' ' +
-          itemDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        items.push({
-          type: 'Radiogram',
-          sessionId: session.id || '',
-          sortDate: itemDate,
-          displayDate,
-          netName: radiogram.sessionNetName ?? '',
-          number: radiogram.number,
-          stationOfOrigin: radiogram.stationOfOrigin,
-          addresseePreview: (radiogram.address || '').split('\n')[0],
-          disposition: radiogram.dispositionMethod || '',
-          radiogram,
-        });
-      }
-    }
-
-    // Net reports
     if (session.report) {
       const report = session.report;
       const reportDate = report.savedAt
@@ -106,6 +109,7 @@ function buildItems(sessions: NetSession[]): RadiogramListItem[] {
 export default function RadiogramsPage() {
   const { user, profile, loading, emailVerified, photoURL } = useAuth();
   const router = useRouter();
+  const [radiograms, setRadiograms] = useState<Radiogram[]>([]);
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('date');
@@ -123,14 +127,18 @@ export default function RadiogramsPage() {
 
   useEffect(() => {
     if (user) {
-      getAllSessions(user.uid).then((s) => {
-        setSessions(s);
+      Promise.all([
+        getAllRadiograms(user.uid),
+        getAllSessions(user.uid),
+      ]).then(([rads, sess]) => {
+        setRadiograms(rads);
+        setSessions(sess);
         setFetching(false);
       });
     }
   }, [user]);
 
-  const items = useMemo(() => buildItems(sessions), [sessions]);
+  const items = useMemo(() => buildItems(radiograms, sessions), [radiograms, sessions]);
 
   const sortedItems = useMemo(() => {
     const sorted = [...items];
@@ -184,29 +192,25 @@ export default function RadiogramsPage() {
     dispositionDate: string;
     dispositionTime: string;
   }) => {
-    if (!user || !item.sessionId) return;
-
-    const session = sessions.find(s => s.id === item.sessionId);
-    if (!session) return;
+    if (!user) return;
 
     if (item.type === 'Radiogram' && item.radiogram) {
-      const updatedRadiograms = (session.radiograms || []).map(r =>
-        r.id === item.radiogram!.id ? { ...r, ...disposition } : r
-      );
-      const success = await updateSession(user.uid, item.sessionId, { radiograms: updatedRadiograms });
+      const success = await updateRadiogram(user.uid, item.radiogram.id, disposition);
       if (success) {
-        setSessions(prev => prev.map(s =>
-          s.id === item.sessionId ? { ...s, radiograms: updatedRadiograms } : s
+        setRadiograms((prev) => prev.map((r) =>
+          r.id === item.radiogram!.id ? { ...r, ...disposition } : r
         ));
       }
-    } else if (item.type === 'Net Report' && session.report?.parts) {
+    } else if (item.type === 'Net Report' && item.sessionId) {
+      const session = sessions.find((s) => s.id === item.sessionId);
+      if (!session?.report?.parts) return;
       const updatedReport = {
         ...session.report,
         parts: { ...session.report.parts, ...disposition },
       };
       const success = await updateSession(user.uid, item.sessionId, { report: updatedReport });
       if (success) {
-        setSessions(prev => prev.map(s =>
+        setSessions((prev) => prev.map((s) =>
           s.id === item.sessionId ? { ...s, report: updatedReport } : s
         ));
       }
@@ -214,16 +218,11 @@ export default function RadiogramsPage() {
   };
 
   const handleUpdateAddress = async (item: RadiogramListItem, address: string) => {
-    if (!user || !item.sessionId || !item.radiogram) return;
-    const session = sessions.find(s => s.id === item.sessionId);
-    if (!session) return;
-    const updatedRadiograms = (session.radiograms || []).map(r =>
-      r.id === item.radiogram!.id ? { ...r, address } : r
-    );
-    const success = await updateSession(user.uid, item.sessionId, { radiograms: updatedRadiograms });
+    if (!user || !item.radiogram) return;
+    const success = await updateRadiogram(user.uid, item.radiogram.id, { address });
     if (success) {
-      setSessions(prev => prev.map(s =>
-        s.id === item.sessionId ? { ...s, radiograms: updatedRadiograms } : s
+      setRadiograms((prev) => prev.map((r) =>
+        r.id === item.radiogram!.id ? { ...r, address } : r
       ));
     }
   };
@@ -231,61 +230,32 @@ export default function RadiogramsPage() {
   const handleDeleteItem = async () => {
     if (!user || !deleteTarget) return;
 
-    const session = sessions.find((s) => s.id === deleteTarget.sessionId);
-    if (!session) return;
-
     if (deleteTarget.type === 'Radiogram' && deleteTarget.radiogram) {
-      const updatedRadiograms = (session.radiograms || []).filter(
-        (r) => r.id !== deleteTarget.radiogram!.id
-      );
-      const success = await updateSession(user.uid, deleteTarget.sessionId, {
-        radiograms: updatedRadiograms,
-      });
+      const success = await deleteRadiogram(user.uid, deleteTarget.radiogram.id);
       if (success) {
-        setSessions((prev) =>
-          prev.map((s) =>
-            s.id === deleteTarget.sessionId ? { ...s, radiograms: updatedRadiograms } : s
-          )
-        );
+        setRadiograms((prev) => prev.filter((r) => r.id !== deleteTarget.radiogram!.id));
       }
     } else if (deleteTarget.type === 'Net Report') {
       const success = await updateSession(user.uid, deleteTarget.sessionId, {
         report: deleteField(),
       } as unknown as Partial<NetSession>);
       if (success) {
-        setSessions((prev) =>
-          prev.map((s) =>
-            s.id === deleteTarget.sessionId ? { ...s, report: undefined } : s
-          )
-        );
+        setSessions((prev) => prev.map((s) =>
+          s.id === deleteTarget.sessionId ? { ...s, report: undefined } : s
+        ));
       }
     }
 
     setDeleteTarget(null);
   };
 
+  // Creates a standalone radiogram — not associated with any session
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
-    if (!user || sessions.length === 0) return;
-
-    const mostRecentSession = sessions[0];
-    if (!mostRecentSession.id) return;
-
+    if (!user) return;
     const radiogramWithTimestamp = { ...radiogram, savedAt: Timestamp.now() };
-    const currentRadiograms = mostRecentSession.radiograms || [];
-    const updatedRadiograms = [...currentRadiograms, radiogramWithTimestamp];
-
-    const success = await updateSession(user.uid, mostRecentSession.id, {
-      radiograms: updatedRadiograms,
-    });
-
+    const success = await addRadiogram(user.uid, radiogramWithTimestamp);
     if (success) {
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === mostRecentSession.id
-            ? { ...s, radiograms: updatedRadiograms }
-            : s
-        )
-      );
+      setRadiograms((prev) => [radiogramWithTimestamp, ...prev]);
     }
   };
 

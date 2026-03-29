@@ -2,7 +2,7 @@
 // The correct implementation (Firebase or Dexie) is selected at build time
 // by NEXT_PUBLIC_DESKTOP_MODE.
 import { db } from './db/index';
-import { Station, NetSession, CheckIn, NetReport, UserProfile } from '@/types';
+import { Station, NetSession, CheckIn, NetReport, UserProfile, Radiogram } from '@/types';
 
 export const getStation = (uid: string, callsign: string) => db.getStation(uid, callsign);
 export const saveStation = (uid: string, station: Station) => db.saveStation(uid, station);
@@ -26,6 +26,13 @@ export const saveReport = (uid: string, sessionId: string, report: NetReport) =>
 export const addCheckIn = (uid: string, sessionId: string, checkIn: CheckIn, currentCheckIns: CheckIn[]) => db.addCheckIn(uid, sessionId, checkIn, currentCheckIns);
 export const updateCheckInTags = (uid: string, sessionId: string, callsign: string, newTags: string[], currentCheckIns: CheckIn[]) => db.updateCheckInTags(uid, sessionId, callsign, newTags, currentCheckIns);
 export const removeCheckIn = (uid: string, sessionId: string, callsign: string, currentCheckIns: CheckIn[]) => db.removeCheckIn(uid, sessionId, callsign, currentCheckIns);
+
+export const addRadiogram = (uid: string, radiogram: Radiogram) => db.addRadiogram(uid, radiogram);
+export const getRadiogram = (uid: string, radiogramId: string) => db.getRadiogram(uid, radiogramId);
+export const updateRadiogram = (uid: string, radiogramId: string, updates: Partial<Radiogram>) => db.updateRadiogram(uid, radiogramId, updates);
+export const deleteRadiogram = (uid: string, radiogramId: string) => db.deleteRadiogram(uid, radiogramId);
+export const getAllRadiograms = (uid: string) => db.getAllRadiograms(uid);
+export const getRadiogramsBySession = (uid: string, sessionId: string) => db.getRadiogramsBySession(uid, sessionId);
 
 // Profile functions (also used in settings page and auth provider)
 export const getUserProfile = (uid: string) => db.getUserProfile(uid);

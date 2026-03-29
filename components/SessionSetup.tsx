@@ -71,7 +71,7 @@ export default function SessionSetup({
         trafficReported: 0,
         trafficCleared: 0,
         checkIns: [],
-        radiograms: [],
+        radiogramIds: [],
       });
     }
   };

@@ -214,7 +214,7 @@ function SessionsContent() {
       trafficReported: 0,
       trafficCleared: 0,
       checkIns: [],
-      radiograms: [],
+      radiogramIds: [],
     });
     if (sessionId) {
       router.push(`/net?session=${sessionId}`);
@@ -376,7 +376,7 @@ function SessionsContent() {
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Delete Session?</h2>
             <p className="text-gray-600 mb-6">
               This will permanently delete the session <strong>{deleteTarget.netName}</strong> from{' '}
-              <strong>{deleteTarget.date.toDate().toLocaleDateString()}</strong> at <strong>{deleteTarget.startTime}</strong>, including all check-ins, radiograms, and reports.
+              <strong>{deleteTarget.date.toDate().toLocaleDateString()}</strong> at <strong>{deleteTarget.startTime}</strong>, including all check-ins and reports. Radiograms from this session will be preserved.
             </p>
             <div className="flex justify-end gap-3">
               <button

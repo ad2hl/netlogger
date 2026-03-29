@@ -11,9 +11,14 @@ import {
   getDocs,
   Timestamp,
   limit,
+  where,
+  writeBatch,
+  arrayUnion,
+  arrayRemove,
+  deleteField,
 } from 'firebase/firestore';
 import { getFirebaseDb } from '../firebase';
-import { Station, NetSession, CheckIn, NetReport, UserProfile } from '@/types';
+import { Station, NetSession, CheckIn, NetReport, UserProfile, Radiogram } from '@/types';
 import type { NetLoggerDB } from './interface';
 
 class FirebaseDB implements NetLoggerDB {
@@ -142,14 +147,46 @@ class FirebaseDB implements NetLoggerDB {
     }
   }
 
+  // Normalizes raw Firestore session data to the current NetSession shape.
+  // Handles old format (radiograms: Radiogram[]) by deriving radiogramIds from it.
+  private normalizeSession(rawData: Record<string, unknown>, id: string): NetSession {
+    const { radiograms: oldRadiograms, ...rest } = rawData as { radiograms?: Radiogram[] } & Record<string, unknown>;
+    const radiogramIds = (rest.radiogramIds as string[] | undefined) ??
+      (oldRadiograms?.map((r) => r.id) ?? []);
+    return { id, ...rest, radiogramIds } as NetSession;
+  }
+
+  // Migrates a session that still has the old embedded radiograms array.
+  // Writes each radiogram to its own document and updates the session atomically.
+  private async migrateSessionIfNeeded(
+    uid: string,
+    rawData: Record<string, unknown>,
+    sessionId: string
+  ): Promise<void> {
+    const oldRadiograms = rawData.radiograms as Radiogram[] | undefined;
+    if (!oldRadiograms || rawData.radiogramIds !== undefined) return;
+
+    const db = getFirebaseDb();
+    const batch = writeBatch(db);
+    for (const r of oldRadiograms) {
+      const radRef = doc(db, 'users', uid, 'radiograms', r.id);
+      batch.set(radRef, { ...r, sessionId, sessionNetName: rawData.netName ?? '' });
+    }
+    batch.update(doc(db, 'users', uid, 'sessions', sessionId), {
+      radiogramIds: oldRadiograms.map((r) => r.id),
+      radiograms: deleteField(),
+    });
+    await batch.commit();
+  }
+
   async getSession(uid: string, sessionId: string): Promise<NetSession | null> {
     try {
       const sessionRef = doc(getFirebaseDb(), 'users', uid, 'sessions', sessionId);
       const sessionDoc = await getDoc(sessionRef);
-      if (sessionDoc.exists()) {
-        return { id: sessionDoc.id, ...sessionDoc.data() } as NetSession;
-      }
-      return null;
+      if (!sessionDoc.exists()) return null;
+      const rawData = sessionDoc.data() as Record<string, unknown>;
+      await this.migrateSessionIfNeeded(uid, rawData, sessionId);
+      return this.normalizeSession(rawData, sessionDoc.id);
     } catch (error) {
       console.error('Error getting session:', error);
       return null;
@@ -172,10 +209,9 @@ class FirebaseDB implements NetLoggerDB {
       const sessionsRef = collection(getFirebaseDb(), 'users', uid, 'sessions');
       const q = query(sessionsRef, orderBy('date', 'desc'));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as NetSession[];
+      const pairs = snapshot.docs.map((d) => ({ id: d.id, raw: d.data() as Record<string, unknown> }));
+      await Promise.all(pairs.map((p) => this.migrateSessionIfNeeded(uid, p.raw, p.id)));
+      return pairs.map((p) => this.normalizeSession(p.raw, p.id));
     } catch (error) {
       console.error('Error getting all sessions:', error);
       return [];
@@ -187,10 +223,9 @@ class FirebaseDB implements NetLoggerDB {
       const sessionsRef = collection(getFirebaseDb(), 'users', uid, 'sessions');
       const q = query(sessionsRef, orderBy('date', 'desc'), limit(count));
       const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as NetSession[];
+      const pairs = snapshot.docs.map((d) => ({ id: d.id, raw: d.data() as Record<string, unknown> }));
+      await Promise.all(pairs.map((p) => this.migrateSessionIfNeeded(uid, p.raw, p.id)));
+      return pairs.map((p) => this.normalizeSession(p.raw, p.id));
     } catch (error) {
       console.error('Error getting recent sessions:', error);
       return [];
@@ -291,6 +326,91 @@ class FirebaseDB implements NetLoggerDB {
     } catch (error) {
       console.error('Error removing check-in:', error);
       return false;
+    }
+  }
+
+  async addRadiogram(uid: string, radiogram: Radiogram): Promise<boolean> {
+    try {
+      const db = getFirebaseDb();
+      const batch = writeBatch(db);
+      const radRef = doc(db, 'users', uid, 'radiograms', radiogram.id);
+      batch.set(radRef, { ...radiogram, savedAt: Timestamp.now() });
+      if (radiogram.sessionId) {
+        const sessionRef = doc(db, 'users', uid, 'sessions', radiogram.sessionId);
+        batch.update(sessionRef, { radiogramIds: arrayUnion(radiogram.id) });
+      }
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error('Error adding radiogram:', error);
+      return false;
+    }
+  }
+
+  async getRadiogram(uid: string, radiogramId: string): Promise<Radiogram | null> {
+    try {
+      const radRef = doc(getFirebaseDb(), 'users', uid, 'radiograms', radiogramId);
+      const snap = await getDoc(radRef);
+      return snap.exists() ? (snap.data() as Radiogram) : null;
+    } catch (error) {
+      console.error('Error getting radiogram:', error);
+      return null;
+    }
+  }
+
+  async updateRadiogram(uid: string, radiogramId: string, updates: Partial<Radiogram>): Promise<boolean> {
+    try {
+      const radRef = doc(getFirebaseDb(), 'users', uid, 'radiograms', radiogramId);
+      await updateDoc(radRef, updates);
+      return true;
+    } catch (error) {
+      console.error('Error updating radiogram:', error);
+      return false;
+    }
+  }
+
+  async deleteRadiogram(uid: string, radiogramId: string): Promise<boolean> {
+    try {
+      const db = getFirebaseDb();
+      const radRef = doc(db, 'users', uid, 'radiograms', radiogramId);
+      const snap = await getDoc(radRef);
+      if (!snap.exists()) return true;
+      const radiogram = snap.data() as Radiogram;
+      const batch = writeBatch(db);
+      batch.delete(radRef);
+      if (radiogram.sessionId) {
+        const sessionRef = doc(db, 'users', uid, 'sessions', radiogram.sessionId);
+        batch.update(sessionRef, { radiogramIds: arrayRemove(radiogramId) });
+      }
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error('Error deleting radiogram:', error);
+      return false;
+    }
+  }
+
+  async getAllRadiograms(uid: string): Promise<Radiogram[]> {
+    try {
+      const radRef = collection(getFirebaseDb(), 'users', uid, 'radiograms');
+      const q = query(radRef, orderBy('savedAt', 'desc'));
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => d.data() as Radiogram);
+    } catch (error) {
+      console.error('Error getting all radiograms:', error);
+      return [];
+    }
+  }
+
+  async getRadiogramsBySession(uid: string, sessionId: string): Promise<Radiogram[]> {
+    try {
+      const radRef = collection(getFirebaseDb(), 'users', uid, 'radiograms');
+      const q = query(radRef, where('sessionId', '==', sessionId), orderBy('savedAt', 'asc'));
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => d.data() as Radiogram);
+    } catch (error) {
+      console.error('Error getting radiograms by session:', error);
+      return [];
     }
   }
 
