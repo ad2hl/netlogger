@@ -29,11 +29,16 @@ npm start        # Start production server
 
 Firebase Firestore with user-scoped subcollections:
 - `users/{uid}/stations/{callsign}` - Station memory (nicknames, notes, last-seen)
-- `users/{uid}/sessions/{sessionId}` - Net sessions with check-ins, radiograms, checklist items
+- `users/{uid}/sessions/{sessionId}` - Net sessions with check-ins, checklist items, and `radiogramIds[]`
+- `users/{uid}/radiograms/{radiogramId}` - Individual radiograms (independent of sessions)
+
+Radiograms are first-class documents, not embedded arrays. A radiogram created during a session carries a `sessionId` back-reference and its ID is listed in the session's `radiogramIds[]` array (bidirectional). Radiograms created from the /radiograms page have no `sessionId`. Deleting a session never cascades to radiograms.
+
+On first read after the schema migration, `getSession`/`getAllSessions`/`getRecentSessions` detect old sessions that still have an embedded `radiograms[]` array and atomically migrate them to the new collection (lazy migration via `writeBatch`).
 
 ### Key Libraries (lib/)
 
-- **firestore.ts**: All database CRUD operations for stations, sessions, check-ins
+- **firestore.ts**: All database CRUD operations for stations, sessions, check-ins, and radiograms
 - **radiogram.ts**: Complex callsign compression algorithm for ARRL format reports. Orders output as NC → ANC → Liaisons → Regular stations. Compresses callsigns by prefix (e.g., W1AW, W1XYZ → W1AW, XYZ)
 - **radiogramPrint.ts**: Fills the official ARRL radiogram PDF form (`public/radiogram-form.pdf`) with radiogram data using pdf-lib and opens the result in a new browser tab. Font sizes: 11pt for message words, 10pt for address/phone, 9pt for preamble/signature/disposition. Simple 1:1 address line mapping (line 1 → Name/Call, line 2 → Address, line 3 → City/State/ZIP).
 - **auth.ts**: Firebase authentication functions
@@ -43,7 +48,7 @@ Firebase Firestore with user-scoped subcollections:
 - **firebase.ts**: Client-side Firebase initialization (app, auth, Firestore, App Check). App Check is only initialized when `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is set.
 - **firebase-admin.ts**: Firebase Admin SDK initialization (uses `GOOGLE_APPLICATION_CREDENTIALS`); exports `getAdminApp()` and `getAdminAuth()`
 - **qrz.ts**: QRZ.com XML API client for operator lookups
-- **content.ts**: Markdown content loader with local override (`content/local/` → `content/default/` fallback)
+- **content.ts**: Content loader with local override (`content/local/` → `content/default/` fallback). `readContent(filename)` for plain text/markdown. `readContentWithType(basename)` tries `.html` then `.md` and returns `{ content, type }` — used by all content API routes so operators can supply HTML instead of Markdown.
 
 ### Tag System
 
@@ -70,9 +75,9 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 
 ### Main Components
 
-- **app/net/page.tsx**: Main logging interface orchestrating all functionality; renders a three-column grid with CheckInForm+CheckInList on the left and SessionSummary+Checklist+RadiogramList on the right
+- **app/net/page.tsx**: Main logging interface orchestrating all functionality; renders a three-column grid with CheckInForm+CheckInList on the left and SessionSummary+Checklist+RadiogramList on the right. Radiograms are held in a separate `radiograms` state array loaded via `getRadiogramsBySession` — not from `session.radiograms`.
 - **app/sessions/page.tsx**: Session history list with New Session button in the main content area (not the header); accepts `?new=1` to auto-open the modal on load
-- **app/radiograms/page.tsx**: Cross-session radiogram history, sortable by date, net name, type, and disposition
+- **app/radiograms/page.tsx**: Cross-session radiogram history, sortable by date, net name, type, and disposition. Fetches radiograms directly from the `users/{uid}/radiograms` collection via `getAllRadiograms`; also fetches sessions (for net reports only). "New Radiogram" creates a standalone radiogram with no session association.
 - **app/settings/page.tsx**: User profile settings including `receivingStationName` (printed in the RECEIVED AT section of radiogram PDFs, distinct from the operator's first name used for signatures)
 - **components/SessionSummary.tsx**: Displays session metadata (Net Name, Date, Start/End, NC/ANC, station/traffic counts) with an inline Edit modal
 - **components/CheckInForm.tsx**: Single-line check-in input; supports callsign search (`?` prefix), tag parsing, and QRZ lookups; includes the Walt Whitman easter egg for callsign P0ET
@@ -135,7 +140,8 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 
 ## Key Types (types/index.ts)
 
-- **`Radiogram`**: includes `addressPhone?: string` (addressee phone number) in addition to the standard ARRL preamble/address/text/signature fields
+- **`Radiogram`**: includes `addressPhone?: string` (addressee phone number), `sessionId?: string` (set when created during a session; absent for standalone radiograms), and `sessionNetName?: string` (denormalized net name for display without a session join)
+- **`NetSession`**: uses `radiogramIds: string[]` (list of associated radiogram document IDs) instead of an embedded `radiograms: Radiogram[]` array
 - **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures)
 
 ## TypeScript
