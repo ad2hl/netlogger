@@ -17,7 +17,7 @@ A web-based amateur radio net logging application for net control operators.
 - **QRZ.com Integration**: Automatic callsign lookups for operator names
 - **Station Memory**: Remembers nicknames, notes, and last-seen dates across sessions
 - **Traffic Checklist**: Track traffic and announcements per station with check-off items
-- **Radiogram Management**: Create, edit, and store ARRL-format radiograms
+- **Radiogram Management**: Create, edit, and store ARRL-format radiograms; radiograms are independent of sessions and are preserved when a session is deleted
 - **Radiogram Printing**: Fill and print the official ARRL radiogram PDF form directly from the app
 - **Net Report**: Generates a formatted radiogram report with callsign compression
 - **Session History**: Browse and review past net sessions in a sortable table
@@ -52,23 +52,10 @@ issue.
 4. Enable **App Check** with reCAPTCHA Enterprise and register your site key
 5. Add Firestore security rules:
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+The `firestore.rules` file in the repository contains the current rules. Deploy them with the Firebase CLI:
 
-      match /stations/{stationId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-
-      match /sessions/{sessionId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-    }
-  }
-}
+```bash
+firebase deploy --only firestore:rules
 ```
 
 6. Get your web app config from Project Settings
