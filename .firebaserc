@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "net-control-log-dev",
+    "dev": "net-control-log-dev",
+    "prod": "net-control-log"
+  }
+}
