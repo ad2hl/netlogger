@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CheckIn, Station, getTagLabel, formatLastSeen, URGENT_TAGS } from '@/types';
+import { CheckIn, Station, getTagLabel, formatLastSeen, URGENT_TAGS, isNewHam } from '@/types';
 
 interface StationCardProps {
   checkIn: CheckIn;
@@ -147,6 +147,12 @@ export default function StationCard({
           title="Click to edit callsign"
         >
           {checkIn.callsign}
+        </span>
+      )}
+
+      {isNewHam(station?.grantDate) && (
+        <span className="text-xs px-1 py-0.5 rounded bg-green-100 text-green-800 border border-green-300 font-medium flex-shrink-0" title="Newly licensed ham (within the past month)">
+          NEW
         </span>
       )}
 

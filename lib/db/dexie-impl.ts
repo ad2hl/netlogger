@@ -246,7 +246,7 @@ class DexieDB implements NetLoggerDB {
     }
   }
 
-  async updateStationFields(_uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null }): Promise<boolean> {
+  async updateStationFields(_uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null; grantDate?: string | null }): Promise<boolean> {
     try {
       await getDb().stations.update(callsign.toUpperCase(), fields);
       return true;

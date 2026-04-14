@@ -7,7 +7,7 @@ export interface NetLoggerDB {
   updateStationNickname(uid: string, callsign: string, nickname: string | null): Promise<boolean>;
   updateStationLocation(uid: string, callsign: string, city: string | null, state: string | null): Promise<boolean>;
   updateStationNote(uid: string, callsign: string, note: string | null): Promise<boolean>;
-  updateStationFields(uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null }): Promise<boolean>;
+  updateStationFields(uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null; grantDate?: string | null }): Promise<boolean>;
   deleteStation(uid: string, callsign: string): Promise<boolean>;
   getAllStations(uid: string): Promise<Station[]>;
   getStations(uid: string, callsigns: string[]): Promise<Map<string, Station>>;
