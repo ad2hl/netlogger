@@ -15,6 +15,7 @@ import {
   updateStationNickname,
   updateStationLocation,
   updateStationNote,
+  updateStationFields,
   getActiveSession,
   getSession,
   getStations,
@@ -166,13 +167,12 @@ function NetPage() {
 
       const cachedStation = await getStation(user.uid, callsign);
 
-      // Return cached station if it has location data, or if no QRZ credentials
-      if (cachedStation && (cachedStation.city || !profile.qrzUsername || !profile.qrzPassword)) {
-        return cachedStation;
-      }
+      let station: Station | null = null;
 
-      if (!profile.qrzUsername || !profile.qrzPassword) {
-        const station: Station = {
+      if (cachedStation && (cachedStation.city || !profile.qrzUsername || !profile.qrzPassword)) {
+        station = cachedStation;
+      } else if (!profile.qrzUsername || !profile.qrzPassword) {
+        station = {
           callsign: callsign.toUpperCase(),
           firstName: null,
           nickname: null,
@@ -182,59 +182,75 @@ function NetPage() {
           lastSeen: null as any,
         };
         await saveStation(user.uid, station);
-        return station;
-      }
+      } else {
+        try {
+          let data: Record<string, string>;
 
-      try {
-        let data: Record<string, string>;
-
-        if (typeof window !== 'undefined' && (window as any).electron) {
-          // Desktop mode: QRZ lookup via Electron IPC (bypasses CORS)
-          data = await (window as any).electron.lookupQrz(
-            callsign,
-            profile.qrzUsername,
-            profile.qrzPassword
-          );
-        } else {
-          const token = await user.getIdToken();
-          const response = await apiFetch('/api/qrz', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
+          if (typeof window !== 'undefined' && (window as any).electron) {
+            // Desktop mode: QRZ lookup via Electron IPC (bypasses CORS)
+            data = await (window as any).electron.lookupQrz(
               callsign,
-              username: profile.qrzUsername,
-              password: profile.qrzPassword,
-            }),
-          });
-          data = await response.json();
-        }
+              profile.qrzUsername,
+              profile.qrzPassword
+            );
+          } else {
+            const token = await user.getIdToken();
+            const response = await apiFetch('/api/qrz', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                callsign,
+                username: profile.qrzUsername,
+                password: profile.qrzPassword,
+              }),
+            });
+            data = await response.json();
+          }
 
-        if (data.error) {
-          console.error('QRZ lookup error:', data.error);
-          // Don't create a new empty station record when QRZ has no data — it
-          // would permanently block future lookups once the callsign appears in QRZ.
-          // If a record already exists, return it unchanged.
-          return cachedStation ?? null;
+          if (data.error) {
+            console.error('QRZ lookup error:', data.error);
+            // Don't create a new empty station record when QRZ has no data —
+            // it would permanently block future lookups once the callsign appears in QRZ.
+            station = cachedStation ?? null;
+          } else {
+            station = {
+              callsign: data.callsign,
+              firstName: data.nickname || data.firstName || null,
+              nickname: cachedStation?.nickname || null,
+              city: data.city || null,
+              state: data.state || null,
+              note: cachedStation?.note || null,
+              lastSeen: null as any,
+            };
+            await saveStation(user.uid, station);
+          }
+        } catch (error) {
+          console.error('QRZ lookup failed:', error);
+          return null;
         }
-
-        const station: Station = {
-          callsign: data.callsign,
-          firstName: data.nickname || data.firstName || null,
-          nickname: cachedStation?.nickname || null,
-          city: data.city || null,
-          state: data.state || null,
-          note: cachedStation?.note || null,
-          lastSeen: null as any,
-        };
-        await saveStation(user.uid, station);
-        return station;
-      } catch (error) {
-        console.error('QRZ lookup failed:', error);
-        return null;
       }
+
+      if (!station) return null;
+
+      // Check callook.info for grant date if not yet fetched (undefined = not checked)
+      if (station.grantDate === undefined) {
+        try {
+          const resp = await apiFetch(`/api/callook?callsign=${encodeURIComponent(callsign)}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            const grantDate: string | null = data.grantDate ?? null;
+            await updateStationFields(user.uid, callsign, { grantDate });
+            station = { ...station, grantDate };
+          }
+        } catch {
+          // Non-critical — skip if callook is unavailable
+        }
+      }
+
+      return station;
     },
     [user, profile]
   );

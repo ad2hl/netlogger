@@ -28,6 +28,16 @@ export interface Station {
   state: string | null;
   note: string | null;  // Persistent note text (e.g., "Assistant Net Manager")
   lastSeen: Timestamp;
+  grantDate?: string | null;  // ISO date from callook.info; null = checked, no date; undefined = not yet checked
+}
+
+// Returns true if the station received their license within the past month.
+export function isNewHam(grantDate: string | null | undefined): boolean {
+  if (!grantDate) return false;
+  const grant = new Date(grantDate + 'T00:00:00');
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  return grant >= oneMonthAgo;
 }
 
 export function formatLastSeen(lastSeen: Timestamp | null): string | null {

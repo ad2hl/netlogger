@@ -9,7 +9,7 @@ export const saveStation = (uid: string, station: Station) => db.saveStation(uid
 export const updateStationNickname = (uid: string, callsign: string, nickname: string | null) => db.updateStationNickname(uid, callsign, nickname);
 export const updateStationLocation = (uid: string, callsign: string, city: string | null, state: string | null) => db.updateStationLocation(uid, callsign, city, state);
 export const updateStationNote = (uid: string, callsign: string, note: string | null) => db.updateStationNote(uid, callsign, note);
-export const updateStationFields = (uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null }) => db.updateStationFields(uid, callsign, fields);
+export const updateStationFields = (uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null; grantDate?: string | null }) => db.updateStationFields(uid, callsign, fields);
 export const deleteStation = (uid: string, callsign: string) => db.deleteStation(uid, callsign);
 export const getAllStations = (uid: string) => db.getAllStations(uid);
 export const getStations = (uid: string, callsigns: string[]) => db.getStations(uid, callsigns);
