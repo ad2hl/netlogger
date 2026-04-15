@@ -214,17 +214,10 @@ function NetPage() {
 
         if (data.error) {
           console.error('QRZ lookup error:', data.error);
-          const station: Station = {
-            callsign: callsign.toUpperCase(),
-            firstName: null,
-            nickname: null,
-            city: null,
-            state: null,
-            note: null,
-            lastSeen: null as any,
-          };
-          await saveStation(user.uid, station);
-          return station;
+          // Don't create a new empty station record when QRZ has no data — it
+          // would permanently block future lookups once the callsign appears in QRZ.
+          // If a record already exists, return it unchanged.
+          return cachedStation ?? null;
         }
 
         const station: Station = {
