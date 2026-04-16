@@ -32,6 +32,26 @@ App Check is enforced at two levels:
 
 Without a valid App Check token the app cannot read or write any data.
 
+## Local Development with the Debug Provider
+
+During local development you can bypass reCAPTCHA entirely using the Firebase App Check
+debug provider:
+
+1. In the Firebase Console, go to **App Check → Apps → Manage debug tokens** and create a
+   new debug token for your app.
+2. Add it to `.env.local`:
+   ```
+   NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN=<your-debug-token>
+   ```
+3. Restart the dev server (`npm run dev`).
+
+You do **not** need `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` in your local `.env.local`
+when using a debug token. The app will initialize App Check using the debug token only, so
+all Firestore operations and API routes work exactly as they do in production.
+
+> **Do not ship a debug token to production.** The token bypasses reCAPTCHA validation and
+> grants unrestricted App Check access to anyone who has it.
+
 ## App Check and the Firebase Free Tier
 
 NetLogger uses the `ReCaptchaEnterpriseProvider`, which requires Google Cloud billing to be enabled
