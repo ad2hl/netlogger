@@ -25,8 +25,16 @@ function ensureInitialized() {
     db = getFirestore(app);
 
     const debugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN;
-    if (debugToken) {
-      (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken;
+
+    // In development, fall back to `true` so Firebase auto-generates a debug token and logs it:
+    //   "AppCheck debug token: '<uuid>'. You will need to safelist it in the Firebase console..."
+    // Copy that UUID, register it in Firebase Console → App Check → Apps → Manage debug tokens,
+    // then optionally pin it via NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN in .env.local.
+    const debugValue: string | boolean | undefined =
+      debugToken || (process.env.NODE_ENV === 'development' ? true : undefined);
+
+    if (debugValue) {
+      (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugValue;
     }
 
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
@@ -35,13 +43,16 @@ function ensureInitialized() {
         provider: new ReCaptchaEnterpriseProvider(siteKey),
         isTokenAutoRefreshEnabled: true,
       });
-    } else if (debugToken) {
-      // No reCAPTCHA site key, but a debug token is configured. Initialize App Check with a
+    } else if (debugValue) {
+      // No reCAPTCHA site key, but debug mode is active. Initialize App Check with a
       // CustomProvider — the FIREBASE_APPCHECK_DEBUG_TOKEN set above intercepts all token
       // requests before the provider is invoked, so the provider never actually runs.
       appCheck = initializeAppCheck(app, {
         provider: new CustomProvider({
-          getToken: () => Promise.resolve({ token: debugToken, expireTimeMillis: Date.now() + 3600 * 1000 }),
+          getToken: () => Promise.resolve({
+            token: typeof debugValue === 'string' ? debugValue : '',
+            expireTimeMillis: Date.now() + 3600 * 1000,
+          }),
         }),
         isTokenAutoRefreshEnabled: true,
       });

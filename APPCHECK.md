@@ -35,22 +35,37 @@ Without a valid App Check token the app cannot read or write any data.
 ## Local Development with the Debug Provider
 
 During local development you can bypass reCAPTCHA entirely using the Firebase App Check
-debug provider:
+debug provider. You do **not** need `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` in your
+local `.env.local`.
 
-1. In the Firebase Console, go to **App Check → Apps → Manage debug tokens** and create a
-   new debug token for your app.
-2. Add it to `.env.local`:
+### First-time setup (bootstrapping your debug token)
+
+1. Start the dev server with no App Check env vars set (`npm run dev`).
+2. Open the browser console. You will see:
    ```
-   NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN=<your-debug-token>
+   AppCheck debug token: '<uuid>'. You will need to safelist it in the Firebase console for it to work.
    ```
-3. Restart the dev server (`npm run dev`).
+3. Copy the UUID.
+4. In the Firebase Console, go to **App Check → Apps → your app → Manage debug tokens** and
+   register the UUID.
 
-You do **not** need `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` in your local `.env.local`
-when using a debug token. The app will initialize App Check using the debug token only, so
-all Firestore operations and API routes work exactly as they do in production.
+That's it. On every subsequent `npm run dev` the same UUID is auto-generated (it is stable
+for the browser/origin) and App Check works without any env vars.
 
-> **Do not ship a debug token to production.** The token bypasses reCAPTCHA validation and
-> grants unrestricted App Check access to anyone who has it.
+### Pinning the token (optional)
+
+If you prefer an explicit, portable token (e.g. shared across team members or CI), add it
+to `.env.local` and restart the dev server:
+
+```
+NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN=<your-registered-uuid>
+```
+
+The app will use this token instead of auto-generating one.
+
+> **Do not ship a debug token to production.** Debug mode is only active when
+> `NODE_ENV === 'development'` (i.e. `npm run dev`). Production builds (`npm run build`)
+> require a real reCAPTCHA site key.
 
 ## App Check and the Firebase Free Tier
 
