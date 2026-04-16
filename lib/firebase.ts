@@ -1,7 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { initializeAppCheck, AppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import { initializeAppCheck, AppCheck, ReCaptchaEnterpriseProvider, CustomProvider } from 'firebase/app-check';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -33,6 +33,16 @@ function ensureInitialized() {
     if (siteKey) {
       appCheck = initializeAppCheck(app, {
         provider: new ReCaptchaEnterpriseProvider(siteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } else if (debugToken) {
+      // No reCAPTCHA site key, but a debug token is configured. Initialize App Check with a
+      // CustomProvider — the FIREBASE_APPCHECK_DEBUG_TOKEN set above intercepts all token
+      // requests before the provider is invoked, so the provider never actually runs.
+      appCheck = initializeAppCheck(app, {
+        provider: new CustomProvider({
+          getToken: () => Promise.resolve({ token: debugToken, expireTimeMillis: Date.now() + 3600 * 1000 }),
+        }),
         isTokenAutoRefreshEnabled: true,
       });
     } else {
