@@ -408,6 +408,7 @@ export default function RadiogramsPage() {
         onClose={() => setIsFormOpen(false)}
         onSave={handleSaveRadiogram}
         dispositionMethods={profile?.dispositionMethods}
+        receivedMethods={profile?.receivedMethods}
         userProfile={profile ?? undefined}
       />
 
