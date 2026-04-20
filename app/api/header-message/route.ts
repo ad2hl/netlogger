@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { readContentWithType } from '@/lib/content';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const result = await readContentWithType('header-message');
   if (result === null) {
