@@ -17,6 +17,7 @@
     "dexie": "^4.3.0",
     "firebase": "^12.8.0",
     "firebase-admin": "^13.6.1",
+    "firebase-tools": "^13.35.1",
     "next": "^14.2.35",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
