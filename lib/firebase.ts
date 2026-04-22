@@ -1,7 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { initializeAppCheck, AppCheck, ReCaptchaEnterpriseProvider, CustomProvider } from 'firebase/app-check';
+import { initializeAppCheck, getToken, AppCheck, ReCaptchaEnterpriseProvider, CustomProvider } from 'firebase/app-check';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -43,6 +43,10 @@ function ensureInitialized() {
         provider: new ReCaptchaEnterpriseProvider(siteKey),
         isTokenAutoRefreshEnabled: true,
       });
+      // Pre-warm the token immediately. Firebase only fetches the first token on demand,
+      // so without this, the first Firestore call after a fast Google sign-in can race
+      // against the token fetch and fail. Errors are ignored — the SDK will retry.
+      getToken(appCheck, false).catch(() => {});
     } else if (debugValue) {
       // No reCAPTCHA site key, but debug mode is active. Initialize App Check with a
       // CustomProvider — the FIREBASE_APPCHECK_DEBUG_TOKEN set above intercepts all token
