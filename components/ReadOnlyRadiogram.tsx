@@ -17,7 +17,6 @@ interface ReadOnlyRadiogramProps {
   netReport?: NetReport;
   onClose: () => void;
   onUpdateDisposition?: (disposition: DispositionFields) => Promise<void> | void;
-  onUpdateAddress?: (address: string) => Promise<void> | void;
   dispositionMethods?: string[];
   userProfile?: UserProfile;
 }
@@ -128,7 +127,7 @@ function parseNetReportText(text: string): {
   };
 }
 
-function RadiogramFormView({ fields, receivedSection, sentSection, onUpdateAddress }: {
+function RadiogramFormView({ fields, receivedSection, sentSection }: {
   fields: {
     number: string;
     precedence: string;
@@ -146,23 +145,7 @@ function RadiogramFormView({ fields, receivedSection, sentSection, onUpdateAddre
   };
   receivedSection?: React.ReactNode;
   sentSection?: React.ReactNode;
-  onUpdateAddress?: (address: string) => Promise<void> | void;
 }) {
-  const [editingAddress, setEditingAddress] = useState(false);
-  const [addressDraft, setAddressDraft] = useState(fields.addressee);
-  const [displayedAddress, setDisplayedAddress] = useState(fields.addressee);
-
-  const handleSaveAddress = async () => {
-    if (onUpdateAddress) await onUpdateAddress(addressDraft);
-    setDisplayedAddress(addressDraft);
-    setEditingAddress(false);
-  };
-
-  const handleCancelAddress = () => {
-    setAddressDraft(displayedAddress);
-    setEditingAddress(false);
-  };
-
   return (
     <div className="space-y-3">
       {/* Preamble */}
@@ -183,50 +166,10 @@ function RadiogramFormView({ fields, receivedSection, sentSection, onUpdateAddre
 
       {/* Addressee */}
       <div className="border-b pb-3">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="text-sm font-semibold text-slate-700">Addressee</h3>
-          {onUpdateAddress && !editingAddress && (
-            <button
-              onClick={() => setEditingAddress(true)}
-              className="text-slate-400 hover:text-cyan-700 p-0.5"
-              title="Edit addressee"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
-                <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
-              </svg>
-            </button>
-          )}
+        <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
+        <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700 whitespace-pre-line">
+          {fields.addressee || '\u00A0'}
         </div>
-        {editingAddress ? (
-          <>
-            <textarea
-              value={addressDraft}
-              onChange={(e) => setAddressDraft(e.target.value.toUpperCase())}
-              rows={5}
-              className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
-              autoFocus
-            />
-            <div className="flex justify-end gap-2 mt-2">
-              <button
-                onClick={handleCancelAddress}
-                className="px-3 py-1 text-sm text-slate-600 border border-slate-300 rounded-md hover:bg-slate-100"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveAddress}
-                className="px-3 py-1 text-sm text-white bg-cyan-700 rounded-md hover:bg-cyan-900"
-              >
-                Save
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="w-full px-2 py-1 border border-slate-200 rounded text-sm uppercase bg-slate-50 text-slate-700 whitespace-pre-line">
-            {displayedAddress || '\u00A0'}
-          </div>
-        )}
         {fields.addressOpNote && (
           <div className="mt-2">
             <label className="block text-xs font-medium text-slate-600 mb-1">Op Note</label>
@@ -368,7 +311,7 @@ function ReadOnlyReceived({ method, from, date, time }: { method: string; from: 
   );
 }
 
-export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition, onUpdateAddress, dispositionMethods, userProfile }: ReadOnlyRadiogramProps) {
+export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition, dispositionMethods, userProfile }: ReadOnlyRadiogramProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -536,7 +479,7 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
             </button>
           </div>
         </div>
-        {fields && <RadiogramFormView fields={fields} receivedSection={receivedSection} sentSection={sentSection} onUpdateAddress={radiogram ? onUpdateAddress : undefined} />}
+        {fields && <RadiogramFormView fields={fields} receivedSection={receivedSection} sentSection={sentSection} />}
       </div>
     </div>
   );
