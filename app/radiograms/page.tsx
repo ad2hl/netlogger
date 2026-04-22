@@ -116,6 +116,7 @@ export default function RadiogramsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [selectedItem, setSelectedItem] = useState<RadiogramListItem | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingRadiogram, setEditingRadiogram] = useState<Radiogram | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RadiogramListItem | null>(null);
 
 
@@ -192,37 +193,17 @@ export default function RadiogramsPage() {
     dispositionDate: string;
     dispositionTime: string;
   }) => {
-    if (!user) return;
-
-    if (item.type === 'Radiogram' && item.radiogram) {
-      const success = await updateRadiogram(user.uid, item.radiogram.id, disposition);
-      if (success) {
-        setRadiograms((prev) => prev.map((r) =>
-          r.id === item.radiogram!.id ? { ...r, ...disposition } : r
-        ));
-      }
-    } else if (item.type === 'Net Report' && item.sessionId) {
-      const session = sessions.find((s) => s.id === item.sessionId);
-      if (!session?.report?.parts) return;
-      const updatedReport = {
-        ...session.report,
-        parts: { ...session.report.parts, ...disposition },
-      };
-      const success = await updateSession(user.uid, item.sessionId, { report: updatedReport });
-      if (success) {
-        setSessions((prev) => prev.map((s) =>
-          s.id === item.sessionId ? { ...s, report: updatedReport } : s
-        ));
-      }
-    }
-  };
-
-  const handleUpdateAddress = async (item: RadiogramListItem, address: string) => {
-    if (!user || !item.radiogram) return;
-    const success = await updateRadiogram(user.uid, item.radiogram.id, { address });
+    if (!user || item.type !== 'Net Report' || !item.sessionId) return;
+    const session = sessions.find((s) => s.id === item.sessionId);
+    if (!session?.report?.parts) return;
+    const updatedReport = {
+      ...session.report,
+      parts: { ...session.report.parts, ...disposition },
+    };
+    const success = await updateSession(user.uid, item.sessionId, { report: updatedReport });
     if (success) {
-      setRadiograms((prev) => prev.map((r) =>
-        r.id === item.radiogram!.id ? { ...r, address } : r
+      setSessions((prev) => prev.map((s) =>
+        s.id === item.sessionId ? { ...s, report: updatedReport } : s
       ));
     }
   };
@@ -249,13 +230,28 @@ export default function RadiogramsPage() {
     setDeleteTarget(null);
   };
 
-  // Creates a standalone radiogram — not associated with any session
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
     if (!user) return;
     const radiogramWithTimestamp = { ...radiogram, savedAt: Timestamp.now() };
-    const success = await addRadiogram(user.uid, radiogramWithTimestamp);
+    const isExisting = radiograms.some((r) => r.id === radiogram.id);
+    if (isExisting) {
+      const success = await updateRadiogram(user.uid, radiogram.id, radiogramWithTimestamp);
+      if (success) {
+        setRadiograms((prev) => prev.map((r) => r.id === radiogram.id ? radiogramWithTimestamp : r));
+      }
+    } else {
+      const success = await addRadiogram(user.uid, radiogramWithTimestamp);
+      if (success) {
+        setRadiograms((prev) => [radiogramWithTimestamp, ...prev]);
+      }
+    }
+  };
+
+  const handleDeleteRadiogram = async (id: string) => {
+    if (!user) return;
+    const success = await deleteRadiogram(user.uid, id);
     if (success) {
-      setRadiograms((prev) => [radiogramWithTimestamp, ...prev]);
+      setRadiograms((prev) => prev.filter((r) => r.id !== id));
     }
   };
 
@@ -288,7 +284,7 @@ export default function RadiogramsPage() {
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-slate-900">Radiograms</h2>
           <button
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => { setEditingRadiogram(null); setIsFormOpen(true); }}
             className="bg-amber-700 text-white py-1 px-3 rounded-md hover:bg-amber-900 text-sm"
           >
             New Radiogram
@@ -354,7 +350,14 @@ export default function RadiogramsPage() {
                   <tr
                     key={i}
                     className="border-b hover:bg-slate-50 cursor-pointer"
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => {
+                      if (item.type === 'Radiogram') {
+                        setEditingRadiogram(item.radiogram ?? null);
+                        setIsFormOpen(true);
+                      } else {
+                        setSelectedItem(item);
+                      }
+                    }}
                   >
                     <td className="py-2 pr-4 whitespace-nowrap">{item.displayDate}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{item.netName}</td>
@@ -384,7 +387,6 @@ export default function RadiogramsPage() {
 
       {selectedItem && (
         <ReadOnlyRadiogram
-          radiogram={selectedItem.radiogram}
           netReport={selectedItem.netReport}
           onClose={() => setSelectedItem(null)}
           onUpdateDisposition={
@@ -393,11 +395,6 @@ export default function RadiogramsPage() {
               ? undefined
               : (d) => handleUpdateDisposition(selectedItem, d)
           }
-          onUpdateAddress={
-            selectedItem.radiogram
-              ? (address) => handleUpdateAddress(selectedItem, address)
-              : undefined
-          }
           dispositionMethods={profile?.dispositionMethods}
           userProfile={profile ?? undefined}
         />
@@ -405,8 +402,10 @@ export default function RadiogramsPage() {
 
       <RadiogramForm
         isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
+        onClose={() => { setIsFormOpen(false); setEditingRadiogram(null); }}
         onSave={handleSaveRadiogram}
+        onDelete={handleDeleteRadiogram}
+        existingRadiogram={editingRadiogram}
         dispositionMethods={profile?.dispositionMethods}
         receivedMethods={profile?.receivedMethods}
         userProfile={profile ?? undefined}
