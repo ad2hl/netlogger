@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import ContentRenderer from '@/components/ContentRenderer';
-import PrivacyPolicySummary from './PrivacyPolicySummary';
 import { apiFetch } from '@/lib/api-fetch';
 
 type TypedContent = { content: string; type: 'html' | 'md' };
@@ -11,11 +10,9 @@ type TypedContent = { content: string; type: 'html' | 'md' };
 export default function Footer() {
   const [aboutContent, setAboutContent] = useState<TypedContent | null>(null);
   const [summaryContent, setSummaryContent] = useState<TypedContent | null>(null);
-  const [fullPolicyContent, setFullPolicyContent] = useState<TypedContent | null>(null);
   const [footerCredit, setFooterCredit] = useState<TypedContent | null>(null);
   const [localModalContent, setLocalModalContent] = useState<string | null>(null);
   const [showAbout, setShowAbout] = useState(false);
-  const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
     apiFetch('/api/about')
@@ -25,10 +22,6 @@ export default function Footer() {
     apiFetch('/api/privacy-policy-summary')
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.content) setSummaryContent({ content: data.content, type: data.type ?? 'md' }); })
-      .catch(() => {});
-    apiFetch('/api/privacy-policy')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.content) setFullPolicyContent({ content: data.content, type: data.type ?? 'md' }); })
       .catch(() => {});
     apiFetch('/api/footer-credit')
       .then(res => res.ok ? res.json() : null)
@@ -88,12 +81,12 @@ export default function Footer() {
             </button>
           )}
           {summaryContent && (
-            <button
-              onClick={() => setShowPrivacy(true)}
+            <a
+              href="/privacy-policy"
               className="text-cyan-700 hover:text-cyan-900"
             >
               Privacy Policy
-            </button>
+            </a>
           )}
         </div>
       </footer>
@@ -103,15 +96,6 @@ export default function Footer() {
       )}
       {showAbout && aboutContent && (
         <AboutModal content={aboutContent.content} type={aboutContent.type} onClose={() => setShowAbout(false)} />
-      )}
-      {showPrivacy && summaryContent && (
-        <PrivacyPolicySummary
-          content={summaryContent.content}
-          contentType={summaryContent.type}
-          fullPolicyContent={fullPolicyContent?.content}
-          fullPolicyType={fullPolicyContent?.type}
-          onClose={() => setShowPrivacy(false)}
-        />
       )}
     </>
   );
