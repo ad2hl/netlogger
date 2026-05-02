@@ -162,7 +162,7 @@ export default function HomePage() {
 
           <Link href="/radiograms" className={linkClass}>Manage radiograms</Link>
 
-          <Link href="/stations" className={linkClass}>Manage users</Link>
+          <Link href="/stations" className={linkClass}>Manage stations</Link>
 
           <a
             href="/help?page=overview"
