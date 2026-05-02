@@ -17,7 +17,7 @@ npm start        # Start production server
 
 ## Tech Stack
 
-- Next.js 14 (App Router) with TypeScript
+- Next.js 15 (App Router) with TypeScript
 - Firebase (Authentication + Firestore + App Check)
 - Tailwind CSS
 - React 18 with client components
@@ -64,6 +64,7 @@ The `isStatusTag()` and `getTagLabel()` utilities in `types/index.ts` differenti
 All API routes (except `/api/health`) are protected by Firebase App Check. Authenticated routes additionally verify Firebase ID tokens. Client code must use `apiFetch()` from `lib/api-fetch.ts` instead of `fetch()` for all API calls so the App Check token is attached.
 
 - **app/api/qrz/route.ts**: QRZ.com callsign lookups (App Check + auth)
+- **app/api/callook/route.ts**: callook.info license grant-date lookups for newly licensed ham detection (App Check only)
 - **app/api/credentials/route.ts**: Password encryption (App Check + auth)
 - **app/api/login-banner/route.ts**: Serves markdown banner for login/signup pages (App Check only)
 - **app/api/login-background/route.ts**: Serves login background image (App Check only)
@@ -71,6 +72,9 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 - **app/api/about/route.ts**: Serves about page content (App Check only)
 - **app/api/privacy-policy/route.ts**: Serves full privacy policy (App Check only)
 - **app/api/privacy-policy-summary/route.ts**: Serves privacy policy summary (App Check only)
+- **app/api/help/route.ts**: Serves per-page help content (no App Check — public)
+- **app/api/footer-credit/route.ts**: Serves optional footer credit text (no App Check — public)
+- **app/api/local-content/route.ts**: Generic local content file reader (App Check only)
 - **app/api/health/route.ts**: Health check endpoint (no protection — used by monitoring)
 
 ### Main Components
@@ -78,6 +82,7 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 - **app/net/page.tsx**: Main logging interface orchestrating all functionality; renders a three-column grid with CheckInForm+CheckInList on the left and SessionSummary+Checklist+RadiogramList on the right. Radiograms are held in a separate `radiograms` state array loaded via `getRadiogramsBySession` — not from `session.radiograms`.
 - **app/sessions/page.tsx**: Session history list with New Session button in the main content area (not the header); accepts `?new=1` to auto-open the modal on load
 - **app/radiograms/page.tsx**: Cross-session radiogram history, sortable by date, net name, type, and disposition. Fetches radiograms directly from the `users/{uid}/radiograms` collection via `getAllRadiograms`; also fetches sessions (for net reports only). "New Radiogram" creates a standalone radiogram with no session association.
+- **app/stations/page.tsx**: Station memory list with sortable columns (callsign, name, nickname, location, note, last seen, check-in count). "Add Station" button opens a modal to manually create a station (all fields except lastSeen; duplicate callsigns are rejected). Row hover reveals Edit and Delete buttons.
 - **app/settings/page.tsx**: User profile settings including `receivingStationName` (printed in the RECEIVED AT section of radiogram PDFs, distinct from the operator's first name used for signatures)
 - **components/SessionSummary.tsx**: Displays session metadata (Net Name, Date, Start/End, NC/ANC, station/traffic counts) with an inline Edit modal
 - **components/CheckInForm.tsx**: Single-line check-in input; supports callsign search (`?` prefix), tag parsing, and QRZ lookups; includes the Walt Whitman easter egg for callsign P0ET
@@ -113,6 +118,8 @@ Optional for local development:
 NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN    # Register in Firebase Console → App Check → Manage debug tokens
 ```
 
+In `NODE_ENV === 'development'`, App Check debug mode is **auto-enabled** even without this variable — the SDK logs an auto-generated UUID to the browser console on first run. Copy that UUID, register it in Firebase Console → App Check → Manage debug tokens, and subsequent runs work without any env var. Set `NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN` to pin a specific token (e.g., for a shared team token). See `APPCHECK.md` for full details.
+
 QRZ credentials are stored per-user in Firestore, not in environment variables.
 
 App Check is enforced at two levels: **Firestore** (via Firebase Console enforcement) rejects all direct client SDK reads and writes without a valid token, and all **server-side API routes** (except `/api/health`) call `verifyAppCheck` and return HTTP 401 without a valid token. If `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is absent, App Check is not initialized and the app will be non-functional. See `APPCHECK.md` for details on running without App Check.
@@ -140,6 +147,7 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 
 ## Key Types (types/index.ts)
 
+- **`Station`**: includes `grantDate?: string | null` (ISO date from callook.info; `null` = checked but no date found; `undefined` = not yet checked). Used by `isNewHam()` to flag stations licensed within the past month.
 - **`Radiogram`**: includes `addressPhone?: string` (addressee phone number), `sessionId?: string` (set when created during a session; absent for standalone radiograms), and `sessionNetName?: string` (denormalized net name for display without a session join)
 - **`NetSession`**: uses `radiogramIds: string[]` (list of associated radiogram document IDs) instead of an embedded `radiograms: Radiogram[]` array
 - **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures)
@@ -152,7 +160,7 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 
 ## ESLint
 
-`npm run lint` currently fails due to an incompatibility between ESLint 9.x (installed) and Next.js 14's `next lint` command, which passes options removed in ESLint 9. This is a pre-existing issue unrelated to application code. Use `npx tsc --noEmit` for type checking and `npm run build` to validate the codebase.
+`npm run lint` currently fails due to an incompatibility between ESLint 9.x (installed) and Next.js 15's `next lint` command, which passes options removed in ESLint 9. This is a pre-existing issue unrelated to application code. Use `npx tsc --noEmit` for type checking and `npm run build` to validate the codebase.
 
 ## ChunkLoadError Handling
 

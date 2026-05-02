@@ -15,7 +15,8 @@ A web-based amateur radio net logging application for net control operators.
   - `/S` or `/IO` - Secure/In-and-out (highlighted)
   - `/XXX` - Liaison to XXX net
 - **QRZ.com Integration**: Automatic callsign lookups for operator names
-- **Station Memory**: Remembers nicknames, notes, and last-seen dates across sessions
+- **Station Memory**: Remembers nicknames, notes, and last-seen dates across sessions. Add stations manually from the Stations page; edit or delete any station.
+- **Newly Licensed Ham Indicator**: Stations licensed within the past month are flagged with a star in the check-in list
 - **Traffic Checklist**: Track traffic and announcements per station with check-off items
 - **Radiogram Management**: Create, edit, and store ARRL-format radiograms; radiograms are independent of sessions and are preserved when a session is deleted
 - **Radiogram Printing**: Fill and print the official ARRL radiogram PDF form directly from the app
@@ -88,11 +89,17 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY=your-recaptcha-site-key
 ```
 
-For local development, register a debug token in Firebase Console → App Check → Manage debug tokens, then add:
+For local development, App Check debug mode is **auto-enabled** — just start the dev server without any App Check env vars. On first run the browser console will print:
+```
+AppCheck debug token: '<uuid>'. You will need to safelist it in the Firebase console for it to work.
+```
+Copy that UUID and register it in Firebase Console → App Check → Manage debug tokens. On all subsequent runs the same token is reused automatically.
 
+To pin a specific token (e.g., a shared team token), add it to `.env.local`:
 ```
-NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN=your-debug-token
+NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN=your-registered-uuid
 ```
+See `APPCHECK.md` for full details.
 
 For server-side API routes on non-Google-Cloud hosts, provide a service account:
 
@@ -137,7 +144,7 @@ The `docker-compose.yml` maps all `NEXT_PUBLIC_*` variables from `.env` as build
 
 ## Tech Stack
 
-- [Next.js 14](https://nextjs.org/) (App Router)
+- [Next.js 15](https://nextjs.org/) (App Router)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Firebase](https://firebase.google.com/) (Auth + Firestore + App Check)
