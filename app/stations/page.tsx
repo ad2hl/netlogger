@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
-import { getAllStations, getAllSessions, updateStationFields, deleteStation } from '@/lib/firestore';
+import { getAllStations, getAllSessions, updateStationFields, deleteStation, saveStation, getStation } from '@/lib/firestore';
+import { Timestamp } from 'firebase/firestore';
 import HeaderBanner from '@/components/HeaderBanner';
 import ProfileMenu from '@/components/ProfileMenu';
 
@@ -33,13 +34,23 @@ export default function StationsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [editTarget, setEditTarget] = useState<StationRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StationRow | null>(null);
-
+  const [isAddOpen, setIsAddOpen] = useState(false);
 
   // Edit modal fields
   const [editNickname, setEditNickname] = useState('');
   const [editNote, setEditNote] = useState('');
   const [editCity, setEditCity] = useState('');
   const [editState, setEditState] = useState('');
+
+  // Add modal fields
+  const [addCallsign, setAddCallsign] = useState('');
+  const [addFirstName, setAddFirstName] = useState('');
+  const [addNickname, setAddNickname] = useState('');
+  const [addNote, setAddNote] = useState('');
+  const [addCity, setAddCity] = useState('');
+  const [addState, setAddState] = useState('');
+  const [addError, setAddError] = useState('');
+  const [addSaving, setAddSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || !emailVerified)) {
@@ -74,16 +85,79 @@ export default function StationsPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!editTarget && !deleteTarget) return;
+    if (!editTarget && !deleteTarget && !isAddOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setEditTarget(null);
         setDeleteTarget(null);
+        setIsAddOpen(false);
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [editTarget, deleteTarget]);
+  }, [editTarget, deleteTarget, isAddOpen]);
+
+  const openAdd = () => {
+    setAddCallsign('');
+    setAddFirstName('');
+    setAddNickname('');
+    setAddNote('');
+    setAddCity('');
+    setAddState('');
+    setAddError('');
+    setIsAddOpen(true);
+  };
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    const callsign = addCallsign.trim().toUpperCase();
+    if (!callsign) {
+      setAddError('Callsign is required.');
+      return;
+    }
+    if (rows.some((r) => r.callsign.toUpperCase() === callsign)) {
+      setAddError(`${callsign} already exists.`);
+      return;
+    }
+    setAddSaving(true);
+    setAddError('');
+    const exists = await getStation(user.uid, callsign);
+    if (exists) {
+      setAddError(`${callsign} already exists.`);
+      setAddSaving(false);
+      return;
+    }
+    const station = {
+      callsign,
+      firstName: addFirstName.trim() || null,
+      nickname: addNickname.trim() || null,
+      city: addCity.trim() || null,
+      state: addState.trim() || null,
+      note: addNote.trim() || null,
+      lastSeen: Timestamp.now(),
+    };
+    const success = await saveStation(user.uid, station);
+    if (success) {
+      const location = [station.city, station.state].filter(Boolean).join(', ');
+      setRows((prev) => [...prev, {
+        callsign,
+        firstName: station.firstName || '',
+        nickname: station.nickname || '',
+        city: station.city || '',
+        state: station.state || '',
+        location,
+        note: station.note || '',
+        lastSeen: null,
+        lastSeenDisplay: '',
+        checkIns: 0,
+      }]);
+      setIsAddOpen(false);
+    } else {
+      setAddError('Failed to save. Please try again.');
+    }
+    setAddSaving(false);
+  };
 
   const openEdit = (row: StationRow) => {
     setEditNickname(row.nickname);
@@ -176,9 +250,17 @@ export default function StationsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-3">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">
-          Stations{!fetching && ` (${rows.length})`}
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Stations{!fetching && ` (${rows.length})`}
+          </h2>
+          <button
+            onClick={openAdd}
+            className="px-3 py-1.5 text-sm font-medium text-white bg-cyan-700 hover:bg-cyan-900 rounded-md"
+          >
+            Add Station
+          </button>
+        </div>
 
         {fetching ? (
           <p className="text-slate-500">Loading...</p>
@@ -326,6 +408,106 @@ export default function StationsPage() {
                   className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
                 >
                   Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add station modal */}
+      {isAddOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Add Station</h2>
+              <button
+                onClick={() => setIsAddOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Callsign <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={addCallsign}
+                  onChange={(e) => { setAddCallsign(e.target.value.toUpperCase()); setAddError(''); }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono uppercase"
+                  autoFocus
+                  autoComplete="off"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
+                <input
+                  type="text"
+                  value={addFirstName}
+                  onChange={(e) => setAddFirstName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nickname</label>
+                <input
+                  type="text"
+                  value={addNickname}
+                  onChange={(e) => setAddNickname(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={addCity}
+                    onChange={(e) => setAddCity(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+                <div className="w-24">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={addState}
+                    onChange={(e) => setAddState(e.target.value.toUpperCase())}
+                    maxLength={2}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
+                <input
+                  type="text"
+                  value={addNote}
+                  onChange={(e) => setAddNote(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+              {addError && (
+                <p className="text-sm text-red-600">{addError}</p>
+              )}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddOpen(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addSaving}
+                  className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium disabled:opacity-50"
+                >
+                  {addSaving ? 'Saving…' : 'Add'}
                 </button>
               </div>
             </form>
