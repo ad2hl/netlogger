@@ -108,22 +108,30 @@ export default function StationCard({
 
   const tags = checkIn.tags || [];
   const hasUrgentTag = tags.some(t => URGENT_TAGS.includes(t));
+  const roleTag = tags.find(t => t === 'NC' || t === 'ANC') ?? null;
+  const rightTags = tags.filter(t => t !== 'NC' && t !== 'ANC');
 
   return (
     <div className={`flex items-center gap-2 py-1.5 px-2 rounded group ${hasUrgentTag ? 'bg-yellow-50' : 'hover:bg-slate-50'}`}>
-      {onSetBookmark && (
-        <button
-          onClick={onSetBookmark}
-          className={`w-4 flex-shrink-0 text-center transition-opacity ${
-            isBookmarked
-              ? 'text-cyan-700 opacity-100'
-              : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-sky-500'
-          }`}
-          title={isBookmarked ? 'Last acknowledged' : 'Mark as last acknowledged'}
-        >
-          ▶
-        </button>
-      )}
+      <div className="w-8 flex-shrink-0 flex items-center justify-center">
+        {roleTag ? (
+          <span className={`text-xs px-1 py-0.5 rounded font-semibold ${getTagStyle(roleTag)}`}>
+            {roleTag}
+          </span>
+        ) : onSetBookmark ? (
+          <button
+            onClick={onSetBookmark}
+            className={`w-4 text-center transition-opacity ${
+              isBookmarked
+                ? 'text-cyan-700 opacity-100'
+                : 'text-slate-300 opacity-0 group-hover:opacity-100 hover:text-sky-500'
+            }`}
+            title={isBookmarked ? 'Last acknowledged' : 'Mark as last acknowledged'}
+          >
+            ▶
+          </button>
+        ) : null}
+      </div>
       <span className="text-sm text-slate-400 w-6 flex-shrink-0 text-right">
         {number}
       </span>
@@ -232,7 +240,7 @@ export default function StationCard({
       )}
 
       <div className="flex items-center gap-1 flex-shrink-0">
-        {tags.map((tag) => (
+        {rightTags.map((tag) => (
           <span
             key={tag}
             className={`text-xs px-1.5 py-0.5 rounded ${getTagStyle(tag)}`}
