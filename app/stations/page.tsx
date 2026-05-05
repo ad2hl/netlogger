@@ -26,7 +26,7 @@ interface StationRow {
 type SortColumn = 'callsign' | 'firstName' | 'nickname' | 'location' | 'note' | 'lastSeen' | 'checkIns';
 
 export default function StationsPage() {
-  const { user, loading, emailVerified, photoURL } = useAuth();
+  const { user, loading, emailVerified } = useAuth();
   const router = useRouter();
   const [rows, setRows] = useState<StationRow[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -244,7 +244,7 @@ export default function StationsPage() {
             <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
             <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
             <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
-            <ProfileMenu photoURL={photoURL} />
+            <ProfileMenu />
           </div>
         </div>
       </header>

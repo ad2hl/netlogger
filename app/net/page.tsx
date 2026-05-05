@@ -49,7 +49,7 @@ export default function NetPageWrapper() {
 }
 
 function NetPage() {
-  const { user, profile, loading, emailVerified, photoURL } = useAuth();
+  const { user, profile, loading, emailVerified } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionIdParam = searchParams.get('session');
@@ -778,7 +778,7 @@ function NetPage() {
             >
               Help
             </a>
-            <ProfileMenu photoURL={photoURL} />
+            <ProfileMenu />
           </div>
         </div>
       </header>
