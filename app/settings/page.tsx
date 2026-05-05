@@ -14,7 +14,7 @@ import ProfileMenu from '@/components/ProfileMenu';
 import { apiFetch } from '@/lib/api-fetch';
 
 export default function SettingsPage() {
-  const { user, profile, loading, emailVerified, photoURL, refreshProfile } = useAuth();
+  const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
   const router = useRouter();
 
   const [formData, setFormData] = useState<Partial<UserProfile>>({
@@ -172,7 +172,7 @@ export default function SettingsPage() {
             <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
             <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
             <a href="/help?page=settings" target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900 text-sm">Help</a>
-            <ProfileMenu photoURL={photoURL} />
+            <ProfileMenu />
           </div>
         </div>
       </header>

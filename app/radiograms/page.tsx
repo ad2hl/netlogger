@@ -107,7 +107,7 @@ function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramL
 }
 
 export default function RadiogramsPage() {
-  const { user, profile, loading, emailVerified, photoURL } = useAuth();
+  const { user, profile, loading, emailVerified } = useAuth();
   const router = useRouter();
   const [radiograms, setRadiograms] = useState<Radiogram[]>([]);
   const [sessions, setSessions] = useState<NetSession[]>([]);
@@ -275,7 +275,7 @@ export default function RadiogramsPage() {
             <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
             <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
             <a href="/help?page=radiograms" target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900 text-sm">Help</a>
-            <ProfileMenu photoURL={photoURL} />
+            <ProfileMenu />
           </div>
         </div>
       </header>

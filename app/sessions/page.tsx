@@ -55,7 +55,7 @@ export default function SessionsPage() {
 }
 
 function SessionsContent() {
-  const { user, loading, emailVerified, photoURL } = useAuth();
+  const { user, loading, emailVerified } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const openOnLoad = searchParams.get('new') === '1';
@@ -270,7 +270,7 @@ function SessionsContent() {
             <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
             <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
             <a href="/help?page=sessions" target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900 text-sm">Help</a>
-            <ProfileMenu photoURL={photoURL} />
+            <ProfileMenu />
           </div>
         </div>
       </header>
