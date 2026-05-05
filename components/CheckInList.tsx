@@ -56,7 +56,11 @@ export default function CheckInList({
         ref={scrollRef}
         className="divide-y divide-slate-100 overflow-y-auto max-h-96 lg:min-h-[calc(100vh-14rem)] lg:max-h-[calc(100vh-14rem)]"
       >
-        {checkIns.map((checkIn, index) => (
+        {[
+          ...checkIns.filter(c => c.tags.includes('NC')),
+          ...checkIns.filter(c => !c.tags.includes('NC') && c.tags.includes('ANC')),
+          ...checkIns.filter(c => !c.tags.includes('NC') && !c.tags.includes('ANC')),
+        ].map((checkIn, index) => (
           <StationCard
             key={checkIn.callsign}
             checkIn={checkIn}
