@@ -13,8 +13,9 @@ import {
   User,
   AuthError,
 } from 'firebase/auth';
+import { getToken } from 'firebase/app-check';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { getFirebaseAuth, getFirebaseDb } from './firebase';
+import { getFirebaseAuth, getFirebaseDb, getFirebaseAppCheck } from './firebase';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 
 const googleProvider = new GoogleAuthProvider();
@@ -23,6 +24,18 @@ export async function signInWithGoogle(): Promise<{ user: User | null; error?: s
   try {
     const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
     const user = result.user;
+
+    // The pre-warm in firebase.ts is fire-and-forget; the popup can close before
+    // the reCAPTCHA token fetch finishes. Awaiting here ensures the App Check
+    // token is ready before the first Firestore call.
+    const appCheck = getFirebaseAppCheck();
+    if (appCheck) {
+      try {
+        await getToken(appCheck, false);
+      } catch {
+        // Continue — Firestore will try to attach its own token
+      }
+    }
 
     const userDocRef = doc(getFirebaseDb(), 'users', user.uid);
     const userDoc = await getDoc(userDocRef);
