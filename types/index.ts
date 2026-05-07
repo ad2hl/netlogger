@@ -3,6 +3,13 @@ import { Timestamp } from 'firebase/firestore';
 export const DEFAULT_DISPOSITION_METHODS = ['VHF', 'SSB', 'CW', 'Digital', 'Delivered'];
 export const DEFAULT_RECEIVED_METHODS = ['VHF', 'SSB', 'CW', 'Digital', 'Originated'];
 
+export interface CustomTag {
+  acronym: string;   // e.g. "OC", "HVN"
+  label: string;     // tooltip text, e.g. "Orange County Net"
+  color?: string;    // key into CUSTOM_TAG_COLORS; defaults to 'teal'
+  inReport?: boolean; // true = include in net report callsign (liaison); false = status only; defaults to true
+}
+
 export interface UserProfile {
   callsign: string;
   name: string;
@@ -18,6 +25,7 @@ export interface UserProfile {
   receivingStationName?: string;
   dispositionMethods?: string[];
   receivedMethods?: string[];
+  customTags?: CustomTag[];
 }
 
 export interface Station {

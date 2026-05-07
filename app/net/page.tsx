@@ -139,6 +139,7 @@ function NetPage() {
       userLocation: profile.location,
       addresseeCallsign: profile.netManagerCall || '',
       messageNumber,
+      customTags: profile.customTags,
     });
 
     // Combine date and startTime into a single timestamp
@@ -805,6 +806,7 @@ function NetPage() {
                 disabled={isLookingUp}
                 allStations={allStations}
                 onTabToTraffic={handleTabToTraffic}
+                customTags={profile?.customTags}
               />
               <CheckInList
                 checkIns={session.checkIns}
@@ -816,6 +818,7 @@ function NetPage() {
                 onUpdateLocation={handleUpdateLocation}
                 lastAcknowledged={session.lastAcknowledged}
                 onSetLastAcknowledged={handleSetLastAcknowledged}
+                customTags={profile?.customTags}
               />
             </div>
           )}

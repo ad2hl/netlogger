@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
-import { CheckIn, Station } from '@/types';
+import { CheckIn, Station, CustomTag } from '@/types';
 import StationCard from './StationCard';
 
 interface CheckInListProps {
@@ -14,6 +14,7 @@ interface CheckInListProps {
   onUpdateLocation: (callsign: string, city: string | null, state: string | null) => void;
   lastAcknowledged?: string | null;
   onSetLastAcknowledged?: (callsign: string) => void;
+  customTags?: CustomTag[];
 }
 
 export default function CheckInList({
@@ -26,6 +27,7 @@ export default function CheckInList({
   onUpdateLocation,
   lastAcknowledged,
   onSetLastAcknowledged,
+  customTags,
 }: CheckInListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +75,7 @@ export default function CheckInList({
             onUpdateLocation={onUpdateLocation}
             isBookmarked={lastAcknowledged?.toUpperCase() === checkIn.callsign.toUpperCase()}
             onSetBookmark={onSetLastAcknowledged ? () => onSetLastAcknowledged(checkIn.callsign) : undefined}
+            customTags={customTags}
           />
         ))}
       </div>
