@@ -1,26 +1,33 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { CheckIn, Station } from '@/types';
+import { CheckIn, Station, CustomTag } from '@/types';
 import { parseCallsignInput } from '@/lib/radiogram';
 import { searchStations } from '@/lib/stationSearch';
 import StationLookupDropdown from './StationLookupDropdown';
 
 const WHITMAN_IMG = 'https://upload.wikimedia.org/wikipedia/commons/8/85/Walt_Whitman_-_Brady-Handy_restored.png';
 
+const CUSTOM_TAG_BUTTON_COLORS: Record<string, string> = {
+  teal:   'bg-teal-100 text-teal-800 border border-teal-300 hover:bg-teal-200',
+  sky:    'bg-sky-100 text-sky-800 border border-sky-300 hover:bg-sky-200',
+  green:  'bg-green-100 text-green-800 border border-green-300 hover:bg-green-200',
+  indigo: 'bg-indigo-100 text-indigo-800 border border-indigo-300 hover:bg-indigo-200',
+};
+
 interface CheckInFormProps {
   onCheckIn: (checkIn: CheckIn) => void;
   disabled?: boolean;
   allStations?: Station[];
   onTabToTraffic?: () => void;
+  customTags?: CustomTag[];
 }
 
-const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function CheckInForm({ onCheckIn, disabled, allStations = [], onTabToTraffic }, ref) {
+const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function CheckInForm({ onCheckIn, disabled, allStations = [], onTabToTraffic, customTags = [] }, ref) {
   const [input, setInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showWhitman, setShowWhitman] = useState(false);
-  const [liaisonNet, setLiaisonNet] = useState('');
   const whitmanArmed = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -132,11 +139,6 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
-  const handleLiaisonClick = () => {
-    appendTag(liaisonNet);
-    setLiaisonNet('');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isSubmitting || isSearchMode) return;
@@ -172,9 +174,9 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
     <>
     <div ref={formRef} className="bg-white rounded-lg shadow p-3">
       <form onSubmit={handleSubmit}>
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-semibold text-slate-900 whitespace-nowrap">Check In Station</span>
-          <div className="flex-1 relative">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-sm font-semibold text-slate-900 whitespace-nowrap">Station</span>
+          <div className="relative">
             <input
               ref={inputRef}
               type="text"
@@ -185,8 +187,8 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
                 setInput(val);
               }}
               onKeyDown={handleKeyDown}
-              className="w-full px-2 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
-              placeholder="e.g., AD2HL/NC/T or ?2HL to search"
+              className="w-[20ch] px-2 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
+              placeholder="? to search"
               disabled={disabled || isSubmitting}
               autoComplete="off"
               autoCapitalize="characters"
@@ -202,55 +204,64 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
           </div>
 
           <button
-            type="submit"
-            disabled={disabled || isSubmitting || !hasValidCallsign || isSearchMode}
-            className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
+            type="button"
+            onClick={() => handleTagClick('NC')}
+            disabled={disabled || isSubmitting || !hasValidCallsign || hasTag('NC')}
+            title="Net Control"
+            className="ml-2 px-1.5 py-1 text-xs font-semibold rounded border border-purple-300 bg-purple-100 text-purple-800 hover:bg-purple-200 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? '...' : 'Add'}
+            NC
           </button>
-        </div>
 
-        <div className="flex items-center gap-1.5 mt-2">
-          {[
-            { label: 'Net Control',     tag: 'NC'  },
-            { label: 'Alt Net Control', tag: 'ANC' },
-            { label: 'Traffic',         tag: 'T'   },
-            { label: 'Announcement',    tag: 'A'   },
-          ].map(({ label, tag }) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => handleTagClick(tag)}
-              disabled={disabled || isSubmitting || !hasValidCallsign || hasTag(tag)}
-              className="flex-1 py-1 text-xs font-medium rounded border border-slate-300 bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {label}
-            </button>
-          ))}
-          <input
-            type="text"
-            value={liaisonNet}
-            onChange={(e) => setLiaisonNet(e.target.value.toUpperCase())}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                if (hasValidCallsign && liaisonNet.trim().length >= 2 && !hasTag(liaisonNet.trim())) {
-                  handleLiaisonClick();
-                }
-              }
-            }}
-            className="w-24 ml-4 px-1.5 py-1 text-xs font-mono border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-sky-500"
-            placeholder="OC/HVN"
-            maxLength={12}
-            autoComplete="off"
-          />
           <button
             type="button"
-            onClick={handleLiaisonClick}
-            disabled={disabled || isSubmitting || !hasValidCallsign || liaisonNet.trim().length < 2 || hasTag(liaisonNet.trim())}
-            className="flex-1 py-1 text-xs font-medium rounded border border-slate-300 bg-slate-200 text-slate-700 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={() => handleTagClick('ANC')}
+            disabled={disabled || isSubmitting || !hasValidCallsign || hasTag('ANC')}
+            title="Alternate Net Control"
+            className="px-1.5 py-1 text-xs font-semibold rounded border border-violet-300 bg-violet-100 text-violet-800 hover:bg-violet-200 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Liaison
+            ANC
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTagClick('T')}
+            disabled={disabled || isSubmitting || !hasValidCallsign || hasTag('T')}
+            title="Traffic"
+            className="px-1.5 py-1 text-xs font-bold rounded bg-red-500 text-white hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            T
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTagClick('A')}
+            disabled={disabled || isSubmitting || !hasValidCallsign || hasTag('A')}
+            title="Announcement"
+            className="px-1.5 py-1 text-xs font-bold rounded bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            A
+          </button>
+
+          {customTags.map((ct) => (
+            <button
+              key={ct.acronym}
+              type="button"
+              onClick={() => handleTagClick(ct.acronym)}
+              disabled={disabled || isSubmitting || !hasValidCallsign || hasTag(ct.acronym)}
+              title={ct.label}
+              className={`px-1.5 py-1 text-xs font-semibold rounded disabled:opacity-40 disabled:cursor-not-allowed ${CUSTOM_TAG_BUTTON_COLORS[ct.color ?? 'teal'] ?? CUSTOM_TAG_BUTTON_COLORS.teal}`}
+            >
+              {ct.acronym}
+            </button>
+          ))}
+
+          <button
+            type="submit"
+            disabled={disabled || isSubmitting || !hasValidCallsign || isSearchMode}
+            className="ml-auto bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm"
+          >
+            {isSubmitting ? '...' : 'Add'}
           </button>
         </div>
       </form>

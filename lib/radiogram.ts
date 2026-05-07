@@ -1,4 +1,4 @@
-import { CheckIn, NetSession, isStatusTag } from '@/types';
+import { CheckIn, NetSession, CustomTag, isStatusTag } from '@/types';
 
 interface RadiogramData {
   session: NetSession;
@@ -7,6 +7,7 @@ interface RadiogramData {
   userLocation: string;
   addresseeCallsign: string;
   messageNumber?: string;
+  customTags?: CustomTag[];
 }
 
 function getCallsignPrefix(callsign: string): string {
@@ -41,9 +42,9 @@ export function compressCallsigns(callsigns: string[]): string[] {
   return result;
 }
 
-function formatCallsignWithTags(callsign: string, tags: string[]): string {
-  // Include all tags except status tags (single letters like T, A, M, P, S, E, D, etc. and IO)
-  const reportTags = tags.filter(t => !isStatusTag(t));
+function formatCallsignWithTags(callsign: string, tags: string[], statusOnlyTags: Set<string>): string {
+  // Include all tags except built-in status tags and custom tags marked as status-only
+  const reportTags = tags.filter(t => !isStatusTag(t) && !statusOnlyTags.has(t));
   if (reportTags.length === 0) {
     return callsign;
   }
@@ -51,7 +52,8 @@ function formatCallsignWithTags(callsign: string, tags: string[]): string {
 }
 
 function formatCheckInsForReport(
-  checkIns: CheckIn[]
+  checkIns: CheckIn[],
+  statusOnlyTags: Set<string>
 ): string[] {
   // Order: NC first, then ANC, then liaisons (in check-in order), then regular stations (alphabetized & compressed)
   const ncStations: string[] = [];
@@ -59,23 +61,23 @@ function formatCheckInsForReport(
   const liaisonStations: string[] = [];
   const regularStations: string[] = [];
 
+  // A tag is a liaison tag if it's multi-letter (except NC, ANC, IO) and not marked status-only
+  const isLiaisonTag = (t: string) =>
+    t.length > 1 && t !== 'NC' && t !== 'ANC' && t !== 'IO' && !statusOnlyTags.has(t);
+
   for (const checkIn of checkIns) {
     const callsign = checkIn.callsign.toUpperCase();
     const tags = checkIn.tags || [];
-    const callsignWithTags = formatCallsignWithTags(callsign, tags);
-
-    // A tag is a liaison tag if it's multi-letter (except NC, ANC)
-    const isLiaisonTag = (t: string) => t.length > 1 && t !== 'NC' && t !== 'ANC' && t !== 'IO';
+    const callsignWithTags = formatCallsignWithTags(callsign, tags, statusOnlyTags);
 
     if (tags.includes('NC')) {
       ncStations.push(callsignWithTags);
     } else if (tags.includes('ANC')) {
       ancStations.push(callsignWithTags);
     } else if (tags.some(isLiaisonTag)) {
-      // Has a liaison tag (multi-letter, not NC/ANC/IO)
       liaisonStations.push(callsignWithTags);
     } else {
-      regularStations.push(callsign); // No tags for regular stations
+      regularStations.push(callsign);
     }
   }
 
@@ -139,7 +141,10 @@ export function generateRadiogram(data: RadiogramData): RadiogramResult {
   const dayOfMonth = sessionDate.getDate();
   const month = getMonthName(sessionDate);
 
-  const formattedCallsigns = formatCheckInsForReport(session.checkIns);
+  const statusOnlyTags = new Set(
+    (data.customTags ?? []).filter(ct => ct.inReport === false).map(ct => ct.acronym)
+  );
+  const formattedCallsigns = formatCheckInsForReport(session.checkIns, statusOnlyTags);
 
   const stationCount = session.checkIns.length;
   const trafficStr = `${session.trafficReported}/${session.trafficCleared}`;

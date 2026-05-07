@@ -8,7 +8,16 @@ import { changePassword } from '@/lib/auth';
 import { updateUserProfile } from '@/lib/firestore';
 
 const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
-import { UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
+
+const FIXED_TAG_ACRONYMS = new Set(Object.keys(SPECIAL_TAGS));
+
+const COLOR_OPTIONS: { key: string; label: string; swatch: string; button: string }[] = [
+  { key: 'teal',   label: 'Teal',   swatch: 'bg-teal-400',   button: 'bg-teal-100 text-teal-800 border border-teal-300' },
+  { key: 'sky',    label: 'Sky',    swatch: 'bg-sky-400',    button: 'bg-sky-100 text-sky-800 border border-sky-300' },
+  { key: 'green',  label: 'Green',  swatch: 'bg-green-400',  button: 'bg-green-100 text-green-800 border border-green-300' },
+  { key: 'indigo', label: 'Indigo', swatch: 'bg-indigo-400', button: 'bg-indigo-100 text-indigo-800 border border-indigo-300' },
+];
+import { UserProfile, CustomTag, SPECIAL_TAGS, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
 import ProfileMenu from '@/components/ProfileMenu';
 import { apiFetch } from '@/lib/api-fetch';
@@ -35,6 +44,11 @@ export default function SettingsPage() {
   const [newMethod, setNewMethod] = useState('');
   const [receivedMethods, setReceivedMethods] = useState<string[]>(DEFAULT_RECEIVED_METHODS);
   const [newReceivedMethod, setNewReceivedMethod] = useState('');
+  const [customTags, setCustomTags] = useState<CustomTag[]>([]);
+  const [newTagAcronym, setNewTagAcronym] = useState('');
+  const [newTagLabel, setNewTagLabel] = useState('');
+  const [newTagColor, setNewTagColor] = useState('teal');
+  const [newTagInReport, setNewTagInReport] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -69,6 +83,7 @@ export default function SettingsPage() {
       });
       setDispositionMethods(profile.dispositionMethods ?? DEFAULT_DISPOSITION_METHODS);
       setReceivedMethods(profile.receivedMethods ?? DEFAULT_RECEIVED_METHODS);
+      setCustomTags(profile.customTags ?? []);
     }
   }, [profile]);
 
@@ -87,7 +102,7 @@ export default function SettingsPage() {
     setSaving(true);
     setMessage(null);
 
-    const dataToSave = { ...formData, dispositionMethods, receivedMethods };
+    const dataToSave = { ...formData, dispositionMethods, receivedMethods, customTags };
 
     if (dataToSave.qrzPassword && !isDesktop) {
       try {
@@ -498,6 +513,157 @@ export default function SettingsPage() {
                 Add
               </button>
             </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-1">Quick Tag Buttons</h2>
+            <p className="text-sm text-slate-600 mb-4">
+              Add shortcut buttons for liaison networks or other tags you use regularly. They appear in the Station check-in bar alongside NC, ANC, T, and A.
+            </p>
+
+            <div className="space-y-2 mb-4">
+              {customTags.map((tag, index) => (
+                <div key={index} className="flex items-center gap-2 flex-wrap">
+                  <input
+                    type="text"
+                    value={tag.acronym}
+                    onChange={(e) => {
+                      const updated = [...customTags];
+                      updated[index] = { ...updated[index], acronym: e.target.value.toUpperCase() };
+                      setCustomTags(updated);
+                    }}
+                    className="w-20 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm font-mono"
+                    placeholder="OC"
+                    maxLength={8}
+                  />
+                  <input
+                    type="text"
+                    value={tag.label}
+                    onChange={(e) => {
+                      const updated = [...customTags];
+                      updated[index] = { ...updated[index], label: e.target.value };
+                      setCustomTags(updated);
+                    }}
+                    className="flex-1 min-w-40 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                    placeholder="e.g., Orange County Net"
+                  />
+                  <div className="flex gap-1 items-center">
+                    {COLOR_OPTIONS.map((c) => (
+                      <button
+                        key={c.key}
+                        type="button"
+                        onClick={() => {
+                          const updated = [...customTags];
+                          updated[index] = { ...updated[index], color: c.key };
+                          setCustomTags(updated);
+                        }}
+                        title={c.label}
+                        className={`w-5 h-5 rounded-full ${c.swatch} ${(tag.color ?? 'teal') === c.key ? 'ring-2 ring-offset-1 ring-slate-500' : ''}`}
+                      />
+                    ))}
+                    <span className={`ml-2 px-1.5 py-0.5 text-xs font-semibold rounded ${COLOR_OPTIONS.find(c => c.key === (tag.color ?? 'teal'))?.button ?? ''}`}>
+                      {tag.acronym || '—'}
+                    </span>
+                  </div>
+                  <label className="flex items-center gap-1 text-sm text-slate-600 whitespace-nowrap cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={tag.inReport ?? true}
+                      onChange={(e) => {
+                        const updated = [...customTags];
+                        updated[index] = { ...updated[index], inReport: e.target.checked };
+                        setCustomTags(updated);
+                      }}
+                      className="rounded"
+                    />
+                    In report
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setCustomTags(customTags.filter((_, i) => i !== index))}
+                    className="text-red-500 hover:text-red-700 px-2 py-1 text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="text"
+                value={newTagAcronym}
+                onChange={(e) => setNewTagAcronym(e.target.value.toUpperCase())}
+                className={`w-20 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm font-mono ${FIXED_TAG_ACRONYMS.has(newTagAcronym.trim()) ? 'border-red-400 bg-red-50' : 'border-slate-300'}`}
+                placeholder="OC"
+                maxLength={8}
+              />
+              <input
+                type="text"
+                value={newTagLabel}
+                onChange={(e) => setNewTagLabel(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const acronym = newTagAcronym.trim().toUpperCase();
+                    const label = newTagLabel.trim();
+                    if (acronym && label && !FIXED_TAG_ACRONYMS.has(acronym) && !customTags.some(t => t.acronym === acronym)) {
+                      setCustomTags([...customTags, { acronym, label, color: newTagColor, inReport: newTagInReport }]);
+                      setNewTagAcronym('');
+                      setNewTagLabel('');
+                      setNewTagColor('teal');
+                      setNewTagInReport(true);
+                    }
+                  }
+                }}
+                className="flex-1 min-w-40 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+                placeholder="New tag label"
+              />
+              <div className="flex gap-1 items-center">
+                {COLOR_OPTIONS.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => setNewTagColor(c.key)}
+                    title={c.label}
+                    className={`w-5 h-5 rounded-full ${c.swatch} ${newTagColor === c.key ? 'ring-2 ring-offset-1 ring-slate-500' : ''}`}
+                  />
+                ))}
+                <span className={`ml-2 px-1.5 py-0.5 text-xs font-semibold rounded ${COLOR_OPTIONS.find(c => c.key === newTagColor)?.button ?? ''}`}>
+                  {newTagAcronym || '—'}
+                </span>
+              </div>
+              <label className="flex items-center gap-1 text-sm text-slate-600 whitespace-nowrap cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newTagInReport}
+                  onChange={(e) => setNewTagInReport(e.target.checked)}
+                  className="rounded"
+                />
+                In report
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const acronym = newTagAcronym.trim().toUpperCase();
+                  const label = newTagLabel.trim();
+                  if (acronym && label && !FIXED_TAG_ACRONYMS.has(acronym) && !customTags.some(t => t.acronym === acronym)) {
+                    setCustomTags([...customTags, { acronym, label, color: newTagColor, inReport: newTagInReport }]);
+                    setNewTagAcronym('');
+                    setNewTagLabel('');
+                    setNewTagColor('teal');
+                    setNewTagInReport(true);
+                  }
+                }}
+                disabled={FIXED_TAG_ACRONYMS.has(newTagAcronym.trim())}
+                className="bg-slate-200 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
+            </div>
+            {FIXED_TAG_ACRONYMS.has(newTagAcronym.trim()) && (
+              <p className="mt-2 text-sm text-red-600">{newTagAcronym.trim()} is a built-in tag and cannot be redefined.</p>
+            )}
           </div>
 
           {message && (
