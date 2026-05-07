@@ -6,7 +6,6 @@ export const DEFAULT_RECEIVED_METHODS = ['VHF', 'SSB', 'CW', 'Digital', 'Origina
 export interface CustomTag {
   acronym: string;   // e.g. "OC", "HVN"
   label: string;     // tooltip text, e.g. "Orange County Net"
-  color?: string;    // key into CUSTOM_TAG_COLORS; defaults to 'teal'
   inReport?: boolean; // true = include in net report callsign (liaison); false = status only; defaults to true
 }
 

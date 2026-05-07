@@ -8,12 +8,6 @@ import StationLookupDropdown from './StationLookupDropdown';
 
 const WHITMAN_IMG = 'https://upload.wikimedia.org/wikipedia/commons/8/85/Walt_Whitman_-_Brady-Handy_restored.png';
 
-const CUSTOM_TAG_BUTTON_COLORS: Record<string, string> = {
-  teal:   'bg-teal-100 text-teal-800 border border-teal-300 hover:bg-teal-200',
-  sky:    'bg-sky-100 text-sky-800 border border-sky-300 hover:bg-sky-200',
-  green:  'bg-green-100 text-green-800 border border-green-300 hover:bg-green-200',
-  indigo: 'bg-indigo-100 text-indigo-800 border border-indigo-300 hover:bg-indigo-200',
-};
 
 interface CheckInFormProps {
   onCheckIn: (checkIn: CheckIn) => void;
@@ -250,7 +244,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               onClick={() => handleTagClick(ct.acronym)}
               disabled={disabled || isSubmitting || !hasValidCallsign || hasTag(ct.acronym)}
               title={ct.label}
-              className={`px-1.5 py-1 text-xs font-semibold rounded disabled:opacity-40 disabled:cursor-not-allowed ${CUSTOM_TAG_BUTTON_COLORS[ct.color ?? 'teal'] ?? CUSTOM_TAG_BUTTON_COLORS.teal}`}
+              className="px-1.5 py-1 text-xs font-semibold rounded disabled:opacity-40 disabled:cursor-not-allowed bg-teal-100 text-teal-800 border border-teal-300 hover:bg-teal-200"
             >
               {ct.acronym}
             </button>

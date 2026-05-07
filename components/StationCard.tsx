@@ -3,12 +3,6 @@
 import React, { useState } from 'react';
 import { CheckIn, Station, CustomTag, getTagLabel, formatLastSeen, URGENT_TAGS, isNewHam } from '@/types';
 
-const CUSTOM_TAG_DISPLAY_COLORS: Record<string, string> = {
-  teal:   'bg-teal-100 text-teal-800 border border-teal-300',
-  sky:    'bg-sky-100 text-sky-800 border border-sky-300',
-  green:  'bg-green-100 text-green-800 border border-green-300',
-  indigo: 'bg-indigo-100 text-indigo-800 border border-indigo-300',
-};
 
 interface StationCardProps {
   checkIn: CheckIn;
@@ -100,12 +94,9 @@ export default function StationCard({
       case 'A':   return 'bg-orange-500 text-white font-bold animate-pulse';
       case 'S':
       case 'IO':  return 'bg-amber-500 text-white font-bold animate-pulse';
-      default: {
-        const ct = customTags.find(c => c.acronym === tag);
-        if (ct) return CUSTOM_TAG_DISPLAY_COLORS[ct.color ?? 'teal'] ?? CUSTOM_TAG_DISPLAY_COLORS.teal;
+      default:
         if (tag.length === 1) return 'bg-sky-100 text-sky-800 border border-sky-300';
         return 'bg-teal-100 text-teal-800 border border-teal-300';
-      }
     }
   };
 
@@ -118,7 +109,7 @@ export default function StationCard({
     <div className={`flex items-center gap-2 py-1.5 px-2 rounded group ${hasUrgentTag ? 'bg-yellow-50' : 'hover:bg-slate-50'}`}>
       <div className="w-8 flex-shrink-0 flex items-center justify-center">
         {roleTag ? (
-          <span className={`text-xs px-1 py-0.5 rounded font-semibold ${getTagStyle(roleTag)}`}>
+          <span className={`text-xs px-1 py-0.5 rounded font-semibold ${getTagStyle(roleTag)}`} title={getTagLabel(roleTag)}>
             {roleTag}
           </span>
         ) : onSetBookmark ? (
@@ -247,7 +238,7 @@ export default function StationCard({
           <span
             key={tag}
             className={`text-xs px-1.5 py-0.5 rounded ${getTagStyle(tag)}`}
-            title={getTagLabel(tag)}
+            title={customTags.find(c => c.acronym === tag)?.label ?? getTagLabel(tag)}
           >
             {tag}
           </span>
