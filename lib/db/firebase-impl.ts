@@ -295,14 +295,12 @@ class FirebaseDB implements NetLoggerDB {
 
       if (!existingCheckIn) return null;
 
-      const mergedTags = Array.from(new Set([...existingCheckIn.tags, ...newTags]));
-
       const updatedCheckIns = currentCheckIns.filter(
         (c) => c.callsign.toUpperCase() !== upperCallsign
       );
       const updatedCheckIn: CheckIn = {
         ...existingCheckIn,
-        tags: mergedTags,
+        tags: newTags,
         timestamp: new Date(),
       };
       updatedCheckIns.push(updatedCheckIn);
