@@ -44,17 +44,13 @@
     "appId": "net.ad2hl.netlogger-desktop",
     "productName": "AD2HL Net Logger",
     "files": [
-      ".next/standalone/**",
-      ".next/static/**",
-      "public/**",
-      "content/**",
       "electron/dist/**"
     ],
     "extraResources": [
-      {
-        "from": ".next/static",
-        "to": ".next/static"
-      }
+      { "from": ".next/standalone", "to": ".next/standalone" },
+      { "from": ".next/static", "to": ".next/standalone/.next/static" },
+      { "from": "public", "to": ".next/standalone/public" },
+      { "from": "content", "to": ".next/standalone/content" }
     ],
     "win": {
       "target": "nsis"

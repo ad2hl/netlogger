@@ -51,7 +51,7 @@ async function waitForServer(port: number, maxMs: number = 60000): Promise<void>
 }
 
 async function startNextServer(port: number): Promise<void> {
-  const serverScript = path.join(__dirname, '..', '..', '.next', 'standalone', 'server.js');
+  const serverScript = path.join(process.resourcesPath, '.next', 'standalone', 'server.js');
 
   serverProcess = spawn(process.execPath, [serverScript], {
     env: {
