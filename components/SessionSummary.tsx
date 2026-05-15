@@ -102,7 +102,10 @@ export default function SessionSummary({
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">Date</span>
-            <span className="text-base font-mono font-semibold">{date.toLocaleDateString()}</span>
+            <span className="text-base font-mono font-semibold text-right">
+                <span className="block">{date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                <span className="block text-sm font-normal text-slate-500">{date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>
+              </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">Start</span>
