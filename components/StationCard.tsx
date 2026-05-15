@@ -16,6 +16,7 @@ interface StationCardProps {
   isBookmarked?: boolean;
   onSetBookmark?: () => void;
   customTags?: CustomTag[];
+  sessionActive?: boolean;
 }
 
 export default function StationCard({
@@ -30,6 +31,7 @@ export default function StationCard({
   isBookmarked,
   onSetBookmark,
   customTags = [],
+  sessionActive = true,
 }: StationCardProps) {
   const [editingField, setEditingField] = useState<'callsign' | 'name' | 'note' | 'location' | null>(null);
   const [callsign, setCallsign] = useState(checkIn.callsign);
@@ -245,7 +247,7 @@ export default function StationCard({
         ))}
       </div>
 
-      {lastSeenText && (
+      {sessionActive && lastSeenText && (
         <span className="text-xs text-slate-400 flex-shrink-0" title="Time since last check-in">
           {lastSeenText}
         </span>

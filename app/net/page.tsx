@@ -813,6 +813,7 @@ function NetPage() {
                 lastAcknowledged={session.lastAcknowledged}
                 onSetLastAcknowledged={handleSetLastAcknowledged}
                 customTags={profile?.customTags}
+                sessionActive={!session.endTime}
               />
             </div>
           )}
