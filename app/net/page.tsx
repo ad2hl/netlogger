@@ -747,11 +747,7 @@ function NetPage() {
             <HeaderBanner />
           </div>
           <div className="flex items-center gap-4">
-            {profile?.callsign && (
-              <span className="font-mono text-slate-600">
-                {profile.callsign}
-              </span>
-            )}
+            <ProfileMenu />
             <Link
               href="/sessions"
               className="text-cyan-700 hover:text-cyan-900 text-sm"
@@ -778,7 +774,6 @@ function NetPage() {
             >
               Help
             </a>
-            <ProfileMenu />
           </div>
         </div>
       </header>

@@ -8,7 +8,7 @@ import { useAuth } from '@/components/AuthProvider';
 
 export default function ProfileMenu() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -18,7 +18,9 @@ export default function ProfileMenu() {
   return (
     <>
       {user?.email && (
-        <span className="text-sm text-slate-500">{user.email}</span>
+        <span className="text-sm text-slate-500">
+          {user.email}{profile?.callsign ? ` (${profile.callsign})` : ''}
+        </span>
       )}
       <Link href="/settings" className="text-cyan-700 hover:text-cyan-900 text-sm">Settings</Link>
       <button

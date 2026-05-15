@@ -175,11 +175,11 @@ export default function SettingsPage() {
             <HeaderBanner />
           </div>
           <div className="flex items-center gap-4">
+            <ProfileMenu />
             <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
             <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
             <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
             <a href="/help?page=settings" target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900 text-sm">Help</a>
-            <ProfileMenu />
           </div>
         </div>
       </header>
