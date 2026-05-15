@@ -15,6 +15,7 @@ interface CheckInListProps {
   lastAcknowledged?: string | null;
   onSetLastAcknowledged?: (callsign: string) => void;
   customTags?: CustomTag[];
+  sessionActive?: boolean;
 }
 
 export default function CheckInList({
@@ -28,6 +29,7 @@ export default function CheckInList({
   lastAcknowledged,
   onSetLastAcknowledged,
   customTags,
+  sessionActive = true,
 }: CheckInListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +78,7 @@ export default function CheckInList({
             isBookmarked={lastAcknowledged?.toUpperCase() === checkIn.callsign.toUpperCase()}
             onSetBookmark={onSetLastAcknowledged ? () => onSetLastAcknowledged(checkIn.callsign) : undefined}
             customTags={customTags}
+            sessionActive={sessionActive}
           />
         ))}
       </div>
