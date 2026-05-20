@@ -445,15 +445,11 @@ class DexieDB implements NetLoggerDB {
 
       if (!existingCheckIn) return null;
 
-      const updatedCheckIns = currentCheckIns.filter(
-        (c) => c.callsign.toUpperCase() !== upperCallsign
+      const updatedCheckIns = currentCheckIns.map((c) =>
+        c.callsign.toUpperCase() === upperCallsign
+          ? { ...existingCheckIn, tags: newTags }
+          : c
       );
-      const updatedCheckIn: CheckIn = {
-        ...existingCheckIn,
-        tags: newTags,
-        timestamp: new Date(),
-      };
-      updatedCheckIns.push(updatedCheckIn);
 
       await getDb().sessions.update(sessionId, { checkIns: updatedCheckIns });
       return updatedCheckIns;

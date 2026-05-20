@@ -263,7 +263,7 @@ function NetPage() {
       (c) => c.callsign.toUpperCase() === checkIn.callsign.toUpperCase()
     );
 
-    // If station already checked in, replace tags with the new set and move to end
+    // If station already checked in, update its tags in-place (preserve list position)
     if (existingCheckIn) {
       if (checkIn.tags.length === 0) return;
 

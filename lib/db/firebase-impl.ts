@@ -295,15 +295,11 @@ class FirebaseDB implements NetLoggerDB {
 
       if (!existingCheckIn) return null;
 
-      const updatedCheckIns = currentCheckIns.filter(
-        (c) => c.callsign.toUpperCase() !== upperCallsign
+      const updatedCheckIns = currentCheckIns.map((c) =>
+        c.callsign.toUpperCase() === upperCallsign
+          ? { ...existingCheckIn, tags: newTags }
+          : c
       );
-      const updatedCheckIn: CheckIn = {
-        ...existingCheckIn,
-        tags: newTags,
-        timestamp: new Date(),
-      };
-      updatedCheckIns.push(updatedCheckIn);
 
       await updateDoc(sessionRef, { checkIns: updatedCheckIns });
       return updatedCheckIns;
