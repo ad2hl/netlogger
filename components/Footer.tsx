@@ -11,8 +11,10 @@ export default function Footer() {
   const [aboutContent, setAboutContent] = useState<TypedContent | null>(null);
   const [summaryContent, setSummaryContent] = useState<TypedContent | null>(null);
   const [footerCredit, setFooterCredit] = useState<TypedContent | null>(null);
+  const [termsContent, setTermsContent] = useState<TypedContent | null>(null);
   const [localModalContent, setLocalModalContent] = useState<string | null>(null);
   const [showAbout, setShowAbout] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     apiFetch('/api/about')
@@ -26,6 +28,10 @@ export default function Footer() {
     apiFetch('/api/footer-credit')
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data?.content) setFooterCredit({ content: data.content, type: data.type ?? 'md' }); })
+      .catch(() => {});
+    apiFetch('/api/terms-of-service')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.content) setTermsContent({ content: data.content, type: data.type ?? 'md' }); })
       .catch(() => {});
   }, []);
 
@@ -88,6 +94,14 @@ export default function Footer() {
               Privacy Policy
             </a>
           )}
+          {termsContent && (
+            <button
+              onClick={() => setShowTerms(true)}
+              className="text-cyan-700 hover:text-cyan-900"
+            >
+              Terms of Service
+            </button>
+          )}
         </div>
       </footer>
 
@@ -96,6 +110,9 @@ export default function Footer() {
       )}
       {showAbout && aboutContent && (
         <AboutModal content={aboutContent.content} type={aboutContent.type} onClose={() => setShowAbout(false)} />
+      )}
+      {showTerms && termsContent && (
+        <AboutModal content={termsContent.content} type={termsContent.type} onClose={() => setShowTerms(false)} />
       )}
     </>
   );
