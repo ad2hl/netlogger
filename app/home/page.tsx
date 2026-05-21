@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { useAuth } from '@/components/AuthProvider';
 import { getActiveSession, createSession, updateSession } from '@/lib/firestore';
 import { signOut } from '@/lib/auth';
+import { apiFetch } from '@/lib/api-fetch';
+import ContentRenderer from '@/components/ContentRenderer';
 import { NetSession } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 
@@ -20,6 +22,7 @@ export default function HomePage() {
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [showActiveWarning, setShowActiveWarning] = useState(false);
   const [showFirstUseNotice, setShowFirstUseNotice] = useState(false);
+  const [welcomeContent, setWelcomeContent] = useState<{ content: string; type: 'html' | 'md' } | null>(null);
   const [newNetName, setNewNetName] = useState('');
   const [newDate, setNewDate] = useState('');
   const [newStartTime, setNewStartTime] = useState('');
@@ -49,7 +52,15 @@ export default function HomePage() {
     });
     const key = `netlogger:firstUseNotice:${user.uid}`;
     if (!localStorage.getItem(key)) {
-      setShowFirstUseNotice(true);
+      apiFetch('/api/welcome')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.content) {
+            setWelcomeContent({ content: data.content, type: data.type ?? 'md' });
+            setShowFirstUseNotice(true);
+          }
+        })
+        .catch(() => {});
     }
   }, [user]);
 
@@ -229,21 +240,18 @@ export default function HomePage() {
         </div>
       )}
 
-      {showFirstUseNotice && (
+      {showFirstUseNotice && welcomeContent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Welcome to AD2HL Net Logger</h2>
-            <p className="text-gray-600 mb-6">
-              This application logs amateur radio net activity and radiograms, which are public
-              communications transmitted over amateur radio frequencies. Users should not submit
-              information they would not transmit on the air.
-            </p>
+            <div className="prose prose-sm text-gray-600 mb-6">
+              <ContentRenderer content={welcomeContent.content} type={welcomeContent.type} />
+            </div>
             <div className="flex justify-end">
               <button
                 onClick={dismissFirstUseNotice}
                 className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
               >
-                I understand
+                Close
               </button>
             </div>
           </div>
