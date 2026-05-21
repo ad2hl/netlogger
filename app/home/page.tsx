@@ -19,6 +19,7 @@ export default function HomePage() {
   const [activeSession, setActiveSession] = useState<NetSession | null | undefined>(undefined);
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
   const [showActiveWarning, setShowActiveWarning] = useState(false);
+  const [showFirstUseNotice, setShowFirstUseNotice] = useState(false);
   const [newNetName, setNewNetName] = useState('');
   const [newDate, setNewDate] = useState('');
   const [newStartTime, setNewStartTime] = useState('');
@@ -46,6 +47,10 @@ export default function HomePage() {
     getActiveSession(user.uid).then((session) => {
       setActiveSession(session ?? null);
     });
+    const key = `netlogger:firstUseNotice:${user.uid}`;
+    if (!localStorage.getItem(key)) {
+      setShowFirstUseNotice(true);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -61,6 +66,12 @@ export default function HomePage() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showActiveWarning]);
+
+  const dismissFirstUseNotice = () => {
+    if (!user) return;
+    localStorage.setItem(`netlogger:firstUseNotice:${user.uid}`, '1');
+    setShowFirstUseNotice(false);
+  };
 
   const openNewSessionModal = () => {
     const now = new Date();
@@ -212,6 +223,27 @@ export default function HomePage() {
                 className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
               >
                 Proceed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFirstUseNotice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Welcome to AD2HL Net Logger</h2>
+            <p className="text-gray-600 mb-6">
+              This application logs amateur radio net activity and radiograms, which are public
+              communications transmitted over amateur radio frequencies. Users should not submit
+              information they would not transmit on the air.
+            </p>
+            <div className="flex justify-end">
+              <button
+                onClick={dismissFirstUseNotice}
+                className="px-4 py-2 text-white bg-cyan-700 hover:bg-cyan-900 rounded-md text-sm font-medium"
+              >
+                I understand
               </button>
             </div>
           </div>
