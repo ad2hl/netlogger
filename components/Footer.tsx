@@ -86,14 +86,6 @@ export default function Footer() {
               About this website
             </button>
           )}
-          {summaryContent && (
-            <a
-              href="/privacy-policy"
-              className="text-cyan-700 hover:text-cyan-900"
-            >
-              Privacy Policy
-            </a>
-          )}
           {termsContent && (
             <button
               onClick={() => setShowTerms(true)}
@@ -101,6 +93,14 @@ export default function Footer() {
             >
               Terms of Service
             </button>
+          )}
+          {summaryContent && (
+            <a
+              href="/privacy-policy"
+              className="text-cyan-700 hover:text-cyan-900"
+            >
+              Privacy Policy
+            </a>
           )}
         </div>
       </footer>
