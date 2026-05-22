@@ -8,7 +8,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { getAllStations, getAllSessions, updateStationFields, deleteStation, saveStation, getStation } from '@/lib/firestore';
 import { Timestamp } from 'firebase/firestore';
 import HeaderBanner from '@/components/HeaderBanner';
-import ProfileMenu from '@/components/ProfileMenu';
+import NavMenu from '@/components/NavMenu';
 
 interface StationRow {
   callsign: string;
@@ -241,10 +241,7 @@ export default function StationsPage() {
             <HeaderBanner />
           </div>
           <div className="flex items-center gap-4">
-            <ProfileMenu />
-            <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
-            <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
-            <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
+            <NavMenu helpPage="stations" />
           </div>
         </div>
       </header>

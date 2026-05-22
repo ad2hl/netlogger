@@ -12,7 +12,7 @@ const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
 const FIXED_TAG_ACRONYMS = new Set(Object.keys(SPECIAL_TAGS));
 import { UserProfile, CustomTag, SPECIAL_TAGS, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
-import ProfileMenu from '@/components/ProfileMenu';
+import NavMenu from '@/components/NavMenu';
 import { apiFetch } from '@/lib/api-fetch';
 
 export default function SettingsPage() {
@@ -175,11 +175,7 @@ export default function SettingsPage() {
             <HeaderBanner />
           </div>
           <div className="flex items-center gap-4">
-            <ProfileMenu />
-            <Link href="/sessions" className="text-cyan-700 hover:text-cyan-900 text-sm">Sessions</Link>
-            <Link href="/radiograms" className="text-cyan-700 hover:text-cyan-900 text-sm">Radiograms</Link>
-            <Link href="/stations" className="text-cyan-700 hover:text-cyan-900 text-sm">Stations</Link>
-            <a href="/help?page=settings" target="_blank" rel="noopener noreferrer" className="text-cyan-700 hover:text-cyan-900 text-sm">Help</a>
+            <NavMenu helpPage="settings" />
           </div>
         </div>
       </header>
