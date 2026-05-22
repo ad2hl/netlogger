@@ -90,6 +90,12 @@ function getAuthErrorMessage(error: AuthError): string {
       return 'Too many attempts. Please try again later.';
     case 'auth/user-disabled':
       return 'This account has been disabled.';
+    case 'auth/operation-not-allowed':
+      return 'Email/password sign-in is not enabled. Please contact an administrator.';
+    case 'auth/admin-restricted-operation':
+      return 'Account creation is not currently allowed. Please contact an administrator.';
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your connection and try again.';
     default:
       return 'An unexpected error occurred. Please try again.';
   }
@@ -130,6 +136,7 @@ export async function signUpWithEmail(
 
     return { user };
   } catch (error) {
+    console.error('signUpWithEmail error:', error);
     return { error: getAuthErrorMessage(error as AuthError) };
   }
 }
