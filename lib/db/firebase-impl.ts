@@ -328,7 +328,8 @@ class FirebaseDB implements NetLoggerDB {
       const db = getFirebaseDb();
       const batch = writeBatch(db);
       const radRef = doc(db, 'users', uid, 'radiograms', radiogram.id);
-      batch.set(radRef, { ...radiogram, savedAt: Timestamp.now() });
+      const now = Timestamp.now();
+      batch.set(radRef, { ...radiogram, createdAt: now, savedAt: now });
       if (radiogram.sessionId) {
         const sessionRef = doc(db, 'users', uid, 'sessions', radiogram.sessionId);
         batch.update(sessionRef, { radiogramIds: arrayUnion(radiogram.id) });

@@ -41,7 +41,7 @@ function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramL
 
   // User-created radiograms from the independent collection
   for (const radiogram of radiograms) {
-    const itemDate = radiogram.savedAt ? radiogram.savedAt.toDate() : new Date();
+    const itemDate = (radiogram.createdAt ?? radiogram.savedAt)?.toDate() ?? new Date();
     const displayDate = itemDate.toLocaleDateString() + ' ' +
       itemDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 

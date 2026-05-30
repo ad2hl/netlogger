@@ -144,6 +144,7 @@ export interface Radiogram {
   dispositionDate?: string;
   dispositionTime?: string;
   // Metadata
+  createdAt?: Timestamp;    // set once on first save; never overwritten
   savedAt?: Timestamp;
   sessionNetName?: string;
   sessionId?: string;       // set when radiogram belongs to a session; absent for standalone

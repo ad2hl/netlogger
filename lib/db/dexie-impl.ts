@@ -31,7 +31,8 @@ interface StoredSession {
   checkedSecure?: string[];
 }
 
-interface StoredRadiogram extends Omit<Radiogram, 'savedAt'> {
+interface StoredRadiogram extends Omit<Radiogram, 'createdAt' | 'savedAt'> {
+  createdAt?: string; // ISO string
   savedAt?: string; // ISO string
   sessionId?: string;
 }
@@ -83,6 +84,12 @@ class NetLoggerDexie extends Dexie {
           radiograms: undefined,
         });
       }
+    });
+    this.version(3).stores({
+      stations: 'callsign, lastSeen',
+      sessions: 'id, date',
+      profile: 'id',
+      radiograms: 'id, sessionId, savedAt, createdAt',
     });
   }
 }
@@ -474,9 +481,11 @@ class DexieDB implements NetLoggerDB {
 
   async addRadiogram(_uid: string, radiogram: Radiogram): Promise<boolean> {
     try {
+      const now = new Date().toISOString();
       const stored: StoredRadiogram = {
         ...radiogram,
-        savedAt: new Date().toISOString(),
+        createdAt: now,
+        savedAt: now,
       };
       await getDb().radiograms.put(stored);
       if (radiogram.sessionId) {
@@ -495,7 +504,11 @@ class DexieDB implements NetLoggerDB {
     try {
       const stored = await getDb().radiograms.get(radiogramId);
       if (!stored) return null;
-      return { ...stored, savedAt: stored.savedAt ? toTimestamp(stored.savedAt) : undefined };
+      return {
+        ...stored,
+        createdAt: stored.createdAt ? toTimestamp(stored.createdAt) : undefined,
+        savedAt: stored.savedAt ? toTimestamp(stored.savedAt) : undefined,
+      };
     } catch (error) {
       console.error('Error getting radiogram:', error);
       return null;
@@ -504,7 +517,7 @@ class DexieDB implements NetLoggerDB {
 
   async updateRadiogram(_uid: string, radiogramId: string, updates: Partial<Radiogram>): Promise<boolean> {
     try {
-      const { savedAt, ...rest } = updates;
+      const { savedAt, createdAt: _createdAt, ...rest } = updates;
       const storedUpdates: Partial<StoredRadiogram> = {
         ...rest,
         ...(savedAt ? { savedAt: toIso(savedAt) } : {}),
@@ -536,7 +549,11 @@ class DexieDB implements NetLoggerDB {
   async getAllRadiograms(_uid: string): Promise<Radiogram[]> {
     try {
       const stored = await getDb().radiograms.orderBy('savedAt').reverse().toArray();
-      return stored.map((r) => ({ ...r, savedAt: r.savedAt ? toTimestamp(r.savedAt) : undefined }));
+      return stored.map((r) => ({
+        ...r,
+        createdAt: r.createdAt ? toTimestamp(r.createdAt) : undefined,
+        savedAt: r.savedAt ? toTimestamp(r.savedAt) : undefined,
+      }));
     } catch (error) {
       console.error('Error getting all radiograms:', error);
       return [];
@@ -546,7 +563,11 @@ class DexieDB implements NetLoggerDB {
   async getRadiogramsBySession(_uid: string, sessionId: string): Promise<Radiogram[]> {
     try {
       const stored = await getDb().radiograms.where('sessionId').equals(sessionId).sortBy('savedAt');
-      return stored.map((r) => ({ ...r, savedAt: r.savedAt ? toTimestamp(r.savedAt) : undefined }));
+      return stored.map((r) => ({
+        ...r,
+        createdAt: r.createdAt ? toTimestamp(r.createdAt) : undefined,
+        savedAt: r.savedAt ? toTimestamp(r.savedAt) : undefined,
+      }));
     } catch (error) {
       console.error('Error getting radiograms by session:', error);
       return [];
