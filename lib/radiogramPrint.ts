@@ -1,4 +1,4 @@
-import { PDFDocument, PDFFont, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import { Radiogram, UserProfile } from '@/types';
 
 const WORDS_PER_FORM = 25;
@@ -51,7 +51,8 @@ interface HalfData {
   recipientNameCall?: string;
   recipientAddress?: string;
   recipientCityStateZip?: string;
-  recipientLine4?: string;  // 4th address line; printed in the TELEPHONE NUMBER field space
+  recipientLine4?: string;  // 4th address line — drawn as free text after flatten
+  recipientLine5?: string;  // 5th address line — drawn below line 4 if space permits
   // Message words for this form (up to 25)
   words: string[];
   // Signature (last form only)
@@ -95,11 +96,10 @@ function fillHalf(
     set('Precidence - Bottom', data.precedence ?? '');
   }
 
-  // Addressee — one line per field
+  // Addressee — one line per field (lines 4-5 are drawn as free text after flatten)
   set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '', FONT_SIZE_ADDRESS);
-  set(`Recipient Phone - ${suffix}`, data.recipientLine4 ?? '', FONT_SIZE_ADDRESS);
 
   // Message words — larger font
   for (let i = 0; i < WORDS_PER_FORM; i++) {
@@ -131,6 +131,51 @@ function fillHalf(
   }
 }
 
+// PDF coordinates (y increases upward) for the phone-row area in each half.
+// The "TELEPHONE NUMBER" label occupies x=[addrX, phoneX) in the same row as the
+// Recipient Phone form field. We cover both with white and draw lines 4-5 as free text.
+const PHONE_AREA = {
+  Top:    { addrX: 63.3, phoneY: 609.2, phoneH: 15.7, addrW: 262.4 },
+  Bottom: { addrX: 63.2, phoneY: 222.4, phoneH: 15.7, addrW: 262.4 },
+} as const;
+
+// When both line 4 and line 5 are present, extend the cover area downward so
+// line 5 text (baseline below phoneY) is on a white background.
+const LINE5_DROP = 4.7; // pts below phoneY for line-5 baseline
+
+function drawAddressLines45(
+  page: PDFPage,
+  font: PDFFont,
+  suffix: 'Top' | 'Bottom',
+  line4: string,
+  line5: string,
+): void {
+  if (!line4 && !line5) return;
+
+  const { addrX, phoneY, phoneH, addrW } = PHONE_AREA[suffix];
+  const white = rgb(1, 1, 1);
+  const black = rgb(0, 0, 0);
+
+  // White rectangle covers: label area + phone field + (if line5) gap below
+  const coverY = line5 ? phoneY - LINE5_DROP : phoneY;
+  page.drawRectangle({ x: addrX, y: coverY, width: addrW, height: phoneY + phoneH - coverY, color: white, borderWidth: 0 });
+
+  if (line4) {
+    // With two lines: position line 4 near the top of the phone field.
+    // With one line: vertically centre it in the field.
+    const baseline4 = line5
+      ? phoneY + phoneH - 7.5   // caps top ≈ phoneY + phoneH - 0.2
+      : phoneY + phoneH - 12;   // caps top ≈ phoneY + phoneH - 4.7
+    page.drawText(line4, { x: addrX + 1, y: baseline4, size: FONT_SIZE_ADDRESS, font, color: black });
+  }
+
+  if (line5) {
+    // Line 5 baseline just below the phone field; caps ascenders land inside the
+    // covered (white) area so they don't bleed onto other form content.
+    page.drawText(line5, { x: addrX + 1, y: phoneY - LINE5_DROP, size: FONT_SIZE_ADDRESS, font, color: black });
+  }
+}
+
 export async function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
   const words = radiogram.textWords.filter(w => w.length > 0);
 
@@ -141,9 +186,8 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
   const recipientNameCall = addressLines[0] ?? '';
   const recipientAddress = addressLines[1] ?? '';
   const recipientCityStateZip = addressLines[2] ?? '';
-  // Lines 4-5 share the field formerly labelled TELEPHONE NUMBER; if the PDF field
-  // supports multi-line text both lines print, otherwise only line 4 shows.
-  const recipientLine4 = [addressLines[3], addressLines[4]].filter(Boolean).join('\n');
+  const recipientLine4 = addressLines[3] ?? '';
+  const recipientLine5 = addressLines[4] ?? '';
 
   // Receiving station info from user profile.
   // Skip if the local station is the originator — they sent it, not received it.
@@ -168,6 +212,7 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     recipientAddress,
     recipientCityStateZip,
     recipientLine4,
+    recipientLine5,
     receivingStation: isOriginator ? undefined : userProfile?.callsign,
     receivingPhone: isOriginator ? undefined : userProfile?.phone,
     receivingName: isOriginator ? undefined : userProfile?.receivingStationName,
@@ -231,8 +276,15 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     fillHalf(form, font, 'Top', pageData.top);
     if (pageData.bottom) fillHalf(form, font, 'Bottom', pageData.bottom);
 
-    // Flatten so the output contains static text, not interactive fields
+    // Flatten first so form-field appearances are baked into the page stream,
+    // then draw lines 4-5 on top (white cover + free text overrides the label).
     form.flatten();
+
+    const page = pdfDoc.getPages()[0];
+    drawAddressLines45(page, font, 'Top', pageData.top.recipientLine4 ?? '', pageData.top.recipientLine5 ?? '');
+    if (pageData.bottom) {
+      drawAddressLines45(page, font, 'Bottom', pageData.bottom.recipientLine4 ?? '', pageData.bottom.recipientLine5 ?? '');
+    }
 
     const flatBytes = await pdfDoc.save();
     const flatDoc = await PDFDocument.load(flatBytes);
