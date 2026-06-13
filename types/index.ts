@@ -126,7 +126,6 @@ export interface Radiogram {
   date: string;
   // Address
   address: string;
-  addressPhone?: string;
   addressOpNote: string;
   // Text (array of words, displayed 5 per line)
   textWords: string[];

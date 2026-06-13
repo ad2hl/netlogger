@@ -4,7 +4,7 @@ import { Radiogram, UserProfile } from '@/types';
 const WORDS_PER_FORM = 25;
 
 const FONT_SIZE_WORDS = 11;   // message text words only
-const FONT_SIZE_ADDRESS = 10; // addressee name/address/phone
+const FONT_SIZE_ADDRESS = 10; // addressee name/address lines
 const FONT_SIZE_OTHER = 9;    // preamble, signature, RECEIVED AT, REC'D/SENT
 
 function formatPrintDate(dateStr: string | undefined): string {
@@ -51,7 +51,7 @@ interface HalfData {
   recipientNameCall?: string;
   recipientAddress?: string;
   recipientCityStateZip?: string;
-  recipientPhone?: string;
+  recipientLine4?: string;  // 4th address line; printed in the TELEPHONE NUMBER field space
   // Message words for this form (up to 25)
   words: string[];
   // Signature (last form only)
@@ -99,7 +99,7 @@ function fillHalf(
   set(`Recipient Name / Call - ${suffix}`, data.recipientNameCall ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient Address - ${suffix}`, data.recipientAddress ?? '', FONT_SIZE_ADDRESS);
   set(`Recipient City, State, & ZIP - ${suffix}`, data.recipientCityStateZip ?? '', FONT_SIZE_ADDRESS);
-  set(`Recipient Phone - ${suffix}`, data.recipientPhone ?? '', FONT_SIZE_ADDRESS);
+  set(`Recipient Phone - ${suffix}`, data.recipientLine4 ?? '', FONT_SIZE_ADDRESS);
 
   // Message words — larger font
   for (let i = 0; i < WORDS_PER_FORM; i++) {
@@ -134,36 +134,16 @@ function fillHalf(
 export async function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
   const words = radiogram.textWords.filter(w => w.length > 0);
 
-  // Parse address lines: fill the 3 TO fields in order, then detect phone and email
-  // in the remaining lines (or in any position for phone/email-looking lines).
-  const isPhoneLine = (l: string) => /^[\d\s()\-+]+$/.test(l) && l.trim().length > 0;
-  const isEmailLine = (l: string) => /ATSIGN/i.test(l) && /DOT/i.test(l);
-
+  // Map address lines to the 4 addressee fields on the ARRL form.
+  // The 4th field occupies the space that was formerly labelled TELEPHONE NUMBER.
   const addressLines = radiogram.address.split('\n').map(l => l.trim()).filter(Boolean);
-  const mainLines: string[] = [];
-  let phoneFromAddress = '';
-  let emailFromAddress = '';
 
-  for (const line of addressLines) {
-    if (!phoneFromAddress && isPhoneLine(line)) {
-      phoneFromAddress = line;
-    } else if (!emailFromAddress && isEmailLine(line)) {
-      emailFromAddress = line;
-    } else if (mainLines.length < 3) {
-      mainLines.push(line);
-    }
-    // Lines beyond 3 regular + 1 phone + 1 email are rare; they remain in the
-    // address textarea for display but the ARRL form has no additional fields.
-  }
-
-  const recipientNameCall = mainLines[0] ?? '';
-  const recipientAddress = mainLines[1] ?? '';
-  const recipientCityStateZip = mainLines[2] ?? '';
-
-  // Phone field: prefer the explicit addressPhone field; fall back to address-extracted phone.
-  // Email (if present) goes on a second line below the phone number.
-  const phone = radiogram.addressPhone || phoneFromAddress;
-  const recipientPhone = [phone, emailFromAddress].filter(Boolean).join('\n');
+  const recipientNameCall = addressLines[0] ?? '';
+  const recipientAddress = addressLines[1] ?? '';
+  const recipientCityStateZip = addressLines[2] ?? '';
+  // Lines 4-5 share the field formerly labelled TELEPHONE NUMBER; if the PDF field
+  // supports multi-line text both lines print, otherwise only line 4 shows.
+  const recipientLine4 = [addressLines[3], addressLines[4]].filter(Boolean).join('\n');
 
   // Receiving station info from user profile.
   // Skip if the local station is the originator — they sent it, not received it.
@@ -187,7 +167,7 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
     recipientNameCall,
     recipientAddress,
     recipientCityStateZip,
-    recipientPhone,
+    recipientLine4,
     receivingStation: isOriginator ? undefined : userProfile?.callsign,
     receivingPhone: isOriginator ? undefined : userProfile?.phone,
     receivingName: isOriginator ? undefined : userProfile?.receivingStationName,
