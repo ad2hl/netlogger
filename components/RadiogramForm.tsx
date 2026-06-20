@@ -15,6 +15,7 @@ interface RadiogramFormProps {
   dispositionMethods?: string[];
   receivedMethods?: string[];
   userProfile?: UserProfile;
+  onAssignNumber?: () => Promise<string>;
 }
 
 function generateId(): string {
@@ -66,6 +67,7 @@ export default function RadiogramForm({
   dispositionMethods,
   receivedMethods,
   userProfile,
+  onAssignNumber,
 }: RadiogramFormProps) {
   const sentMethods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
   const rcvdMethods = receivedMethods ?? DEFAULT_RECEIVED_METHODS;
@@ -307,6 +309,15 @@ export default function RadiogramForm({
     }
   };
 
+  const handleAssignNumber = async () => {
+    if (!onAssignNumber) return;
+    const num = await onAssignNumber();
+    if (num) setFormData(prev => ({ ...prev, number: num }));
+  };
+
+  const assignBtnDisabled = !onAssignNumber ||
+    (formData.number.trim() !== '' && formData.number.toUpperCase() !== 'XXX');
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -399,6 +410,16 @@ export default function RadiogramForm({
                   required
                 />
               </div>
+              <div className="col-span-2 flex flex-col justify-end">
+                <button
+                  type="button"
+                  onClick={handleAssignNumber}
+                  disabled={assignBtnDisabled}
+                  className="w-full px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300 rounded hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Assign Next
+                </button>
+              </div>
               <div className="col-span-2">
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   Precedence
@@ -424,7 +445,7 @@ export default function RadiogramForm({
                   className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                 />
               </div>
-              <div className="col-span-3">
+              <div className="col-span-2">
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   Station of Origin
                 </label>

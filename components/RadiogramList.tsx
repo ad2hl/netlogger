@@ -12,6 +12,7 @@ interface RadiogramListProps {
   dispositionMethods?: string[];
   receivedMethods?: string[];
   userProfile?: UserProfile;
+  onAssignNumber?: () => Promise<string>;
 }
 
 export default function RadiogramList({
@@ -22,6 +23,7 @@ export default function RadiogramList({
   dispositionMethods,
   receivedMethods,
   userProfile,
+  onAssignNumber,
 }: RadiogramListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRadiogram, setEditingRadiogram] = useState<Radiogram | null>(null);
@@ -84,6 +86,7 @@ export default function RadiogramList({
         dispositionMethods={dispositionMethods}
         receivedMethods={receivedMethods}
         userProfile={userProfile}
+        onAssignNumber={onAssignNumber}
       />
     </div>
   );
