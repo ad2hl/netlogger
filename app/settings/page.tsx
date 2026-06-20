@@ -32,6 +32,7 @@ export default function SettingsPage() {
     receivingStationName: '',
     qrzUsername: '',
     qrzPassword: '',
+    nextMessageNumber: 1,
   });
   const [dispositionMethods, setDispositionMethods] = useState<string[]>(DEFAULT_DISPOSITION_METHODS);
   const [newMethod, setNewMethod] = useState('');
@@ -72,6 +73,7 @@ export default function SettingsPage() {
         receivingStationName: profile.receivingStationName || '',
         qrzUsername: profile.qrzUsername || '',
         qrzPassword: '',
+        nextMessageNumber: profile.nextMessageNumber ?? 1,
       });
       setDispositionMethods(profile.dispositionMethods ?? DEFAULT_DISPOSITION_METHODS);
       setReceivedMethods(profile.receivedMethods ?? DEFAULT_RECEIVED_METHODS);
@@ -372,6 +374,26 @@ export default function SettingsPage() {
                   placeholder={hasQrzCredentials ? 'Password saved (leave blank to keep)' : 'Your QRZ password'}
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-1">Message Numbering</h2>
+            <p className="text-sm text-slate-600 mb-4">
+              The next number to assign when you click &ldquo;Assign Next&rdquo; in a radiogram form.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Next Message Number
+              </label>
+              <input
+                type="number"
+                name="nextMessageNumber"
+                value={formData.nextMessageNumber ?? 1}
+                min={1}
+                onChange={(e) => setFormData(prev => ({ ...prev, nextMessageNumber: Math.max(1, parseInt(e.target.value, 10) || 1) }))}
+                className="w-32 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
             </div>
           </div>
 

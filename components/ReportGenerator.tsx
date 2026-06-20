@@ -10,6 +10,7 @@ interface ReportGeneratorProps {
   stations: Map<string, Station>;
   profile: UserProfile | null;
   onSaveReport?: (messageNumber?: string) => Promise<boolean | undefined>;
+  onAssignNumber?: () => Promise<string>;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -27,13 +28,23 @@ function ReadOnlyField({ label, value, className }: { label: string; value: stri
   );
 }
 
-function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange }: {
+function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange, onAssignNumber }: {
   radiogram: RadiogramResult;
   messageNumber: string;
   onMessageNumberChange: (value: string) => void;
+  onAssignNumber?: () => Promise<string>;
 }) {
   const { parts } = radiogram;
   const numLines = Math.ceil(parts.bodyWords.length / WORDS_PER_LINE);
+
+  const assignBtnDisabled = !onAssignNumber ||
+    (messageNumber.trim() !== '' && messageNumber.toUpperCase() !== 'XXX');
+
+  const handleAssignNumber = async () => {
+    if (!onAssignNumber) return;
+    const num = await onAssignNumber();
+    if (num) onMessageNumberChange(num);
+  };
 
   return (
     <div className="space-y-3">
@@ -50,9 +61,19 @@ function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange }:
               className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
             />
           </div>
+          <div className="col-span-2 flex flex-col justify-end">
+            <button
+              type="button"
+              onClick={handleAssignNumber}
+              disabled={assignBtnDisabled}
+              className="w-full px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300 rounded hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Assign Next
+            </button>
+          </div>
           <ReadOnlyField label="Precedence" value={parts.precedence} className="col-span-2" />
           <div className="col-span-2" /> {/* HX - empty for net reports */}
-          <ReadOnlyField label="Station of Origin" value={parts.stationOfOrigin} className="col-span-3" />
+          <ReadOnlyField label="Station of Origin" value={parts.stationOfOrigin} className="col-span-2" />
           <ReadOnlyField label="Check" value={parts.check} className="col-span-2" />
         </div>
         <div className="grid grid-cols-12 gap-3 mt-2">
@@ -114,6 +135,7 @@ export default function ReportGenerator({
   stations,
   profile,
   onSaveReport,
+  onAssignNumber,
   isOpen,
   onClose,
 }: ReportGeneratorProps) {
@@ -209,6 +231,7 @@ export default function ReportGenerator({
           radiogram={radiogram}
           messageNumber={messageNumber}
           onMessageNumberChange={setMessageNumber}
+          onAssignNumber={onAssignNumber}
         />
       </>
     );

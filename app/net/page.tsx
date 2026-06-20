@@ -25,6 +25,7 @@ import {
   updateRadiogram,
   deleteRadiogram,
   getRadiogramsBySession,
+  updateUserProfile,
 } from '@/lib/firestore';
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
@@ -49,7 +50,7 @@ export default function NetPageWrapper() {
 }
 
 function NetPage() {
-  const { user, profile, loading, emailVerified } = useAuth();
+  const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionIdParam = searchParams.get('session');
@@ -544,6 +545,15 @@ function NetPage() {
     }
   };
 
+  const handleAssignMessageNumber = async (): Promise<string> => {
+    const nextNum = profile?.nextMessageNumber ?? 1;
+    if (user) {
+      await updateUserProfile(user.uid, { nextMessageNumber: nextNum + 1 });
+      await refreshProfile();
+    }
+    return String(nextNum);
+  };
+
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
     if (!user || !session?.id) return;
 
@@ -848,6 +858,7 @@ function NetPage() {
                 dispositionMethods={profile?.dispositionMethods}
                 receivedMethods={profile?.receivedMethods}
                 userProfile={profile ?? undefined}
+                onAssignNumber={handleAssignMessageNumber}
               />
             </div>
           )}
@@ -859,6 +870,7 @@ function NetPage() {
         stations={stations}
         profile={profile}
         onSaveReport={handleSaveReport}
+        onAssignNumber={handleAssignMessageNumber}
         isOpen={showReport}
         onClose={() => setShowReport(false)}
       />

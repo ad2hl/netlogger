@@ -12,6 +12,7 @@ import {
   updateRadiogram,
   deleteRadiogram,
   updateSession,
+  updateUserProfile,
 } from '@/lib/firestore';
 import { NetSession, Radiogram, NetReport } from '@/types';
 import { Timestamp, deleteField } from 'firebase/firestore';
@@ -107,7 +108,7 @@ function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramL
 }
 
 export default function RadiogramsPage() {
-  const { user, profile, loading, emailVerified } = useAuth();
+  const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
   const router = useRouter();
   const [radiograms, setRadiograms] = useState<Radiogram[]>([]);
   const [sessions, setSessions] = useState<NetSession[]>([]);
@@ -228,6 +229,15 @@ export default function RadiogramsPage() {
     }
 
     setDeleteTarget(null);
+  };
+
+  const handleAssignMessageNumber = async (): Promise<string> => {
+    const nextNum = profile?.nextMessageNumber ?? 1;
+    if (user) {
+      await updateUserProfile(user.uid, { nextMessageNumber: nextNum + 1 });
+      await refreshProfile();
+    }
+    return String(nextNum);
   };
 
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
@@ -405,6 +415,7 @@ export default function RadiogramsPage() {
         dispositionMethods={profile?.dispositionMethods}
         receivedMethods={profile?.receivedMethods}
         userProfile={profile ?? undefined}
+        onAssignNumber={handleAssignMessageNumber}
       />
 
       {deleteTarget && (

@@ -25,6 +25,7 @@ export interface UserProfile {
   dispositionMethods?: string[];
   receivedMethods?: string[];
   customTags?: CustomTag[];
+  nextMessageNumber?: number;
 }
 
 export interface Station {
