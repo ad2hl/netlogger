@@ -121,6 +121,15 @@ function NetPage() {
       const updatedSession = { ...session, ...updates };
       setSession(updatedSession);
 
+      // When netName changes, propagate to all session radiograms' denormalized sessionNetName
+      if (updates.netName && updates.netName !== session.netName) {
+        const newNetName = updates.netName;
+        await Promise.all(
+          radiograms.map((r) => updateRadiogram(user.uid, r.id, { sessionNetName: newNetName }))
+        );
+        setRadiograms((prev) => prev.map((r) => ({ ...r, sessionNetName: newNetName })));
+      }
+
       // Auto-save report when net ends
       if (updates.endTime && !session.endTime && profile) {
         handleSaveReport(undefined, updatedSession);
