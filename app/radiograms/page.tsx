@@ -37,14 +37,18 @@ interface RadiogramListItem {
 
 type SortColumn = 'date' | 'netName' | 'type' | 'number' | 'stationOfOrigin' | 'addressee' | 'disposition';
 
+function formatDisplayDate(date: Date): string {
+  return date.toLocaleDateString() + ' ' +
+    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramListItem[] {
   const items: RadiogramListItem[] = [];
 
   // User-created radiograms from the independent collection
   for (const radiogram of radiograms) {
     const itemDate = (radiogram.createdAt ?? radiogram.savedAt)?.toDate() ?? new Date();
-    const displayDate = itemDate.toLocaleDateString() + ' ' +
-      itemDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const displayDate = formatDisplayDate(itemDate);
 
     items.push({
       type: 'Radiogram',
@@ -67,8 +71,7 @@ function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramL
       const reportDate = report.savedAt
         ? report.savedAt.toDate()
         : report.startDateTime.toDate();
-      const displayDate = reportDate.toLocaleDateString() + ' ' +
-        reportDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const displayDate = formatDisplayDate(reportDate);
 
       let number: string;
       let stationOfOrigin: string;

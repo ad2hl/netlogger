@@ -7,10 +7,11 @@ import { useAuth } from '@/components/AuthProvider';
 import { changePassword } from '@/lib/auth';
 import { updateUserProfile } from '@/lib/firestore';
 
+import { UserProfile, CustomTag, SPECIAL_TAGS, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
+
 const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
 
 const FIXED_TAG_ACRONYMS = new Set(Object.keys(SPECIAL_TAGS));
-import { UserProfile, CustomTag, SPECIAL_TAGS, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
 import { apiFetch } from '@/lib/api-fetch';
@@ -134,6 +135,33 @@ export default function SettingsPage() {
   };
 
   const isPasswordUser = user?.providerData.some((p) => p.providerId === 'password') ?? false;
+
+  const handleAddDispositionMethod = () => {
+    const trimmed = newMethod.trim();
+    if (trimmed && !dispositionMethods.includes(trimmed)) {
+      setDispositionMethods([...dispositionMethods, trimmed]);
+      setNewMethod('');
+    }
+  };
+
+  const handleAddReceivedMethod = () => {
+    const trimmed = newReceivedMethod.trim();
+    if (trimmed && !receivedMethods.includes(trimmed)) {
+      setReceivedMethods([...receivedMethods, trimmed]);
+      setNewReceivedMethod('');
+    }
+  };
+
+  const handleAddCustomTag = () => {
+    const acronym = newTagAcronym.trim().toUpperCase();
+    const label = newTagLabel.trim();
+    if (acronym && label && !FIXED_TAG_ACRONYMS.has(acronym) && !customTags.some(t => t.acronym === acronym)) {
+      setCustomTags([...customTags, { acronym, label, inReport: newTagInReport }]);
+      setNewTagAcronym('');
+      setNewTagLabel('');
+      setNewTagInReport(true);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -432,28 +460,13 @@ export default function SettingsPage() {
                 type="text"
                 value={newMethod}
                 onChange={(e) => setNewMethod(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const trimmed = newMethod.trim();
-                    if (trimmed && !dispositionMethods.includes(trimmed)) {
-                      setDispositionMethods([...dispositionMethods, trimmed]);
-                      setNewMethod('');
-                    }
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDispositionMethod(); } }}
                 className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                 placeholder="New method name"
               />
               <button
                 type="button"
-                onClick={() => {
-                  const trimmed = newMethod.trim();
-                  if (trimmed && !dispositionMethods.includes(trimmed)) {
-                    setDispositionMethods([...dispositionMethods, trimmed]);
-                    setNewMethod('');
-                  }
-                }}
+                onClick={handleAddDispositionMethod}
                 className="bg-slate-200 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-300 text-sm"
               >
                 Add
@@ -496,28 +509,13 @@ export default function SettingsPage() {
                 type="text"
                 value={newReceivedMethod}
                 onChange={(e) => setNewReceivedMethod(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const trimmed = newReceivedMethod.trim();
-                    if (trimmed && !receivedMethods.includes(trimmed)) {
-                      setReceivedMethods([...receivedMethods, trimmed]);
-                      setNewReceivedMethod('');
-                    }
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddReceivedMethod(); } }}
                 className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                 placeholder="New method name"
               />
               <button
                 type="button"
-                onClick={() => {
-                  const trimmed = newReceivedMethod.trim();
-                  if (trimmed && !receivedMethods.includes(trimmed)) {
-                    setReceivedMethods([...receivedMethods, trimmed]);
-                    setNewReceivedMethod('');
-                  }
-                }}
+                onClick={handleAddReceivedMethod}
                 className="bg-slate-200 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-300 text-sm"
               >
                 Add
@@ -594,19 +592,7 @@ export default function SettingsPage() {
                 type="text"
                 value={newTagLabel}
                 onChange={(e) => setNewTagLabel(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const acronym = newTagAcronym.trim().toUpperCase();
-                    const label = newTagLabel.trim();
-                    if (acronym && label && !FIXED_TAG_ACRONYMS.has(acronym) && !customTags.some(t => t.acronym === acronym)) {
-                      setCustomTags([...customTags, { acronym, label, inReport: newTagInReport }]);
-                      setNewTagAcronym('');
-                      setNewTagLabel('');
-                      setNewTagInReport(true);
-                    }
-                  }
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomTag(); } }}
                 className="flex-1 min-w-40 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
                 placeholder="New tag label"
               />
@@ -621,16 +607,7 @@ export default function SettingsPage() {
               </label>
               <button
                 type="button"
-                onClick={() => {
-                  const acronym = newTagAcronym.trim().toUpperCase();
-                  const label = newTagLabel.trim();
-                  if (acronym && label && !FIXED_TAG_ACRONYMS.has(acronym) && !customTags.some(t => t.acronym === acronym)) {
-                    setCustomTags([...customTags, { acronym, label, inReport: newTagInReport }]);
-                    setNewTagAcronym('');
-                    setNewTagLabel('');
-                    setNewTagInReport(true);
-                  }
-                }}
+                onClick={handleAddCustomTag}
                 disabled={FIXED_TAG_ACRONYMS.has(newTagAcronym.trim())}
                 className="bg-slate-200 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-300 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >

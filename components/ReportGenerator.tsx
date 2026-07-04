@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { NetSession, Radiogram, Station, UserProfile } from '@/types';
+import { NetSession, Radiogram, UserProfile } from '@/types';
 import { generateRadiogram, RadiogramResult } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
 
 interface ReportGeneratorProps {
   session: NetSession | null;
-  stations: Map<string, Station>;
   profile: UserProfile | null;
   onSaveReport?: (messageNumber?: string) => Promise<boolean | undefined>;
   onAssignNumber?: () => Promise<string>;
@@ -132,7 +131,6 @@ function FormattedRadiogram({ radiogram, messageNumber, onMessageNumberChange, o
 
 export default function ReportGenerator({
   session,
-  stations,
   profile,
   onSaveReport,
   onAssignNumber,
