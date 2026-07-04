@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { NetSession, Radiogram, UserProfile } from '@/types';
 import { generateRadiogram, RadiogramResult } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
+import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
 
 interface ReportGeneratorProps {
   session: NetSession | null;
@@ -176,9 +177,9 @@ export default function ReportGenerator({
     setSaving(false);
   };
 
-  const handlePrint = async () => {
-    if (!radiogram) return;
-    const r: Radiogram = {
+  const buildReportRadiogram = (): Radiogram | null => {
+    if (!radiogram) return null;
+    return {
       id: '',
       number: radiogram.parts.number,
       precedence: radiogram.parts.precedence,
@@ -194,7 +195,16 @@ export default function ReportGenerator({
       signature: radiogram.parts.signature,
       signatureOpNote: '',
     };
-    await printRadiogram(r, profile ?? undefined);
+  };
+
+  const handlePrint = async () => {
+    const r = buildReportRadiogram();
+    if (r) await printRadiogram(r, profile ?? undefined);
+  };
+
+  const handlePrintPlain = async () => {
+    const r = buildReportRadiogram();
+    if (r) await printRadiogramReadable(r, profile ?? undefined);
   };
 
   useEffect(() => {
@@ -256,6 +266,14 @@ export default function ReportGenerator({
                 className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
               >
                 Print
+              </button>
+            )}
+            {radiogram && (
+              <button
+                onClick={handlePrintPlain}
+                className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
+              >
+                Plain
               </button>
             )}
             {radiogram && (

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Radiogram, NetReport, UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 import { formatRadiogramAsText } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
+import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
 
 interface DispositionFields {
   dispositionMethod: string;
@@ -361,12 +362,10 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handlePrint = async () => {
-    if (radiogram) {
-      await printRadiogram(radiogram, userProfile);
-      return;
-    }
-    if (!netReport) return;
+  // Build a Radiogram from either the radiogram prop or the netReport.
+  const buildRadiogramForPrint = (): Radiogram | null => {
+    if (radiogram) return radiogram;
+    if (!netReport) return null;
     const parsed = netReport.parts
       ? {
           number: netReport.parts.number,
@@ -382,7 +381,7 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
           signature: netReport.parts.signature,
         }
       : parseNetReportText(netReport.radiogram);
-    const r: Radiogram = {
+    return {
       id: '',
       number: parsed.number,
       precedence: parsed.precedence,
@@ -398,7 +397,16 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
       signature: parsed.signature,
       signatureOpNote: '',
     };
-    await printRadiogram(r, userProfile);
+  };
+
+  const handlePrint = async () => {
+    const r = buildRadiogramForPrint();
+    if (r) await printRadiogram(r, userProfile);
+  };
+
+  const handlePrintPlain = async () => {
+    const r = buildRadiogramForPrint();
+    if (r) await printRadiogramReadable(r, userProfile);
   };
 
   const title = netReport ? 'Net Report' : 'Radiogram';
@@ -464,6 +472,12 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
               className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
             >
               Print
+            </button>
+            <button
+              onClick={handlePrintPlain}
+              className="bg-cyan-700 text-white py-1 px-3 rounded-md hover:bg-cyan-900 text-sm"
+            >
+              Plain
             </button>
             <button
               onClick={handleCopy}
