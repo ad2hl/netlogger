@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Radiogram, UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
 import { formatRadiogramAsText, parseDtnRadiogram } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
+import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
 
 interface RadiogramFormProps {
   isOpen: boolean;
@@ -271,6 +272,10 @@ export default function RadiogramForm({
 
   const handlePrint = async () => {
     await printRadiogram(buildCurrentRadiogram(), userProfile);
+  };
+
+  const handlePrintPlain = async () => {
+    await printRadiogramReadable(buildCurrentRadiogram(), userProfile);
   };
 
   const isFormEmpty = () =>
@@ -709,6 +714,13 @@ export default function RadiogramForm({
                 className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
               >
                 Print
+              </button>
+              <button
+                type="button"
+                onClick={handlePrintPlain}
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
+              >
+                Plain
               </button>
               <button
                 type="button"
