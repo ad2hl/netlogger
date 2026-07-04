@@ -42,6 +42,12 @@ function filterPhoneChars(value: string): string {
   return value.replace(/[^0-9() +\-]/g, '');
 }
 
+function trimTrailingEmpty(words: string[]): string[] {
+  const result = [...words];
+  while (result.length > 0 && result[result.length - 1] === '') result.pop();
+  return result;
+}
+
 // Fields that allow spaces
 const FIELDS_WITH_SPACES = ['placeOfOrigin', 'timeFiled', 'date', 'address', 'addressOpNote', 'signature', 'signatureOpNote', 'receivedDestination', 'dispositionDestination'];
 
@@ -226,13 +232,9 @@ export default function RadiogramForm({
   };
 
   const doSave = () => {
-    const trimmedWords = [...formData.textWords];
-    while (trimmedWords.length > 0 && trimmedWords[trimmedWords.length - 1] === '') {
-      trimmedWords.pop();
-    }
     const radiogram: Radiogram = {
       ...formData,
-      textWords: trimmedWords,
+      textWords: trimTrailingEmpty(formData.textWords),
       id: existingRadiogram?.id || generateId(),
     };
     onSave(radiogram);
@@ -255,32 +257,20 @@ export default function RadiogramForm({
     }
   };
 
+  const buildCurrentRadiogram = (): Radiogram => ({
+    ...formData,
+    textWords: trimTrailingEmpty(formData.textWords),
+    id: existingRadiogram?.id || '',
+  });
+
   const handleCopy = async () => {
-    const trimmedWords = [...formData.textWords];
-    while (trimmedWords.length > 0 && trimmedWords[trimmedWords.length - 1] === '') {
-      trimmedWords.pop();
-    }
-    const radiogram: Radiogram = {
-      ...formData,
-      textWords: trimmedWords,
-      id: existingRadiogram?.id || '',
-    };
-    await navigator.clipboard.writeText(formatRadiogramAsText(radiogram));
+    await navigator.clipboard.writeText(formatRadiogramAsText(buildCurrentRadiogram()));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handlePrint = async () => {
-    const trimmedWords = [...formData.textWords];
-    while (trimmedWords.length > 0 && trimmedWords[trimmedWords.length - 1] === '') {
-      trimmedWords.pop();
-    }
-    const radiogram: Radiogram = {
-      ...formData,
-      textWords: trimmedWords,
-      id: existingRadiogram?.id || '',
-    };
-    await printRadiogram(radiogram, userProfile);
+    await printRadiogram(buildCurrentRadiogram(), userProfile);
   };
 
   const isFormEmpty = () =>

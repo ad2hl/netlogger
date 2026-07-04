@@ -876,7 +876,6 @@ function NetPage() {
 
       <ReportGenerator
         session={session}
-        stations={stations}
         profile={profile}
         onSaveReport={handleSaveReport}
         onAssignNumber={handleAssignMessageNumber}
