@@ -79,7 +79,7 @@ function section(ctx: Ctx, label: string): void {
   txt(ctx, label, ML, ctx.y, ctx.bf, 8, LGRAY);
   ctx.y += 5;
   hrule(ctx);
-  ctx.y += 9;
+  ctx.y += 14;
 }
 
 // Draw one body line and advance the cursor.
