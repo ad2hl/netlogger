@@ -201,7 +201,7 @@ function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
   section(ctx, 'TO');
   const addrLines = rad.address.split('\n').map(l => l.trim()).filter(Boolean);
   for (const l of addrLines) bodyLine(ctx, l);
-  if (rad.addressPhone) bodyLine(ctx, rad.addressPhone);
+  if (rad.addressPhone) bodyLine(ctx, rad.addressPhone); // legacy field — phone is now an address line
   if (rad.addressOpNote) {
     gap(ctx, 4);
     bodyLine(ctx, `Op Note: ${rad.addressOpNote}`, 11, rf, GRAY);

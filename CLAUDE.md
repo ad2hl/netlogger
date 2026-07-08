@@ -40,7 +40,7 @@ On first read after the schema migration, `getSession`/`getAllSessions`/`getRece
 
 - **firestore.ts**: All database CRUD operations for stations, sessions, check-ins, and radiograms
 - **radiogram.ts**: Complex callsign compression algorithm for ARRL format reports. Orders output as NC → ANC → Liaisons → Regular stations. Compresses callsigns by prefix (e.g., W1AW, W1XYZ → W1AW, XYZ)
-- **radiogramPrint.ts**: Fills the official ARRL radiogram PDF form (`public/radiogram-form.pdf`) with radiogram data using pdf-lib and opens the result in a new browser tab. Font sizes: 11pt for message words, 10pt for address/phone, 9pt for preamble/signature/disposition. Simple 1:1 address line mapping (line 1 → Name/Call, line 2 → Address, line 3 → City/State/ZIP).
+- **radiogramPrint.ts**: Fills the official ARRL radiogram PDF form (`public/radiogram-form.pdf`) with radiogram data using pdf-lib and opens the result in a new browser tab. Font sizes: 11pt for message words, 10pt for address, 9pt for preamble/signature/disposition. Simple 1:1 address line mapping (line 1 → Name/Call, line 2 → Address, line 3 → City/State/ZIP, line 4 → unlabeled extra line, typically phone or email; the underlying PDF field is still named "Recipient Phone" but the TELEPHONE NUMBER legend was removed from the form).
 - **auth.ts**: Firebase authentication functions
 - **auth-api.ts**: Server-side Firebase ID token verification for API routes (`verifyAuth`)
 - **appcheck-api.ts**: Server-side Firebase App Check token verification (`verifyAppCheck`)
@@ -89,7 +89,7 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 - **components/CheckInList.tsx**: Scrollable list of checked-in stations; auto-scrolls to bottom on new check-in
 - **components/Checklist.tsx**: Traffic and announcements checklist
 - **components/RadiogramList.tsx**: List of radiograms with inline RadiogramForm for creating and editing; passes `userProfile` through for print support
-- **components/RadiogramForm.tsx**: ARRL standard radiogram entry form. Includes: `addressPhone` field beneath the addressee textarea; green ✓ / red ✗ indicator next to the Check field (compares entered value against actual word count); Print button that calls `printRadiogram()`; `userProfile` prop for RECEIVED AT data
+- **components/RadiogramForm.tsx**: ARRL standard radiogram entry form. Includes: green ✓ / red ✗ indicator next to the Check field (compares entered value against actual word count); Print button that calls `printRadiogram()`; `userProfile` prop for RECEIVED AT data. There is no separate phone field — a phone number or email is entered as an additional Addressee line (issue #258); legacy `addressPhone` values are folded into the address when a radiogram is opened for editing
 - **components/ReadOnlyRadiogram.tsx**: Read-only radiogram viewer with Print button
 - **components/StationCard.tsx**: Individual station row with inline editing for callsign, name, location, and note
 - **components/AuthProvider.tsx**: Firebase auth context with Google profile photo caching
@@ -148,7 +148,7 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 ## Key Types (types/index.ts)
 
 - **`Station`**: includes `grantDate?: string | null` (ISO date from callook.info; `null` = checked but no date found; `undefined` = not yet checked). Used by `isNewHam()` to flag stations licensed within the past month.
-- **`Radiogram`**: includes `addressPhone?: string` (addressee phone number), `sessionId?: string` (set when created during a session; absent for standalone radiograms), and `sessionNetName?: string` (denormalized net name for display without a session join)
+- **`Radiogram`**: includes `addressPhone?: string` (legacy — phone is now an address line; kept so old documents still display/print), `sessionId?: string` (set when created during a session; absent for standalone radiograms), and `sessionNetName?: string` (denormalized net name for display without a session join)
 - **`NetSession`**: uses `radiogramIds: string[]` (list of associated radiogram document IDs) instead of an embedded `radiograms: Radiogram[]` array
 - **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures)
 

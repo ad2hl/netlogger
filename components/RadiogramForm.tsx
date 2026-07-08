@@ -36,11 +36,6 @@ function filterRadiogramCharsWithSpacesAndNewlines(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9/ \n]/g, '');
 }
 
-// Allow phone number characters: digits, spaces, +, -, (, )
-function filterPhoneChars(value: string): string {
-  return value.replace(/[^0-9() +\-]/g, '');
-}
-
 function trimTrailingEmpty(words: string[]): string[] {
   const result = [...words];
   while (result.length > 0 && result[result.length - 1] === '') result.pop();
@@ -155,6 +150,12 @@ export default function RadiogramForm({
       setFormData({
         ...rest,
         textWords,
+        // Legacy radiograms stored the phone separately; fold it into the address
+        // as an additional line (the separate field was removed — issue #258)
+        address: rest.addressPhone
+          ? [rest.address, rest.addressPhone].filter(Boolean).join('\n')
+          : rest.address,
+        addressPhone: '',
         isBook: rest.isBook ?? false,
         bookEntries: rest.bookEntries ?? [],
         bookVariable: rest.bookVariable ?? '',
@@ -176,13 +177,10 @@ export default function RadiogramForm({
     const el = e.target;
     const cursorPos = el.selectionStart;
     const isTextarea = e.target.tagName === 'TEXTAREA';
-    const isPhone = name === 'addressPhone';
     const allowsSpaces = FIELDS_WITH_SPACES.includes(name);
 
     let filtered: string;
-    if (isPhone) {
-      filtered = filterPhoneChars(value);
-    } else if (isTextarea && allowsSpaces) {
+    if (isTextarea && allowsSpaces) {
       filtered = filterRadiogramCharsWithSpacesAndNewlines(value);
     } else if (allowsSpaces) {
       filtered = filterRadiogramCharsWithSpaces(value);
@@ -194,9 +192,7 @@ export default function RadiogramForm({
     let adjustedCursor: number | null = null;
     if (cursorPos !== null) {
       const beforeCursor = value.slice(0, cursorPos);
-      if (isPhone) {
-        adjustedCursor = filterPhoneChars(beforeCursor).length;
-      } else if (isTextarea && allowsSpaces) {
+      if (isTextarea && allowsSpaces) {
         adjustedCursor = filterRadiogramCharsWithSpacesAndNewlines(beforeCursor).length;
       } else if (allowsSpaces) {
         adjustedCursor = filterRadiogramCharsWithSpaces(beforeCursor).length;
@@ -764,29 +760,16 @@ export default function RadiogramForm({
           {!formData.isBook && (
           <div className="border-b pb-3">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    rows={5}
-                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">Phone</label>
-                  <input
-                    type="text"
-                    name="addressPhone"
-                    value={formData.addressPhone || ''}
-                    onChange={handleChange}
-                    className="w-full px-2 py-1 border border-slate-300 rounded text-sm"
-                    placeholder="e.g., 555-867-5309"
-                  />
-                </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-1">Addressee</h3>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  rows={6}
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+                  required
+                />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-1">Op Note</h3>
