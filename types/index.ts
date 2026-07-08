@@ -136,7 +136,7 @@ export interface Radiogram {
   date: string;
   // Address
   address: string;
-  addressPhone?: string;
+  addressPhone?: string;    // legacy — phone is now an address line; kept so old documents still display/print
   addressOpNote: string;
   // Text (array of words, displayed 5 per line)
   textWords: string[];

@@ -225,7 +225,9 @@ export function formatRadiogramAsText(radiogram: Radiogram): string {
 
   const bodyFormatted = formatWordsPerLine(radiogram.textWords);
 
-  const addressLine = radiogram.address + (radiogram.addressOpNote ? ` (${radiogram.addressOpNote})` : '');
+  // addressPhone is legacy — phone is now an address line, but old documents may still have it
+  const address = [radiogram.address, radiogram.addressPhone].filter(Boolean).join('\n');
+  const addressLine = address + (radiogram.addressOpNote ? ` (${radiogram.addressOpNote})` : '');
   const signatureLine = radiogram.signature + (radiogram.signatureOpNote ? ` (${radiogram.signatureOpNote})` : '');
 
   return [
@@ -368,15 +370,12 @@ function parsePreambleLine(line: string): {
 
 function parseAddressBlock(lines: string[]): {
   address: string;
-  addressPhone: string;
   addressOpNote: string;
 } {
-  // All lines go into address verbatim. Nothing is separated into addressPhone or
-  // addressOpNote, because those fields are not printed on the ARRL form.
-  // The print function handles phone/email detection from within the address lines.
+  // All lines go into address verbatim (phone/email are just address lines).
+  // Nothing is separated into addressOpNote.
   return {
     address: lines.join('\n').toUpperCase(),
-    addressPhone: '',
     addressOpNote: '',
   };
 }
@@ -393,7 +392,7 @@ export function parseDtnRadiogram(raw: string): Partial<Omit<import('@/types').R
 
   const [bt1, bt2] = btIndices;
   const preamble = parsePreambleLine(lines[0]);
-  const { address, addressPhone, addressOpNote } = parseAddressBlock(lines.slice(1, bt1));
+  const { address, addressOpNote } = parseAddressBlock(lines.slice(1, bt1));
   const textWords = lines.slice(bt1 + 1, bt2)
     .flatMap(l => l.toUpperCase().split(/\s+/).filter(Boolean));
   const signature = lines.slice(bt2 + 1).filter(l => l.length > 0).join('\n').toUpperCase().trim();
@@ -401,7 +400,6 @@ export function parseDtnRadiogram(raw: string): Partial<Omit<import('@/types').R
   return {
     ...preamble,
     address,
-    addressPhone,
     addressOpNote,
     textWords,
     signature,

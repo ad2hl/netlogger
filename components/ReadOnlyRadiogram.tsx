@@ -422,7 +422,8 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
       placeOfOrigin: radiogram.placeOfOrigin,
       timeFiled: radiogram.timeFiled,
       date: radiogram.date,
-      addressee: radiogram.address,
+      // Legacy radiograms stored the phone in a separate field; show it as an address line
+      addressee: [radiogram.address, radiogram.addressPhone].filter(Boolean).join('\n'),
       addressOpNote: radiogram.addressOpNote,
       bodyWords: radiogram.textWords,
       signature: radiogram.signature,
