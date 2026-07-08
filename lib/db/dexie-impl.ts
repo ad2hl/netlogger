@@ -546,6 +546,35 @@ class DexieDB implements NetLoggerDB {
     }
   }
 
+  async splitBookRadiogram(_uid: string, bookId: string, newRadiograms: Radiogram[]): Promise<boolean> {
+    try {
+      await getDb().transaction('rw', [getDb().radiograms, getDb().sessions], async () => {
+        const book = await getDb().radiograms.get(bookId);
+        if (!book) throw new Error('Book radiogram not found');
+        const now = new Date().toISOString();
+        const stored: StoredRadiogram[] = newRadiograms.map((r) => ({
+          ...r,
+          createdAt: now,
+          savedAt: now,
+        }));
+        await getDb().radiograms.bulkPut(stored);
+        await getDb().radiograms.delete(bookId);
+        if (book.sessionId) {
+          await getDb().sessions.where('id').equals(book.sessionId).modify((s) => {
+            s.radiogramIds = [
+              ...(s.radiogramIds || []).filter((id) => id !== bookId),
+              ...newRadiograms.map((r) => r.id),
+            ];
+          });
+        }
+      });
+      return true;
+    } catch (error) {
+      console.error('Error splitting book radiogram:', error);
+      return false;
+    }
+  }
+
   async getAllRadiograms(_uid: string): Promise<Radiogram[]> {
     try {
       const stored = await getDb().radiograms.orderBy('savedAt').reverse().toArray();

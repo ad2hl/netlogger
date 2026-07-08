@@ -33,6 +33,7 @@ export const updateRadiogram = (uid: string, radiogramId: string, updates: Parti
 export const deleteRadiogram = (uid: string, radiogramId: string) => db.deleteRadiogram(uid, radiogramId);
 export const getAllRadiograms = (uid: string) => db.getAllRadiograms(uid);
 export const getRadiogramsBySession = (uid: string, sessionId: string) => db.getRadiogramsBySession(uid, sessionId);
+export const splitBookRadiogram = (uid: string, bookId: string, newRadiograms: Radiogram[]) => db.splitBookRadiogram(uid, bookId, newRadiograms);
 
 // Profile functions (also used in settings page and auth provider)
 export const getUserProfile = (uid: string) => db.getUserProfile(uid);

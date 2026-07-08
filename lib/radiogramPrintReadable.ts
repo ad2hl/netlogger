@@ -7,6 +7,7 @@
 
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import { Radiogram, UserProfile } from '@/types';
+import { isBookEntryEmpty } from '@/lib/radiogram';
 
 // ── Page geometry (72 pt = 1 inch) ──────────────────────────────────────────
 const PW = 612;  // 8.5"
@@ -102,17 +103,19 @@ function gap(ctx: Ctx, h = 14): void {
 
 // ── Content renderer ─────────────────────────────────────────────────────────
 
-function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
-  const { rf, bf } = ctx;
-
-  // Title
+function renderTitle(ctx: Ctx, title: string): void {
   ensure(ctx, 36);
-  txt(ctx, 'ARRL RADIOGRAM', ML, ctx.y, bf, 15, DARK);
+  txt(ctx, title, ML, ctx.y, ctx.bf, 15, DARK);
   ctx.y += 7;
   hrule(ctx, 2);
   ctx.y += 16;
+}
 
-  // PREAMBLE — reserve space for label + two rows before starting
+// nrValue: the message number, or "Book of N" for a book
+function renderPreamble(ctx: Ctx, rad: Radiogram, nrValue: string): void {
+  const { rf, bf } = ctx;
+
+  // Reserve space for label + two rows before starting
   ensure(ctx, 90);
   section(ctx, 'PREAMBLE');
 
@@ -120,7 +123,7 @@ function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
   const r1lbl = ctx.y;
   const r1val = ctx.y + 13;
   const prow1: Array<{ lbl: string; val: string; x: number }> = [
-    { lbl: 'Nr',                val: rad.number,               x: ML },
+    { lbl: 'Nr',                val: nrValue,                  x: ML },
     { lbl: 'Prec',              val: rad.precedence,            x: ML + 72 },
     { lbl: 'HX',                val: rad.handlingInstructions,  x: ML + 140 },
     { lbl: 'Station of Origin', val: rad.stationOfOrigin,       x: ML + 215 },
@@ -146,21 +149,13 @@ function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
   }
   ctx.y = r2val + 16;
   gap(ctx);
+}
 
-  // TO
-  section(ctx, 'TO');
-  const addrLines = rad.address.split('\n').map(l => l.trim()).filter(Boolean);
-  for (const l of addrLines) bodyLine(ctx, l);
-  if (rad.addressPhone) bodyLine(ctx, rad.addressPhone);
-  if (rad.addressOpNote) {
-    gap(ctx, 4);
-    bodyLine(ctx, `Op Note: ${rad.addressOpNote}`, 11, rf, GRAY);
-  }
-  gap(ctx);
-
-  // TEXT — words numbered 5 per line with a small grey number in the gutter
+// TEXT — words numbered 5 per line with a small grey number in the gutter
+function renderTextSection(ctx: Ctx, rad: Radiogram): void {
+  const { rf } = ctx;
   const words = rad.textWords.filter(w => w.length > 0);
-  section(ctx, `TEXT — ${words.length} WORD${words.length !== 1 ? 'S' : ''}`);
+  section(ctx, `TEXT — ${words.length} WORD GROUP${words.length !== 1 ? 'S' : ''}`);
 
   if (words.length === 0) {
     bodyLine(ctx, '(no text)', 12, rf, LGRAY);
@@ -179,8 +174,10 @@ function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
     }
   }
   gap(ctx);
+}
 
-  // SIGNATURE
+function renderSignatureSection(ctx: Ctx, rad: Radiogram): void {
+  const { rf } = ctx;
   section(ctx, 'SIGNATURE');
   const sigLines = rad.signature.split('\n').map(l => l.trim()).filter(Boolean);
   if (sigLines.length === 0) {
@@ -192,6 +189,81 @@ function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
     gap(ctx, 4);
     bodyLine(ctx, `Op Note: ${rad.signatureOpNote}`, 11, rf, GRAY);
   }
+}
+
+function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
+  const { rf } = ctx;
+
+  renderTitle(ctx, 'ARRL RADIOGRAM');
+  renderPreamble(ctx, rad, rad.number);
+
+  // TO
+  section(ctx, 'TO');
+  const addrLines = rad.address.split('\n').map(l => l.trim()).filter(Boolean);
+  for (const l of addrLines) bodyLine(ctx, l);
+  if (rad.addressPhone) bodyLine(ctx, rad.addressPhone);
+  if (rad.addressOpNote) {
+    gap(ctx, 4);
+    bodyLine(ctx, `Op Note: ${rad.addressOpNote}`, 11, rf, GRAY);
+  }
+  gap(ctx);
+
+  renderTextSection(ctx, rad);
+  renderSignatureSection(ctx, rad);
+  renderRelayAndReceivedAt(ctx, rad, up);
+}
+
+// Booked radiogram: fixed parts once, then each message's variable parts
+function renderBookContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
+  const { rf, bf } = ctx;
+
+  renderTitle(ctx, `ARRL RADIOGRAM — BOOK OF ${rad.number || '?'}`);
+  renderPreamble(ctx, rad, `Book of ${rad.number || '?'}`);
+  renderTextSection(ctx, rad);
+  renderSignatureSection(ctx, rad);
+  gap(ctx);
+
+  section(ctx, 'MESSAGES');
+  const entries = (rad.bookEntries ?? []).filter(e => !isBookEntryEmpty(e));
+  if (entries.length === 0) {
+    bodyLine(ctx, '(no messages)', 12, rf, LGRAY);
+  }
+  for (const entry of entries) {
+    // Nr — same label/value style as the preamble fields
+    ensure(ctx, 34);
+    txt(ctx, 'Nr', ML, ctx.y, bf, 7.5, LGRAY);
+    txt(ctx, entry.number || '—', ML, ctx.y + 13, rf, 13, DARK);
+    ctx.y += 29;
+
+    // TO — same label as the single-radiogram address section
+    ensure(ctx, 20);
+    txt(ctx, 'TO', ML, ctx.y, bf, 8, LGRAY);
+    ctx.y += 14;
+    const addrLines = entry.address.split('\n').map(l => l.trim()).filter(Boolean);
+    for (const l of addrLines) bodyLine(ctx, l);
+    if (entry.addressOpNote) {
+      gap(ctx, 4);
+      bodyLine(ctx, `Op Note: ${entry.addressOpNote}`, 11, rf, GRAY);
+    }
+    if (entry.otherVariables) {
+      gap(ctx, 4);
+      for (const l of entry.otherVariables.split('\n').filter(Boolean)) {
+        bodyLine(ctx, l, 11, rf, GRAY);
+      }
+    }
+    // Rule after each message; the last one sets END BOOK apart
+    gap(ctx, 2);
+    ensure(ctx, 10);
+    hrule(ctx);
+    gap(ctx, 12);
+  }
+  bodyLine(ctx, 'END BOOK', 13, rf);
+
+  renderRelayAndReceivedAt(ctx, rad, up);
+}
+
+function renderRelayAndReceivedAt(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
+  const { rf, bf } = ctx;
 
   // RECEIVED / SENT — relay chain
   const recParts: string[] = [];
@@ -256,7 +328,11 @@ export async function printRadiogramReadable(
 
   const ctx: Ctx = { doc, pages: [], rf, bf, y: MT };
   newPage(ctx);
-  renderContent(ctx, radiogram, userProfile);
+  if (radiogram.isBook) {
+    renderBookContent(ctx, radiogram, userProfile);
+  } else {
+    renderContent(ctx, radiogram, userProfile);
+  }
 
   // Add "Page X of Y" in the top-right margin when the radiogram spans
   // multiple pages.

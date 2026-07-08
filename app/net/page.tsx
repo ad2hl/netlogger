@@ -25,6 +25,7 @@ import {
   updateRadiogram,
   deleteRadiogram,
   getRadiogramsBySession,
+  splitBookRadiogram,
   updateUserProfile,
 } from '@/lib/firestore';
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
@@ -563,6 +564,31 @@ function NetPage() {
     return String(nextNum);
   };
 
+  const handleAssignMessageNumbers = async (count: number): Promise<string[]> => {
+    const nextNum = profile?.nextMessageNumber ?? 1;
+    if (user) {
+      await updateUserProfile(user.uid, { nextMessageNumber: nextNum + count });
+      await refreshProfile();
+    }
+    return Array.from({ length: count }, (_, i) => String(nextNum + i));
+  };
+
+  const handleSplitRadiogram = async (book: Radiogram, splitRadiograms: Radiogram[]) => {
+    if (!user || !session?.id) return;
+
+    const withMeta = splitRadiograms.map((r) => ({
+      ...r,
+      savedAt: Timestamp.now(),
+      sessionNetName: session.netName,
+      sessionId: session.id,
+    }));
+
+    const success = await splitBookRadiogram(user.uid, book.id, withMeta);
+    if (success) {
+      setRadiograms((prev) => [...prev.filter((r) => r.id !== book.id), ...withMeta]);
+    }
+  };
+
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
     if (!user || !session?.id) return;
 
@@ -868,6 +894,8 @@ function NetPage() {
                 receivedMethods={profile?.receivedMethods}
                 userProfile={profile ?? undefined}
                 onAssignNumber={handleAssignMessageNumber}
+                onAssignNumbers={handleAssignMessageNumbers}
+                onSplit={handleSplitRadiogram}
               />
             </div>
           )}

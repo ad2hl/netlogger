@@ -11,6 +11,7 @@ import {
   addRadiogram,
   updateRadiogram,
   deleteRadiogram,
+  splitBookRadiogram,
   updateSession,
   updateUserProfile,
 } from '@/lib/firestore';
@@ -22,7 +23,7 @@ import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
 
 interface RadiogramListItem {
-  type: 'Radiogram' | 'Net Report';
+  type: 'Radiogram' | 'Book' | 'Net Report';
   sessionId: string;
   sortDate: Date;
   displayDate: string;
@@ -51,14 +52,14 @@ function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramL
     const displayDate = formatDisplayDate(itemDate);
 
     items.push({
-      type: 'Radiogram',
+      type: radiogram.isBook ? 'Book' : 'Radiogram',
       sessionId: radiogram.sessionId || '',
       sortDate: itemDate,
       displayDate,
       netName: radiogram.sessionNetName ?? '',
-      number: radiogram.number,
+      number: radiogram.isBook ? `Book of ${radiogram.number}` : radiogram.number,
       stationOfOrigin: radiogram.stationOfOrigin,
-      addresseePreview: (radiogram.address || '').split('\n')[0],
+      addresseePreview: ((radiogram.isBook ? radiogram.bookEntries?.[0]?.address : radiogram.address) || '').split('\n')[0],
       disposition: radiogram.dispositionMethod || '',
       radiogram,
     });
@@ -215,7 +216,7 @@ export default function RadiogramsPage() {
   const handleDeleteItem = async () => {
     if (!user || !deleteTarget) return;
 
-    if (deleteTarget.type === 'Radiogram' && deleteTarget.radiogram) {
+    if (deleteTarget.type !== 'Net Report' && deleteTarget.radiogram) {
       const success = await deleteRadiogram(user.uid, deleteTarget.radiogram.id);
       if (success) {
         setRadiograms((prev) => prev.filter((r) => r.id !== deleteTarget.radiogram!.id));
@@ -241,6 +242,24 @@ export default function RadiogramsPage() {
       await refreshProfile();
     }
     return String(nextNum);
+  };
+
+  const handleAssignMessageNumbers = async (count: number): Promise<string[]> => {
+    const nextNum = profile?.nextMessageNumber ?? 1;
+    if (user) {
+      await updateUserProfile(user.uid, { nextMessageNumber: nextNum + count });
+      await refreshProfile();
+    }
+    return Array.from({ length: count }, (_, i) => String(nextNum + i));
+  };
+
+  const handleSplitRadiogram = async (book: Radiogram, splitRadiograms: Radiogram[]) => {
+    if (!user) return;
+    const withMeta = splitRadiograms.map((r) => ({ ...r, savedAt: Timestamp.now() }));
+    const success = await splitBookRadiogram(user.uid, book.id, withMeta);
+    if (success) {
+      setRadiograms((prev) => [...withMeta, ...prev.filter((r) => r.id !== book.id)]);
+    }
   };
 
   const handleSaveRadiogram = async (radiogram: Radiogram) => {
@@ -360,7 +379,7 @@ export default function RadiogramsPage() {
                     key={i}
                     className="border-b hover:bg-slate-50 cursor-pointer"
                     onClick={() => {
-                      if (item.type === 'Radiogram') {
+                      if (item.type !== 'Net Report') {
                         setEditingRadiogram(item.radiogram ?? null);
                         setIsFormOpen(true);
                       } else {
@@ -419,6 +438,8 @@ export default function RadiogramsPage() {
         receivedMethods={profile?.receivedMethods}
         userProfile={profile ?? undefined}
         onAssignNumber={handleAssignMessageNumber}
+        onAssignNumbers={handleAssignMessageNumbers}
+        onSplit={handleSplitRadiogram}
       />
 
       {deleteTarget && (
@@ -428,7 +449,7 @@ export default function RadiogramsPage() {
               Delete {deleteTarget.type}?
             </h2>
             <p className="text-gray-600 mb-6">
-              This will permanently delete {deleteTarget.type === 'Radiogram' ? 'radiogram' : 'net report'}{' '}
+              This will permanently delete {deleteTarget.type === 'Book' ? '' : deleteTarget.type === 'Radiogram' ? 'radiogram ' : 'net report '}
               <strong>{deleteTarget.number}</strong> from <strong>{deleteTarget.stationOfOrigin}</strong>.
             </p>
             <div className="flex justify-end gap-3">
