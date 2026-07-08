@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Radiogram, UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
-import { formatRadiogramAsText, parseDtnRadiogram } from '@/lib/radiogram';
+import { BookEntry, Radiogram, UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
+import { explodeBook, formatRadiogramAsText, generateRadiogramId, isBookEntryEmpty, parseDtnRadiogram } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
 import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
 
@@ -17,10 +17,8 @@ interface RadiogramFormProps {
   receivedMethods?: string[];
   userProfile?: UserProfile;
   onAssignNumber?: () => Promise<string>;
-}
-
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  onAssignNumbers?: (count: number) => Promise<string[]>;
+  onSplit?: (book: Radiogram, splitRadiograms: Radiogram[]) => Promise<void>;
 }
 
 // Filter to only allow A-Z, 0-9, and /
@@ -46,6 +44,28 @@ function filterPhoneChars(value: string): string {
 function trimTrailingEmpty(words: string[]): string[] {
   const result = [...words];
   while (result.length > 0 && result[result.length - 1] === '') result.pop();
+  return result;
+}
+
+const MAX_BOOK_ENTRIES = 99;
+
+function createEmptyBookEntry(): BookEntry {
+  return { number: '', address: '', addressOpNote: '', otherVariables: '' };
+}
+
+// Grow by appending empty entries; shrink only by removing trailing empty ones
+function resizeBookEntries(entries: BookEntry[], count: number): BookEntry[] {
+  if (!Number.isInteger(count) || count < 0) return entries;
+  const target = Math.min(count, MAX_BOOK_ENTRIES);
+  const result = [...entries];
+  while (result.length < target) result.push(createEmptyBookEntry());
+  while (result.length > target && isBookEntryEmpty(result[result.length - 1])) result.pop();
+  return result;
+}
+
+function trimTrailingEmptyEntries(entries: BookEntry[]): BookEntry[] {
+  const result = [...entries];
+  while (result.length > 0 && isBookEntryEmpty(result[result.length - 1])) result.pop();
   return result;
 }
 
@@ -75,6 +95,8 @@ export default function RadiogramForm({
   receivedMethods,
   userProfile,
   onAssignNumber,
+  onAssignNumbers,
+  onSplit,
 }: RadiogramFormProps) {
   const sentMethods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
   const rcvdMethods = receivedMethods ?? DEFAULT_RECEIVED_METHODS;
@@ -104,11 +126,17 @@ export default function RadiogramForm({
     dispositionDestination: '',
     dispositionDate: '',
     dispositionTime: '',
+    isBook: false,
+    bookEntries: [],
+    bookVariable: '',
   };
 
   const [formData, setFormData] = useState<Omit<Radiogram, 'id'>>(emptyForm);
   const [copied, setCopied] = useState(false);
   const [showCountWarning, setShowCountWarning] = useState(false);
+  const [showBookCountWarning, setShowBookCountWarning] = useState(false);
+  const [showSplitConfirm, setShowSplitConfirm] = useState(false);
+  const [expandedVariables, setExpandedVariables] = useState<Set<number>>(new Set());
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
@@ -124,10 +152,17 @@ export default function RadiogramForm({
       while (textWords.length < minWords) {
         textWords.push('');
       }
-      setFormData({ ...rest, textWords });
+      setFormData({
+        ...rest,
+        textWords,
+        isBook: rest.isBook ?? false,
+        bookEntries: rest.bookEntries ?? [],
+        bookVariable: rest.bookVariable ?? '',
+      });
     } else {
       setFormData({ ...emptyForm, netName: netName || '' });
     }
+    setExpandedVariables(new Set());
   }, [existingRadiogram, isOpen]);
 
   // Calculate word count from textWords for comparison with check
@@ -170,10 +205,14 @@ export default function RadiogramForm({
       }
     }
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: filtered,
-    }));
+    setFormData(prev => {
+      const next = { ...prev, [name]: filtered };
+      // In book mode the Number field holds the message count and drives the entry rows
+      if (name === 'number' && prev.isBook) {
+        next.bookEntries = resizeBookEntries(prev.bookEntries ?? [], parseInt(filtered, 10));
+      }
+      return next;
+    });
 
     // Restore cursor position after React re-renders
     requestAnimationFrame(() => {
@@ -232,14 +271,29 @@ export default function RadiogramForm({
     }
   };
 
+  const buildRadiogram = (id: string): Radiogram => ({
+    ...formData,
+    textWords: trimTrailingEmpty(formData.textWords),
+    isBook: !!formData.isBook,
+    bookEntries: formData.isBook ? trimTrailingEmptyEntries(formData.bookEntries ?? []) : [],
+    bookVariable: formData.bookVariable || '',
+    id,
+  });
+
   const doSave = () => {
-    const radiogram: Radiogram = {
-      ...formData,
-      textWords: trimTrailingEmpty(formData.textWords),
-      id: existingRadiogram?.id || generateId(),
-    };
-    onSave(radiogram);
+    onSave(buildRadiogram(existingRadiogram?.id || generateRadiogramId()));
     onClose();
+  };
+
+  const bookEntryCount = (formData.bookEntries ?? []).filter(e => !isBookEntryEmpty(e)).length;
+  const bookCountMismatch = !!formData.isBook && parseInt(formData.number, 10) !== bookEntryCount;
+
+  const continueAfterCheckWarning = () => {
+    if (bookCountMismatch) {
+      setShowBookCountWarning(true);
+      return;
+    }
+    doSave();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -248,7 +302,7 @@ export default function RadiogramForm({
       setShowCountWarning(true);
       return;
     }
-    doSave();
+    continueAfterCheckWarning();
   };
 
   const handleDelete = () => {
@@ -258,11 +312,7 @@ export default function RadiogramForm({
     }
   };
 
-  const buildCurrentRadiogram = (): Radiogram => ({
-    ...formData,
-    textWords: trimTrailingEmpty(formData.textWords),
-    id: existingRadiogram?.id || '',
-  });
+  const buildCurrentRadiogram = (): Radiogram => buildRadiogram(existingRadiogram?.id || '');
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(formatRadiogramAsText(buildCurrentRadiogram()));
@@ -282,7 +332,8 @@ export default function RadiogramForm({
     !formData.number && !formData.precedence && !formData.stationOfOrigin &&
     !formData.check && !formData.placeOfOrigin && !formData.date &&
     !formData.address && !formData.signature &&
-    formData.textWords.every(w => !w);
+    formData.textWords.every(w => !w) &&
+    (formData.bookEntries ?? []).every(isBookEntryEmpty);
 
   const handleImportConfirm = () => {
     try {
@@ -310,8 +361,94 @@ export default function RadiogramForm({
     if (num) setFormData(prev => ({ ...prev, number: num }));
   };
 
-  const assignBtnDisabled = !onAssignNumber ||
-    (formData.number.trim() !== '' && formData.number.toUpperCase() !== 'XXX');
+  const handleBookToggle = (checked: boolean) => {
+    setFormData(prev => {
+      const next = { ...prev, isBook: checked };
+      if (checked) {
+        next.bookEntries = resizeBookEntries(prev.bookEntries ?? [], parseInt(prev.number, 10));
+      }
+      return next;
+    });
+  };
+
+  const handleEntryChange = (
+    index: number,
+    field: keyof BookEntry,
+    value: string,
+    el: HTMLInputElement | HTMLTextAreaElement
+  ) => {
+    const filter =
+      field === 'address' ? filterRadiogramCharsWithSpacesAndNewlines :
+      field === 'addressOpNote' ? filterRadiogramCharsWithSpaces :
+      field === 'number' ? filterRadiogramChars :
+      (v: string) => v; // otherVariables: verbatim, unfiltered
+    const cursorPos = el.selectionStart;
+    const filtered = filter(value);
+    const adjustedCursor = cursorPos !== null ? filter(value.slice(0, cursorPos)).length : null;
+
+    setFormData(prev => {
+      const entries = [...(prev.bookEntries ?? [])];
+      entries[index] = { ...entries[index], [field]: filtered };
+      return { ...prev, bookEntries: entries };
+    });
+
+    requestAnimationFrame(() => {
+      if (adjustedCursor !== null) {
+        el.setSelectionRange(adjustedCursor, adjustedCursor);
+      }
+    });
+  };
+
+  const handleAddEntry = () => {
+    setFormData(prev => {
+      const entries = [...(prev.bookEntries ?? []), createEmptyBookEntry()];
+      return { ...prev, bookEntries: entries, number: String(entries.length) };
+    });
+  };
+
+  const handleRemoveEntry = (index: number) => {
+    setFormData(prev => {
+      const entries = (prev.bookEntries ?? []).filter((_, i) => i !== index);
+      return { ...prev, bookEntries: entries, number: String(entries.length) };
+    });
+    setExpandedVariables(new Set());
+  };
+
+  const entriesNeedingNumbers = (formData.bookEntries ?? []).filter(
+    e => e.number.trim() === '' || e.number.toUpperCase() === 'XXX'
+  ).length;
+
+  const handleAssignEntryNumbers = async () => {
+    if (!onAssignNumbers) return;
+    const entries = formData.bookEntries ?? [];
+    const targets = entries
+      .map((e, i) => ({ e, i }))
+      .filter(({ e }) => e.number.trim() === '' || e.number.toUpperCase() === 'XXX')
+      .map(({ i }) => i);
+    if (targets.length === 0) return;
+    const nums = await onAssignNumbers(targets.length);
+    setFormData(prev => {
+      const updated = [...(prev.bookEntries ?? [])];
+      targets.forEach((idx, j) => {
+        if (nums[j] && updated[idx]) updated[idx] = { ...updated[idx], number: nums[j] };
+      });
+      return { ...prev, bookEntries: updated };
+    });
+  };
+
+  // In book mode, Assign Next fills the entries' numbers sequentially (N, N+1, ...)
+  const assignBtnDisabled = formData.isBook
+    ? (!onAssignNumbers || entriesNeedingNumbers === 0)
+    : (!onAssignNumber ||
+       (formData.number.trim() !== '' && formData.number.toUpperCase() !== 'XXX'));
+
+  const handleSplitConfirm = async () => {
+    if (!existingRadiogram || !onSplit) return;
+    const book = buildRadiogram(existingRadiogram.id);
+    await onSplit(book, explodeBook(book));
+    setShowSplitConfirm(false);
+    onClose();
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -354,12 +491,88 @@ export default function RadiogramForm({
     return rows;
   };
 
+  // Render the per-message variable parts of a book
+  const renderBookEntries = () => (
+    (formData.bookEntries ?? []).map((entry, i) => {
+      const showVariables = !!entry.otherVariables || expandedVariables.has(i);
+      return (
+        <div key={i} className="border border-slate-200 rounded p-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-semibold text-slate-500">Message {i + 1}</span>
+            <button
+              type="button"
+              onClick={() => handleRemoveEntry(i)}
+              className="text-slate-400 hover:text-red-600 text-lg leading-none px-1"
+              title="Remove message"
+            >
+              ×
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Number</label>
+                <input
+                  type="text"
+                  value={entry.number}
+                  onChange={(e) => handleEntryChange(i, 'number', e.target.value, e.target)}
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Op Note</label>
+                <input
+                  type="text"
+                  value={entry.addressOpNote}
+                  onChange={(e) => handleEntryChange(i, 'addressOpNote', e.target.value, e.target)}
+                  className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Addressee</label>
+              <textarea
+                value={entry.address}
+                onChange={(e) => handleEntryChange(i, 'address', e.target.value, e.target)}
+                rows={4}
+                className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+              />
+            </div>
+          </div>
+          {showVariables ? (
+            <div className="mt-2">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Other variable parts (non-standard) — transcribe verbatim
+              </label>
+              <textarea
+                value={entry.otherVariables || ''}
+                onChange={(e) => handleEntryChange(i, 'otherVariables', e.target.value, e.target)}
+                rows={2}
+                className="w-full px-2 py-1 border border-slate-300 rounded text-sm font-mono"
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setExpandedVariables(prev => new Set(prev).add(i))}
+              className="text-xs text-slate-500 underline mt-1"
+            >
+              + Other variable parts (non-standard)
+            </button>
+          )}
+        </div>
+      );
+    })
+  );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-4 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">
-            {existingRadiogram ? 'Edit Radiogram' : 'New Radiogram'}
+            {formData.isBook
+              ? (existingRadiogram ? 'Edit Book' : 'New Book')
+              : (existingRadiogram ? 'Edit Radiogram' : 'New Radiogram')}
           </h2>
           <div className="flex items-center gap-2">
             <button
@@ -389,13 +602,42 @@ export default function RadiogramForm({
             </div>
           )}
 
+          {/* Unresolved book variable parts (on a radiogram split out of a book) */}
+          {!formData.isBook && formData.bookVariable && (
+            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-semibold">Unresolved variable parts from book — incorporate into the fields below, then clear:</p>
+                  <pre className="whitespace-pre-wrap font-mono text-xs mt-1">{formData.bookVariable}</pre>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, bookVariable: '' }))}
+                  className="shrink-0 text-xs font-medium bg-amber-700 text-white px-2 py-1 rounded hover:bg-amber-900"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Preamble Section */}
           <div className="border-b pb-3">
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Number
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-slate-600">
+                    {formData.isBook ? 'Book of' : 'Number'}
+                  </label>
+                  <label className="flex items-center gap-1 text-xs text-slate-600 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={!!formData.isBook}
+                      onChange={(e) => handleBookToggle(e.target.checked)}
+                    />
+                    Book
+                  </label>
+                </div>
                 <input
                   type="text"
                   name="number"
@@ -408,7 +650,7 @@ export default function RadiogramForm({
               <div className="col-span-2 flex flex-col justify-end">
                 <button
                   type="button"
-                  onClick={handleAssignNumber}
+                  onClick={formData.isBook ? handleAssignEntryNumbers : handleAssignNumber}
                   disabled={assignBtnDisabled}
                   className="w-full px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300 rounded hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -518,7 +760,8 @@ export default function RadiogramForm({
             </div>
           </div>
 
-          {/* Address Section */}
+          {/* Address Section — per-message in book mode */}
+          {!formData.isBook && (
           <div className="border-b pb-3">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -557,6 +800,7 @@ export default function RadiogramForm({
               </div>
             </div>
           </div>
+          )}
 
           {/* Text Section */}
           <div className="border-b pb-3">
@@ -597,6 +841,37 @@ export default function RadiogramForm({
               </div>
             </div>
           </div>
+
+          {/* Book Messages Section — the variable parts of each message in the book */}
+          {formData.isBook && (
+            <div className="border-t pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-slate-700">
+                  Book Messages
+                  {bookCountMismatch && (
+                    <span className="ml-2 text-xs font-normal text-red-600">
+                      ({bookEntryCount} entered, book of {formData.number || '?'})
+                    </span>
+                  )}
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleAddEntry}
+                  className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300 rounded hover:bg-slate-200"
+                >
+                  + Add Message
+                </button>
+              </div>
+              <div className="space-y-2">
+                {renderBookEntries()}
+                {(formData.bookEntries ?? []).length === 0 && (
+                  <p className="text-xs text-slate-500">
+                    Enter the number of messages in the &quot;Book of&quot; field above, or click + Add Message.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Received Section */}
           <div className="border-t pt-3">
@@ -696,7 +971,7 @@ export default function RadiogramForm({
 
           {/* Buttons */}
           <div className="flex justify-between pt-3">
-            <div>
+            <div className="flex gap-2">
               {existingRadiogram && onDelete && (
                 <button
                   type="button"
@@ -706,15 +981,27 @@ export default function RadiogramForm({
                   Delete
                 </button>
               )}
+              {existingRadiogram?.isBook && formData.isBook && onSplit && (
+                <button
+                  type="button"
+                  onClick={() => setShowSplitConfirm(true)}
+                  disabled={bookEntryCount === 0}
+                  className="bg-amber-700 text-white py-2 px-4 rounded-md hover:bg-amber-900 text-sm disabled:opacity-50"
+                >
+                  Split into Messages
+                </button>
+              )}
             </div>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
-              >
-                Print
-              </button>
+              {!formData.isBook && (
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
+                >
+                  Print
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handlePrintPlain}
@@ -803,10 +1090,70 @@ export default function RadiogramForm({
                 Go Back
               </button>
               <button
-                onClick={() => { setShowCountWarning(false); doSave(); }}
+                onClick={() => { setShowCountWarning(false); continueAfterCheckWarning(); }}
                 className="bg-slate-300 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-400 text-sm"
               >
                 Save Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showBookCountWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-base font-semibold text-slate-900 mb-2">Book Count Mismatch</h3>
+            <p className="text-sm text-slate-700 mb-4">
+              The book count ({formData.number || '?'}) does not match the number of messages entered ({bookEntryCount}). Do you want to go back and fix it, or save the book as-is?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowBookCountWarning(false)}
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={() => { setShowBookCountWarning(false); doSave(); }}
+                className="bg-slate-300 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-400 text-sm"
+              >
+                Save Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSplitConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-base font-semibold text-slate-900 mb-2">Split Book</h3>
+            <p className="text-sm text-slate-700 mb-2">
+              This will create {bookEntryCount} individual radiogram{bookEntryCount === 1 ? '' : 's'} and delete the book. This cannot be undone.
+            </p>
+            {(formData.bookEntries ?? []).some(e => !isBookEntryEmpty(e) && !e.number.trim()) && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mb-2">
+                Some messages are missing a number.
+              </p>
+            )}
+            {bookCountMismatch && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mb-2">
+                The book count ({formData.number || '?'}) does not match the number of messages entered ({bookEntryCount}).
+              </p>
+            )}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setShowSplitConfirm(false)}
+                className="bg-slate-300 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-400 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSplitConfirm}
+                className="bg-amber-700 text-white py-2 px-4 rounded-md hover:bg-amber-900 text-sm"
+              >
+                Split
               </button>
             </div>
           </div>

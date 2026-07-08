@@ -385,6 +385,43 @@ class FirebaseDB implements NetLoggerDB {
     }
   }
 
+  async splitBookRadiogram(uid: string, bookId: string, newRadiograms: Radiogram[]): Promise<boolean> {
+    try {
+      const db = getFirebaseDb();
+      const bookRef = doc(db, 'users', uid, 'radiograms', bookId);
+      const snap = await getDoc(bookRef);
+      if (!snap.exists()) return false;
+      const book = snap.data() as Radiogram;
+
+      const batch = writeBatch(db);
+      const now = Timestamp.now();
+      for (const radiogram of newRadiograms) {
+        const radRef = doc(db, 'users', uid, 'radiograms', radiogram.id);
+        batch.set(radRef, { ...radiogram, createdAt: now, savedAt: now });
+      }
+      batch.delete(bookRef);
+      if (book.sessionId) {
+        // arrayUnion and arrayRemove can't both apply to one field in one update,
+        // so compute the final array locally
+        const sessionRef = doc(db, 'users', uid, 'sessions', book.sessionId);
+        const sessionSnap = await getDoc(sessionRef);
+        if (sessionSnap.exists()) {
+          const currentIds: string[] = sessionSnap.data().radiogramIds ?? [];
+          const radiogramIds = [
+            ...currentIds.filter((id) => id !== bookId),
+            ...newRadiograms.map((r) => r.id),
+          ];
+          batch.update(sessionRef, { radiogramIds });
+        }
+      }
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error('Error splitting book radiogram:', error);
+      return false;
+    }
+  }
+
   async getAllRadiograms(uid: string): Promise<Radiogram[]> {
     try {
       const radRef = collection(getFirebaseDb(), 'users', uid, 'radiograms');

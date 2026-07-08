@@ -34,6 +34,8 @@ export interface NetLoggerDB {
   deleteRadiogram(uid: string, radiogramId: string): Promise<boolean>;
   getAllRadiograms(uid: string): Promise<Radiogram[]>;
   getRadiogramsBySession(uid: string, sessionId: string): Promise<Radiogram[]>;
+  // Atomically replace a book radiogram with its individual messages
+  splitBookRadiogram(uid: string, bookId: string, newRadiograms: Radiogram[]): Promise<boolean>;
 
   // Profile
   getUserProfile(uid: string): Promise<UserProfile | null>;

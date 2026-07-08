@@ -1,4 +1,8 @@
-import { CheckIn, NetSession, CustomTag, isStatusTag } from '@/types';
+import { BookEntry, CheckIn, NetSession, CustomTag, Radiogram, isStatusTag } from '@/types';
+
+export function generateRadiogramId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
 
 interface RadiogramData {
   session: NetSession;
@@ -205,7 +209,9 @@ export function generateRadiogram(data: RadiogramData): RadiogramResult {
   };
 }
 
-export function formatRadiogramAsText(radiogram: import('@/types').Radiogram): string {
+export function formatRadiogramAsText(radiogram: Radiogram): string {
+  if (radiogram.isBook) return formatBookAsText(radiogram);
+
   const preamble = [
     radiogram.number,
     radiogram.precedence,
@@ -230,6 +236,69 @@ export function formatRadiogramAsText(radiogram: import('@/types').Radiogram): s
     'BT',
     signatureLine,
   ].join('\n');
+}
+
+export function isBookEntryEmpty(entry: BookEntry): boolean {
+  return !entry.number && !entry.address &&
+    !entry.addressOpNote && !entry.otherVariables;
+}
+
+// Book text format (ARRL MPG 2.3.4): fixed parts once, then each message's
+// variable parts, e.g.
+//   BK 2 R HXG AD2HL 2 HARTSDALE NY MARCH 22 / BT / <text> / BT / <signature>
+//   / BT / 123 / <address> / BT / 124 / <address> / AR
+export function formatBookAsText(book: Radiogram): string {
+  const preamble = [
+    `BK ${book.number}`,
+    book.precedence,
+    book.handlingInstructions || '',
+    book.stationOfOrigin,
+    book.check,
+    book.placeOfOrigin,
+    book.timeFiled,
+    book.date,
+  ].filter(Boolean).join(' ');
+
+  const signatureLine = book.signature + (book.signatureOpNote ? ` (${book.signatureOpNote})` : '');
+
+  const lines: string[] = [
+    preamble,
+    'BT',
+    formatWordsPerLine(book.textWords),
+    'BT',
+    signatureLine,
+  ];
+
+  for (const entry of (book.bookEntries ?? []).filter(e => !isBookEntryEmpty(e))) {
+    lines.push('BT');
+    lines.push(entry.number);
+    if (entry.address) lines.push(entry.address);
+    if (entry.addressOpNote) lines.push(`(${entry.addressOpNote})`);
+    if (entry.otherVariables) lines.push(entry.otherVariables);
+  }
+  lines.push('AR');
+
+  return lines.join('\n');
+}
+
+// Expand a book into the individual radiograms it represents (ARRL MPG 2.3.4).
+// Timestamps are left unset; the db layer stamps them at write time.
+export function explodeBook(book: Radiogram): Radiogram[] {
+  return (book.bookEntries ?? [])
+    .filter(e => !isBookEntryEmpty(e))
+    .map(entry => ({
+      ...book,
+      id: generateRadiogramId(),
+      number: entry.number,
+      address: entry.address,
+      addressPhone: '',
+      addressOpNote: entry.addressOpNote,
+      bookVariable: entry.otherVariables || '',
+      isBook: false,
+      bookEntries: [],
+      createdAt: undefined,
+      savedAt: undefined,
+    }));
 }
 
 const MONTH_NAMES = new Set([

@@ -13,6 +13,8 @@ interface RadiogramListProps {
   receivedMethods?: string[];
   userProfile?: UserProfile;
   onAssignNumber?: () => Promise<string>;
+  onAssignNumbers?: (count: number) => Promise<string[]>;
+  onSplit?: (book: Radiogram, splitRadiograms: Radiogram[]) => Promise<void>;
 }
 
 export default function RadiogramList({
@@ -24,6 +26,8 @@ export default function RadiogramList({
   receivedMethods,
   userProfile,
   onAssignNumber,
+  onAssignNumbers,
+  onSplit,
 }: RadiogramListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRadiogram, setEditingRadiogram] = useState<Radiogram | null>(null);
@@ -63,13 +67,13 @@ export default function RadiogramList({
               className="w-full text-left px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded text-sm flex items-center gap-2"
             >
               <span className="font-mono font-semibold text-slate-700 flex-shrink-0">
-                {radiogram.number}
+                {radiogram.isBook ? `Book of ${radiogram.number}` : radiogram.number}
               </span>
               <span className="font-mono text-slate-600 flex-shrink-0">
                 {radiogram.stationOfOrigin}
               </span>
               <span className="font-mono text-slate-600 truncate">
-                {radiogram.address.split('\n')[0]}
+                {(radiogram.isBook ? radiogram.bookEntries?.[0]?.address ?? '' : radiogram.address).split('\n')[0]}
               </span>
             </button>
           ))}
@@ -87,6 +91,8 @@ export default function RadiogramList({
         receivedMethods={receivedMethods}
         userProfile={userProfile}
         onAssignNumber={onAssignNumber}
+        onAssignNumbers={onAssignNumbers}
+        onSplit={onSplit}
       />
     </div>
   );

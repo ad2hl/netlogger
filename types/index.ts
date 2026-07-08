@@ -111,6 +111,15 @@ export interface NetReport {
   };
 }
 
+// One message's variable parts within a booked radiogram (ARRL MPG 2.3.4).
+// Phone/email are entered as additional address lines, not separate fields.
+export interface BookEntry {
+  number: string;
+  address: string;          // multi-line, \n-separated (same convention as Radiogram.address)
+  addressOpNote: string;
+  otherVariables?: string;  // non-standard variable parts (check/text/signature), transcribed verbatim
+}
+
 // ARRL Standard Radiogram
 export interface Radiogram {
   id: string;
@@ -149,6 +158,10 @@ export interface Radiogram {
   savedAt?: Timestamp;
   sessionNetName?: string;
   sessionId?: string;       // set when radiogram belongs to a session; absent for standalone
+  // Book (ARRL MPG 2.3.4) — when isBook, `number` holds the message count ("Book of N")
+  isBook?: boolean;
+  bookEntries?: BookEntry[];
+  bookVariable?: string;    // on a split-out radiogram: unresolved variable parts carried from its book entry
 }
 
 // Traffic item for the checklist (e.g., KM2I -> WM2C)
