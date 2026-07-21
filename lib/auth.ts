@@ -20,6 +20,31 @@ import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 
 const googleProvider = new GoogleAuthProvider();
 
+// After the browser has been idle for a long stretch (e.g. laptop asleep for hours),
+// the cached App Check token can appear valid client-side yet be rejected by the
+// server as expired. getToken(appCheck, false) trusts the client-side cache, so it
+// doesn't reliably catch this. Retrying the Firestore call once with a forced token
+// refresh recovers automatically instead of requiring the user to click sign-in again.
+async function withAppCheckRetry<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if ((error as { code?: string })?.code !== 'permission-denied') throw error;
+
+    console.warn('Firestore call got permission-denied; retrying with a forced App Check token refresh', error);
+
+    const appCheck = getFirebaseAppCheck();
+    if (appCheck) {
+      try {
+        await getToken(appCheck, true);
+      } catch {
+        // Fall through and retry anyway — the original error will surface if this doesn't help.
+      }
+    }
+    return await operation();
+  }
+}
+
 export async function signInWithGoogle(): Promise<{ user: User | null; error?: string }> {
   try {
     const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
@@ -38,7 +63,7 @@ export async function signInWithGoogle(): Promise<{ user: User | null; error?: s
     }
 
     const userDocRef = doc(getFirebaseDb(), 'users', user.uid);
-    const userDoc = await getDoc(userDocRef);
+    const userDoc = await withAppCheckRetry(() => getDoc(userDocRef));
 
     if (!userDoc.exists()) {
       if (process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true') {
@@ -54,7 +79,7 @@ export async function signInWithGoogle(): Promise<{ user: User | null; error?: s
         qrzPassword: '',
         dispositionMethods: DEFAULT_DISPOSITION_METHODS,
       };
-      await setDoc(userDocRef, defaultProfile);
+      await withAppCheckRetry(() => setDoc(userDocRef, defaultProfile));
     }
 
     return { user };
