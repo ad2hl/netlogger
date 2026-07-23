@@ -14,27 +14,27 @@ import {
   AuthError,
 } from 'firebase/auth';
 import { getToken } from 'firebase/app-check';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, disableNetwork, enableNetwork } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb, getFirebaseAppCheck } from './firebase';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 
 const googleProvider = new GoogleAuthProvider();
 
 // After the browser has been idle for a long stretch (e.g. laptop asleep for hours),
-// the token Firestore attaches to its first request can be rejected by the server as
-// stale even though it looked valid client-side -- forcing a fresh App Check token
-// alone did not fix this (confirmed in the wild: the retry below fired and still got
-// permission-denied), so this also forces a fresh Firebase Auth ID token, since
-// Firestore's credentials layer pulls from the User object's own (non-forced, cached)
-// token. Retrying once recovers automatically instead of requiring a second manual
-// sign-in click.
+// the first Firestore call after Google sign-in can fail with permission-denied even
+// though a fresh Auth ID token and a fresh App Check token are both available --
+// confirmed in the wild that forcing either (or both) of those alone does not fix it.
+// That points at a different layer: Firestore keeps a persistent network stream that
+// can be holding stale credentials from before this token refresh, and won't pick up
+// the new ones until it reconnects. Force that reconnect (disableNetwork then
+// enableNetwork) in addition to refreshing both tokens, then retry once.
 async function withAuthRetry<T>(operation: () => Promise<T>): Promise<T> {
   try {
     return await operation();
   } catch (error) {
     if ((error as { code?: string })?.code !== 'permission-denied') throw error;
 
-    console.warn('Firestore call got permission-denied; retrying with forced Auth ID token and App Check token refreshes', error);
+    console.warn('Firestore call got permission-denied; refreshing tokens and forcing a Firestore reconnect before retrying', error);
 
     try {
       await getFirebaseAuth().currentUser?.getIdToken(true);
@@ -50,6 +50,15 @@ async function withAuthRetry<T>(operation: () => Promise<T>): Promise<T> {
         // Fall through and retry anyway — the original error will surface if this doesn't help.
       }
     }
+
+    try {
+      const db = getFirebaseDb();
+      await disableNetwork(db);
+      await enableNetwork(db);
+    } catch {
+      // Fall through and retry anyway — the original error will surface if this doesn't help.
+    }
+
     return await operation();
   }
 }
