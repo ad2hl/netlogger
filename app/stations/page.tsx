@@ -32,6 +32,7 @@ export default function StationsPage() {
   const [fetching, setFetching] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('callsign');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [filterText, setFilterText] = useState('');
   const [editTarget, setEditTarget] = useState<StationRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<StationRow | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -197,8 +198,20 @@ export default function StationsPage() {
     setDeleteTarget(null);
   };
 
+  const filteredRows = useMemo(() => {
+    const needle = filterText.trim().toLowerCase();
+    if (!needle) return rows;
+    return rows.filter((r) =>
+      r.callsign.toLowerCase().includes(needle) ||
+      r.firstName.toLowerCase().includes(needle) ||
+      r.nickname.toLowerCase().includes(needle) ||
+      r.location.toLowerCase().includes(needle) ||
+      r.note.toLowerCase().includes(needle)
+    );
+  }, [rows, filterText]);
+
   const sortedRows = useMemo(() => {
-    const sorted = [...rows];
+    const sorted = [...filteredRows];
     sorted.sort((a, b) => {
       let cmp = 0;
       switch (sortColumn) {
@@ -213,7 +226,7 @@ export default function StationsPage() {
       return sortDirection === 'asc' ? cmp : -cmp;
     });
     return sorted;
-  }, [rows, sortColumn, sortDirection]);
+  }, [filteredRows, sortColumn, sortDirection]);
 
   const handleSort = (column: SortColumn) => {
     if (column === sortColumn) {
@@ -247,10 +260,22 @@ export default function StationsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Stations{!fetching && ` (${rows.length})`}
-          </h2>
+        <div className="flex items-center justify-between mb-3 gap-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-slate-900 whitespace-nowrap">
+              Stations{!fetching && ` (${rows.length})`}
+            </h2>
+            {!fetching && rows.length > 0 && (
+              <input
+                type="text"
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+                placeholder="Filter..."
+                className="px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 w-48"
+                aria-label="Filter stations"
+              />
+            )}
+          </div>
           <button
             onClick={openAdd}
             className="px-3 py-1.5 text-sm font-medium text-white bg-cyan-700 hover:bg-cyan-900 rounded-md"
@@ -263,6 +288,8 @@ export default function StationsPage() {
           <p className="text-slate-500">Loading...</p>
         ) : rows.length === 0 ? (
           <p className="text-slate-500">No stations found.</p>
+        ) : sortedRows.length === 0 ? (
+          <p className="text-slate-500">No stations match &ldquo;{filterText.trim()}&rdquo;.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
