@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase';
-import { onAuthChange, getUserProfile, signOut } from '@/lib/auth';
+import { onAuthChange, getUserProfile, signOut, diag } from '@/lib/auth';
 import { UserProfile } from '@/types';
 
 const SESSION_TIMEOUT_HOURS = parseInt(
@@ -68,10 +68,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (authUser) {
             // Check session timeout
             const lastSignIn = authUser.metadata.lastSignInTime;
+            // On page load Firebase replays the *persisted* session here, so
+            // lastSignInTime can be hours stale even when the user is signing in
+            // right now. If that trips the timeout, the signOut below lands in
+            // the middle of the in-flight Google sign-in and nulls request.auth,
+            // which Firestore rules reject as permission-denied. // #214
+            diag('AuthProvider: onAuthChange fired', {
+              lastSignIn,
+              elapsedHours: lastSignIn
+                ? +((Date.now() - new Date(lastSignIn).getTime()) / 3_600_000).toFixed(2)
+                : null,
+              timeoutHours: SESSION_TIMEOUT_HOURS,
+            });
             if (lastSignIn) {
               const elapsed = Date.now() - new Date(lastSignIn).getTime();
               const timeoutMs = SESSION_TIMEOUT_HOURS * 60 * 60 * 1000;
               if (elapsed > timeoutMs) {
+                diag('AuthProvider: SESSION TIMEOUT — signing out'); // #214
                 await signOut();
                 setUser(null);
                 setProfile(null);
