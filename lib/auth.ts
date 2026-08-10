@@ -16,6 +16,7 @@ import {
 import { getToken } from 'firebase/app-check';
 import { doc, getDoc, setDoc, disableNetwork, enableNetwork } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb, getFirebaseAppCheck } from './firebase';
+import { markActivity, clearActivity } from './session-activity';
 import { UserProfile, DEFAULT_DISPOSITION_METHODS } from '@/types';
 
 const googleProvider = new GoogleAuthProvider();
@@ -158,6 +159,11 @@ export async function signInWithGoogle(): Promise<{ user: User | null; error?: s
   try {
     diag('start', describeAppCheckState()); // #214
 
+    // Start the idle clock before opening the popup. AuthProvider's onAuthStateChanged
+    // listener fires while signInWithPopup is still settling, and must not judge this
+    // brand-new sign-in against a timestamp from the operator's previous visit.
+    markActivity();
+
     const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
     const user = result.user;
     popupUser = user;
@@ -247,6 +253,7 @@ export async function signInWithGoogle(): Promise<{ user: User | null; error?: s
 export async function signOut(): Promise<void> {
   try {
     await firebaseSignOut(getFirebaseAuth());
+    clearActivity();
   } catch (error) {
     console.error('Error signing out:', error);
   }
@@ -289,6 +296,7 @@ export async function signUpWithEmail(
     return { error: 'Account creation is disabled. Contact an administrator.' };
   }
   try {
+    markActivity();
     const result = await createUserWithEmailAndPassword(
       getFirebaseAuth(),
       email,
@@ -326,6 +334,7 @@ export async function signInWithEmail(
   password: string
 ): Promise<{ user?: User; error?: string }> {
   try {
+    markActivity();
     const result = await signInWithEmailAndPassword(
       getFirebaseAuth(),
       email,
