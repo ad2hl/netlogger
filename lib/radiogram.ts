@@ -227,17 +227,23 @@ export function formatRadiogramAsText(radiogram: Radiogram): string {
 
   // addressPhone is legacy — phone is now an address line, but old documents may still have it
   const address = [radiogram.address, radiogram.addressPhone].filter(Boolean).join('\n');
-  const addressLine = address + (radiogram.addressOpNote ? ` (${radiogram.addressOpNote})` : '');
-  const signatureLine = radiogram.signature + (radiogram.signatureOpNote ? ` (${radiogram.signatureOpNote})` : '');
+  const addressLines = withOpNoteLine(address, radiogram.addressOpNote);
+  const signatureLines = withOpNoteLine(radiogram.signature, radiogram.signatureOpNote);
 
   return [
     preamble,
-    addressLine,
+    ...addressLines,
     'BT',
     bodyFormatted,
     'BT',
-    signatureLine,
+    ...signatureLines,
   ].join('\n');
+}
+
+// Op Notes get their own "OP NOTE <text>" line — never parenthesized (issue #277).
+function withOpNoteLine(base: string, opNote: string | undefined): string[] {
+  const lines = base ? base.split('\n') : [];
+  return opNote ? [...lines, `OP NOTE ${opNote}`] : lines;
 }
 
 export function isBookEntryEmpty(entry: BookEntry): boolean {
@@ -261,21 +267,21 @@ export function formatBookAsText(book: Radiogram): string {
     book.date,
   ].filter(Boolean).join(' ');
 
-  const signatureLine = book.signature + (book.signatureOpNote ? ` (${book.signatureOpNote})` : '');
+  const signatureLines = withOpNoteLine(book.signature, book.signatureOpNote);
 
   const lines: string[] = [
     preamble,
     'BT',
     formatWordsPerLine(book.textWords),
     'BT',
-    signatureLine,
+    ...signatureLines,
   ];
 
   for (const entry of (book.bookEntries ?? []).filter(e => !isBookEntryEmpty(e))) {
     lines.push('BT');
     lines.push(entry.number);
     if (entry.address) lines.push(entry.address);
-    if (entry.addressOpNote) lines.push(`(${entry.addressOpNote})`);
+    if (entry.addressOpNote) lines.push(`OP NOTE ${entry.addressOpNote}`);
     if (entry.otherVariables) lines.push(entry.otherVariables);
   }
   lines.push('AR');
