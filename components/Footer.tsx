@@ -14,7 +14,6 @@ export default function Footer() {
   const [termsContent, setTermsContent] = useState<TypedContent | null>(null);
   const [localModalContent, setLocalModalContent] = useState<string | null>(null);
   const [showAbout, setShowAbout] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     apiFetch('/api/about')
@@ -87,12 +86,12 @@ export default function Footer() {
             </button>
           )}
           {termsContent && (
-            <button
-              onClick={() => setShowTerms(true)}
+            <a
+              href="/terms-of-service"
               className="text-cyan-700 hover:text-cyan-900"
             >
               Terms of Service
-            </button>
+            </a>
           )}
           {summaryContent && (
             <a
@@ -110,9 +109,6 @@ export default function Footer() {
       )}
       {showAbout && aboutContent && (
         <AboutModal content={aboutContent.content} type={aboutContent.type} onClose={() => setShowAbout(false)} />
-      )}
-      {showTerms && termsContent && (
-        <AboutModal content={termsContent.content} type={termsContent.type} onClose={() => setShowTerms(false)} />
       )}
     </>
   );
