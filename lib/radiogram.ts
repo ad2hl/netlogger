@@ -374,15 +374,27 @@ function parsePreambleLine(line: string): {
   };
 }
 
+// Inverse of withOpNoteLine (issue #277): pulls a trailing "OP NOTE <text>" line
+// out of a block so it lands back in the addressOpNote/signatureOpNote field
+// instead of getting folded into the address/signature text.
+const OP_NOTE_LINE = /^OP NOTE\s+(.*)$/i;
+
+function extractOpNote(lines: string[]): { rest: string[]; opNote: string } {
+  const idx = lines.findIndex(l => OP_NOTE_LINE.test(l));
+  if (idx === -1) return { rest: lines, opNote: '' };
+  const [, text] = lines[idx].match(OP_NOTE_LINE)!;
+  return { rest: [...lines.slice(0, idx), ...lines.slice(idx + 1)], opNote: text.toUpperCase() };
+}
+
 function parseAddressBlock(lines: string[]): {
   address: string;
   addressOpNote: string;
 } {
-  // All lines go into address verbatim (phone/email are just address lines).
-  // Nothing is separated into addressOpNote.
+  // Phone/email are just address lines; only a trailing OP NOTE line splits off.
+  const { rest, opNote } = extractOpNote(lines);
   return {
-    address: lines.join('\n').toUpperCase(),
-    addressOpNote: '',
+    address: rest.join('\n').toUpperCase(),
+    addressOpNote: opNote,
   };
 }
 
@@ -401,7 +413,9 @@ export function parseDtnRadiogram(raw: string): Partial<Omit<import('@/types').R
   const { address, addressOpNote } = parseAddressBlock(lines.slice(1, bt1));
   const textWords = lines.slice(bt1 + 1, bt2)
     .flatMap(l => l.toUpperCase().split(/\s+/).filter(Boolean));
-  const signature = lines.slice(bt2 + 1).filter(l => l.length > 0).join('\n').toUpperCase().trim();
+  const { rest: signatureLines, opNote: signatureOpNote } =
+    extractOpNote(lines.slice(bt2 + 1).filter(l => l.length > 0));
+  const signature = signatureLines.join('\n').toUpperCase().trim();
 
   return {
     ...preamble,
@@ -409,7 +423,7 @@ export function parseDtnRadiogram(raw: string): Partial<Omit<import('@/types').R
     addressOpNote,
     textWords,
     signature,
-    signatureOpNote: '',
+    signatureOpNote,
   };
 }
 
