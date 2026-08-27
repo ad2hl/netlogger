@@ -33,7 +33,8 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   const searchResults = isSearchMode ? searchStations(allStations, searchQuery) : [];
 
   const { callsign: enteredCallsign, tags: enteredTags } = parseCallsignInput(input);
-  const hasValidCallsign = /^[A-Z0-9]{1,2}[0-9][A-Z]{1,3}$/.test(enteredCallsign);
+  // Trailing /<digit> is a call-area designator (e.g. W1AW/2), not a tag (issue #283)
+  const hasValidCallsign = /^[A-Z0-9]{1,2}[0-9][A-Z]{1,3}(\/\d)?$/.test(enteredCallsign);
   const hasTag = (tag: string) => enteredTags.includes(tag.toUpperCase());
 
   // Re-focus input when it becomes enabled after a lookup

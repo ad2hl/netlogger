@@ -1,6 +1,7 @@
 import Dexie, { Table } from 'dexie';
 import { Timestamp } from 'firebase/firestore';
 import { Station, NetSession, CheckIn, NetReport, Radiogram, UserProfile } from '@/types';
+import { getBaseCallsign } from '../callsign';
 import type { NetLoggerDB } from './interface';
 
 // Internal storage types — dates stored as ISO strings or Date objects
@@ -196,7 +197,7 @@ class DexieDB implements NetLoggerDB {
 
   async getStation(_uid: string, callsign: string): Promise<Station | null> {
     try {
-      const stored = await getDb().stations.get(callsign.toUpperCase());
+      const stored = await getDb().stations.get(getBaseCallsign(callsign.toUpperCase()));
       return stored ? stationFromStored(stored) : null;
     } catch (error) {
       console.error('Error getting station:', error);
@@ -207,7 +208,7 @@ class DexieDB implements NetLoggerDB {
   async saveStation(_uid: string, station: Station): Promise<boolean> {
     try {
       const stored: StoredStation = {
-        callsign: station.callsign.toUpperCase(),
+        callsign: getBaseCallsign(station.callsign.toUpperCase()),
         firstName: station.firstName,
         nickname: station.nickname,
         city: station.city,
@@ -225,7 +226,7 @@ class DexieDB implements NetLoggerDB {
 
   async updateStationNickname(_uid: string, callsign: string, nickname: string | null): Promise<boolean> {
     try {
-      await getDb().stations.update(callsign.toUpperCase(), { nickname });
+      await getDb().stations.update(getBaseCallsign(callsign.toUpperCase()), { nickname });
       return true;
     } catch (error) {
       console.error('Error updating station nickname:', error);
@@ -235,7 +236,7 @@ class DexieDB implements NetLoggerDB {
 
   async updateStationLocation(_uid: string, callsign: string, city: string | null, state: string | null): Promise<boolean> {
     try {
-      await getDb().stations.update(callsign.toUpperCase(), { city, state });
+      await getDb().stations.update(getBaseCallsign(callsign.toUpperCase()), { city, state });
       return true;
     } catch (error) {
       console.error('Error updating station location:', error);
@@ -245,7 +246,7 @@ class DexieDB implements NetLoggerDB {
 
   async updateStationNote(_uid: string, callsign: string, note: string | null): Promise<boolean> {
     try {
-      await getDb().stations.update(callsign.toUpperCase(), { note });
+      await getDb().stations.update(getBaseCallsign(callsign.toUpperCase()), { note });
       return true;
     } catch (error) {
       console.error('Error updating station note:', error);
@@ -255,7 +256,7 @@ class DexieDB implements NetLoggerDB {
 
   async updateStationFields(_uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null; grantDate?: string | null }): Promise<boolean> {
     try {
-      await getDb().stations.update(callsign.toUpperCase(), fields);
+      await getDb().stations.update(getBaseCallsign(callsign.toUpperCase()), fields);
       return true;
     } catch (error) {
       console.error('Error updating station fields:', error);
@@ -265,7 +266,7 @@ class DexieDB implements NetLoggerDB {
 
   async deleteStation(_uid: string, callsign: string): Promise<boolean> {
     try {
-      await getDb().stations.delete(callsign.toUpperCase());
+      await getDb().stations.delete(getBaseCallsign(callsign.toUpperCase()));
       return true;
     } catch (error) {
       console.error('Error deleting station:', error);
@@ -429,7 +430,7 @@ class DexieDB implements NetLoggerDB {
       });
 
       // Update lastSeen on the station
-      await getDb().stations.update(checkIn.callsign.toUpperCase(), {
+      await getDb().stations.update(getBaseCallsign(checkIn.callsign.toUpperCase()), {
         lastSeen: new Date().toISOString(),
       }).catch(() => {
         // Station doc may not exist yet — ignore

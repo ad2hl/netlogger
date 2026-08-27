@@ -31,6 +31,7 @@ import {
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
+import { getBaseCallsign } from '@/lib/callsign';
 import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
 import CheckInForm from '@/components/CheckInForm';
@@ -177,7 +178,12 @@ function NetPage() {
     async (callsign: string): Promise<Station | null> => {
       if (!user || !profile) return null;
 
-      const cachedStation = await getStation(user.uid, callsign);
+      // A trailing /<digit> (e.g. W1AW/2) is a call-area designator, not part of
+      // the station's identity — QRZ, callook, and station memory all key off the
+      // base callsign regardless of which call area was used to check in (issue #283).
+      const baseCallsign = getBaseCallsign(callsign.toUpperCase());
+
+      const cachedStation = await getStation(user.uid, baseCallsign);
 
       let station: Station | null = null;
 
@@ -185,7 +191,7 @@ function NetPage() {
         station = cachedStation;
       } else if (!profile.qrzUsername || !profile.qrzPassword) {
         station = {
-          callsign: callsign.toUpperCase(),
+          callsign: baseCallsign,
           firstName: null,
           nickname: null,
           city: null,
@@ -201,7 +207,7 @@ function NetPage() {
           if (typeof window !== 'undefined' && (window as any).electron) {
             // Desktop mode: QRZ lookup via Electron IPC (bypasses CORS)
             data = await (window as any).electron.lookupQrz(
-              callsign,
+              baseCallsign,
               profile.qrzUsername,
               profile.qrzPassword
             );
@@ -214,7 +220,7 @@ function NetPage() {
                 'Authorization': `Bearer ${token}`,
               },
               body: JSON.stringify({
-                callsign,
+                callsign: baseCallsign,
                 username: profile.qrzUsername,
                 password: profile.qrzPassword,
               }),
@@ -250,11 +256,11 @@ function NetPage() {
       // Check callook.info for grant date if not yet fetched (undefined = not checked)
       if (station.grantDate === undefined) {
         try {
-          const resp = await apiFetch(`/api/callook?callsign=${encodeURIComponent(callsign)}`);
+          const resp = await apiFetch(`/api/callook?callsign=${encodeURIComponent(baseCallsign)}`);
           if (resp.ok) {
             const data = await resp.json();
             const grantDate: string | null = data.grantDate ?? null;
-            await updateStationFields(user.uid, callsign, { grantDate });
+            await updateStationFields(user.uid, baseCallsign, { grantDate });
             station = { ...station, grantDate };
           }
         } catch {
@@ -298,7 +304,10 @@ function NetPage() {
 
     const station = await lookupCallsign(checkIn.callsign);
     if (station) {
-      setStations((prev) => new Map(prev).set(station.callsign, station));
+      // Keyed by the full check-in callsign (which may carry a /<digit> call-area
+      // suffix) so CheckInList's lookup finds it even though station identity
+      // itself is normalized to the base callsign (issue #283).
+      setStations((prev) => new Map(prev).set(checkIn.callsign.toUpperCase(), station));
       // Update allStations for search lookup
       setAllStations((prev) => {
         const existingIndex = prev.findIndex(
