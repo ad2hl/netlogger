@@ -1,4 +1,5 @@
 import { BookEntry, CheckIn, NetSession, CustomTag, Radiogram, isStatusTag } from '@/types';
+import { isCallAreaDigit } from '@/lib/callsign';
 
 export function generateRadiogramId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -435,12 +436,19 @@ export function parseCallsignInput(input: string): {
   const parts = trimmed.split('/');
 
   // First part is the callsign
-  const callsign = parts[0].trim();
+  let callsign = parts[0].trim();
 
-  // Remaining parts are tags (NC, ANC, T, A, or liaison net names)
-  const tags = parts.slice(1)
-    .map(t => t.trim())
-    .filter(t => t.length > 0);
+  // Remaining parts are tags (NC, ANC, T, A, or liaison net names) -- except a
+  // bare digit, which is a call-area designator (e.g. W1AW/2) and belongs on
+  // the callsign, not the tag list (issue #283).
+  const tags: string[] = [];
+  for (const part of parts.slice(1).map(t => t.trim()).filter(t => t.length > 0)) {
+    if (isCallAreaDigit(part)) {
+      callsign += `/${part}`;
+    } else {
+      tags.push(part);
+    }
+  }
 
   return { callsign, tags };
 }

@@ -18,13 +18,14 @@ import {
   deleteField,
 } from 'firebase/firestore';
 import { getFirebaseDb } from '../firebase';
+import { getBaseCallsign } from '../callsign';
 import { Station, NetSession, CheckIn, NetReport, UserProfile, Radiogram } from '@/types';
 import type { NetLoggerDB } from './interface';
 
 class FirebaseDB implements NetLoggerDB {
   async getStation(uid: string, callsign: string): Promise<Station | null> {
     try {
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', getBaseCallsign(callsign.toUpperCase()));
       const stationDoc = await getDoc(stationRef);
       if (stationDoc.exists()) {
         return stationDoc.data() as Station;
@@ -38,10 +39,11 @@ class FirebaseDB implements NetLoggerDB {
 
   async saveStation(uid: string, station: Station): Promise<boolean> {
     try {
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', station.callsign.toUpperCase());
+      const baseCallsign = getBaseCallsign(station.callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', baseCallsign);
       await setDoc(stationRef, {
         ...station,
-        callsign: station.callsign.toUpperCase(),
+        callsign: baseCallsign,
         lastSeen: Timestamp.now(),
       });
       return true;
@@ -53,7 +55,7 @@ class FirebaseDB implements NetLoggerDB {
 
   async updateStationNickname(uid: string, callsign: string, nickname: string | null): Promise<boolean> {
     try {
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', getBaseCallsign(callsign.toUpperCase()));
       await updateDoc(stationRef, { nickname });
       return true;
     } catch (error) {
@@ -64,7 +66,7 @@ class FirebaseDB implements NetLoggerDB {
 
   async updateStationLocation(uid: string, callsign: string, city: string | null, state: string | null): Promise<boolean> {
     try {
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', getBaseCallsign(callsign.toUpperCase()));
       await updateDoc(stationRef, { city, state });
       return true;
     } catch (error) {
@@ -75,7 +77,7 @@ class FirebaseDB implements NetLoggerDB {
 
   async updateStationNote(uid: string, callsign: string, note: string | null): Promise<boolean> {
     try {
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', getBaseCallsign(callsign.toUpperCase()));
       await updateDoc(stationRef, { note });
       return true;
     } catch (error) {
@@ -86,7 +88,7 @@ class FirebaseDB implements NetLoggerDB {
 
   async updateStationFields(uid: string, callsign: string, fields: { nickname?: string | null; note?: string | null; city?: string | null; state?: string | null }): Promise<boolean> {
     try {
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', getBaseCallsign(callsign.toUpperCase()));
       await updateDoc(stationRef, fields);
       return true;
     } catch (error) {
@@ -97,7 +99,7 @@ class FirebaseDB implements NetLoggerDB {
 
   async deleteStation(uid: string, callsign: string): Promise<boolean> {
     try {
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', getBaseCallsign(callsign.toUpperCase()));
       await deleteDoc(stationRef);
       return true;
     } catch (error) {
@@ -272,7 +274,7 @@ class FirebaseDB implements NetLoggerDB {
         checkIns: [...currentCheckIns, checkIn],
       });
 
-      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', checkIn.callsign.toUpperCase());
+      const stationRef = doc(getFirebaseDb(), 'users', uid, 'stations', getBaseCallsign(checkIn.callsign.toUpperCase()));
       await updateDoc(stationRef, { lastSeen: Timestamp.now() }).catch(() => {
         // Station doc may not exist yet — ignore
       });
