@@ -239,6 +239,30 @@ export default function RadiogramForm({
     });
   };
 
+  // Splits pasted text on whitespace/tabs, dropping each token into its own word
+  // group starting at the paste target (issue #287)
+  const handleWordPaste = (index: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text');
+    const tokens = pasted.split(/\s+/).map(filterRadiogramChars).filter(t => t.length > 0);
+    if (tokens.length <= 1) return; // let default single-word paste behavior handle it
+
+    e.preventDefault();
+    setFormData(prev => {
+      const newWords = [...prev.textWords];
+      const neededLength = index + tokens.length;
+      while (newWords.length < neededLength) {
+        newWords.push(...Array(WORDS_PER_LINE).fill(''));
+      }
+      tokens.forEach((tok, i) => { newWords[index + i] = tok; });
+      return { ...prev, textWords: newWords };
+    });
+
+    const lastIndex = index + tokens.length - 1;
+    setTimeout(() => {
+      wordInputRefs.current[lastIndex]?.focus();
+    }, 0);
+  };
+
   const handleWordKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.key === 'Tab' && !e.shiftKey) || e.key === ' ') {
       const isLastWordOfLastLine = index === formData.textWords.length - 1;
@@ -472,6 +496,7 @@ export default function RadiogramForm({
               value={formData.textWords[index] || ''}
               onChange={(e) => handleWordChange(index, e.target.value, e.target)}
               onKeyDown={(e) => handleWordKeyDown(index, e)}
+              onPaste={(e) => handleWordPaste(index, e)}
               ref={(el) => { wordInputRefs.current[index] = el; }}
               className="w-full px-2 pt-3 pb-1 border border-slate-300 rounded text-sm uppercase"
             />
