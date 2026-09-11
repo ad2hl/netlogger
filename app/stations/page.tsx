@@ -266,14 +266,26 @@ export default function StationsPage() {
               Stations{!fetching && ` (${rows.length})`}
             </h2>
             {!fetching && rows.length > 0 && (
-              <input
-                type="text"
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
-                placeholder="Filter..."
-                className="px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 w-48"
-                aria-label="Filter stations"
-              />
+              <div className="relative w-48">
+                <input
+                  type="text"
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  placeholder="Filter..."
+                  className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 pr-7"
+                  aria-label="Filter stations"
+                />
+                {filterText && (
+                  <button
+                    type="button"
+                    onClick={() => setFilterText('')}
+                    className="absolute inset-y-0 right-0 flex items-center px-2 text-slate-400 hover:text-slate-600"
+                    aria-label="Clear filter"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             )}
           </div>
           <button
