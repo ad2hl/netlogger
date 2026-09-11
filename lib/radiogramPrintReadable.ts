@@ -101,6 +101,37 @@ function gap(ctx: Ctx, h = 14): void {
   ctx.y += h;
 }
 
+// Greedily wrap `text` on whitespace so each line fits within `maxWidth`
+// at the given font/size. A single word wider than maxWidth is kept whole
+// (not broken mid-word) rather than dropped.
+function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [];
+
+  const lines: string[] = [];
+  let line = words[0];
+  for (let i = 1; i < words.length; i++) {
+    const candidate = `${line} ${words[i]}`;
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      line = candidate;
+    } else {
+      lines.push(line);
+      line = words[i];
+    }
+  }
+  lines.push(line);
+  return lines;
+}
+
+// Draw an "Op Note: ..." line, wrapping it across multiple body lines so it
+// never runs past the right margin (issue #286).
+function opNoteLines(ctx: Ctx, note: string): void {
+  const maxWidth = PW - ML - MR;
+  for (const l of wrapText(`Op Note: ${note}`, ctx.rf, 11, maxWidth)) {
+    bodyLine(ctx, l, 11, ctx.rf, GRAY);
+  }
+}
+
 // ── Content renderer ─────────────────────────────────────────────────────────
 
 function renderTitle(ctx: Ctx, title: string): void {
@@ -177,23 +208,20 @@ function renderTextSection(ctx: Ctx, rad: Radiogram): void {
 }
 
 function renderSignatureSection(ctx: Ctx, rad: Radiogram): void {
-  const { rf } = ctx;
   section(ctx, 'SIGNATURE');
   const sigLines = rad.signature.split('\n').map(l => l.trim()).filter(Boolean);
   if (sigLines.length === 0) {
-    bodyLine(ctx, '—', 13, rf, LGRAY);
+    bodyLine(ctx, '—', 13, ctx.rf, LGRAY);
   } else {
     for (const l of sigLines) bodyLine(ctx, l);
   }
   if (rad.signatureOpNote) {
     gap(ctx, 4);
-    bodyLine(ctx, `Op Note: ${rad.signatureOpNote}`, 11, rf, GRAY);
+    opNoteLines(ctx, rad.signatureOpNote);
   }
 }
 
 function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
-  const { rf } = ctx;
-
   renderTitle(ctx, 'ARRL RADIOGRAM');
   renderPreamble(ctx, rad, rad.number);
 
@@ -204,7 +232,7 @@ function renderContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
   if (rad.addressPhone) bodyLine(ctx, rad.addressPhone); // legacy field — phone is now an address line
   if (rad.addressOpNote) {
     gap(ctx, 4);
-    bodyLine(ctx, `Op Note: ${rad.addressOpNote}`, 11, rf, GRAY);
+    opNoteLines(ctx, rad.addressOpNote);
   }
   gap(ctx);
 
@@ -243,7 +271,7 @@ function renderBookContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
     for (const l of addrLines) bodyLine(ctx, l);
     if (entry.addressOpNote) {
       gap(ctx, 4);
-      bodyLine(ctx, `Op Note: ${entry.addressOpNote}`, 11, rf, GRAY);
+      opNoteLines(ctx, entry.addressOpNote);
     }
     if (entry.otherVariables) {
       gap(ctx, 4);
