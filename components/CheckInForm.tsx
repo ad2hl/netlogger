@@ -245,7 +245,11 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               onClick={() => handleTagClick(ct.acronym)}
               disabled={disabled || isSubmitting || !hasValidCallsign || hasTag(ct.acronym)}
               title={ct.label}
-              className="px-1.5 py-1 text-xs font-semibold rounded disabled:opacity-40 disabled:cursor-not-allowed bg-teal-100 text-teal-800 border border-teal-300 hover:bg-teal-200"
+              className={`px-1.5 py-1 text-xs font-semibold rounded disabled:opacity-40 disabled:cursor-not-allowed ${
+                ct.acronym.length === 1
+                  ? 'bg-sky-100 text-sky-800 border border-sky-300 hover:bg-sky-200'
+                  : 'bg-teal-100 text-teal-800 border border-teal-300 hover:bg-teal-200'
+              }`}
             >
               {ct.acronym}
             </button>
