@@ -144,7 +144,7 @@ export default function SessionSummary({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-600">Traffic</span>
+            <span className="text-sm font-medium text-slate-600 whitespace-nowrap">Traffic Rptd/Clrd</span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => onReportedChange(Math.max(0, reported - 1))}
