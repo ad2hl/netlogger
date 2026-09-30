@@ -22,7 +22,7 @@ Example: `W1AW /T /M`
 
 Prefix a callsign with `?` to search your station memory without checking in (e.g., `?W1AW`).
 
-If you have QRZ credentials configured in Settings, the operator's name and location are looked up automatically on first check-in.
+The operator's name and location are looked up automatically on first check-in, using the free lookup service configured in Settings.
 
 ## Check-In List
 

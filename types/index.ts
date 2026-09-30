@@ -9,13 +9,14 @@ export interface CustomTag {
   inReport?: boolean; // true = include in net report callsign (liaison); false = status only; defaults to true
 }
 
+export type LookupService = 'callook' | 'hamdb';
+
 export interface UserProfile {
   callsign: string;
   name: string;
   location: string;
   netManagerCall: string;
-  qrzUsername: string;
-  qrzPassword: string;
+  lookupService?: LookupService;
   phone?: string;
   streetAddress?: string;
   city?: string;
@@ -190,7 +191,7 @@ export interface NetSession {
   checkedSecure?: string[]; // Callsigns requesting to secure that have been checked off
 }
 
-export interface QRZLookupResult {
+export interface CallsignLookupResult {
   callsign: string;
   firstName: string;
   lastName: string;
@@ -198,11 +199,6 @@ export interface QRZLookupResult {
   city: string;
   state: string;
   country: string;
-  error?: string;
-}
-
-export interface QRZSessionResponse {
-  sessionKey: string;
   error?: string;
 }
 

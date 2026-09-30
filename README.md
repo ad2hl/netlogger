@@ -14,7 +14,7 @@ A web-based amateur radio net logging application for net control operators.
   - `/P` - Portable
   - `/S` or `/IO` - Secure/In-and-out (highlighted)
   - `/XXX` - Liaison to XXX net
-- **QRZ.com Integration**: Automatic callsign lookups for operator names
+- **Free Callsign Lookup**: Automatic callsign lookups for operator names via Callook.info or HamDB.org — no account required
 - **Station Memory**: Remembers nicknames, notes, and last-seen dates across sessions. Add stations manually from the Stations page; edit or delete any station.
 - **Newly Licensed Ham Indicator**: Stations licensed within the past month are flagged with a star in the check-in list
 - **Traffic Checklist**: Track traffic and announcements per station with check-off items
@@ -43,7 +43,6 @@ issue.
 
 - Node.js 18.17+
 - A Firebase project with Authentication, Firestore, and App Check enabled
-- (Optional) QRZ.com XML subscription for callsign lookups
 
 ### Firebase Configuration
 
@@ -122,7 +121,7 @@ Open http://localhost:3000
    - Your callsign, name, and location
    - Net manager callsign (report addressee)
    - Receiving station name (printed in the RECEIVED AT section of radiogram forms)
-   - QRZ.com credentials (optional)
+   - Callsign lookup service (Callook.info or HamDB.org)
    - Custom sent/received disposition methods (optional)
 3. Start a new net session with name, date, and start time
 4. Check in stations by typing a callsign with tags (e.g., `W1AW/NC/T`)

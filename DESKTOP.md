@@ -12,12 +12,11 @@ required, no Firebase account, and no Google sign-in.
 | Authentication | Google sign-in (Firebase) | None — single local user |
 | Data storage | Firestore (cloud) | IndexedDB on your machine |
 | App Check | Required | Not used |
-| QRZ lookups | Via Next.js API route | Via Electron main process |
 | Session timeout | 8 hours (configurable) | Never |
 | Multi-device sync | Yes | No |
 
 Everything else — session logging, radiograms, net reports, PDF printing,
-callsign compression, QRZ lookups, the Stations page — works the same as
+callsign compression, callsign lookups, the Stations page — works the same as
 the web version.
 
 ## Data Storage
@@ -46,7 +45,7 @@ a safe location.
 - Station memory (callsigns, names, nicknames, locations, notes, last-seen dates)
 - Net sessions (check-ins, checklist items, session metadata)
 - Radiograms
-- Your settings profile (callsign, name, QRZ credentials, disposition methods, etc.)
+- Your settings profile (callsign, name, lookup service preference, disposition methods, etc.)
 
 ## Building
 

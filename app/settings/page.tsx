@@ -14,7 +14,6 @@ const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
 const FIXED_TAG_ACRONYMS = new Set(Object.keys(SPECIAL_TAGS));
 import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
-import { apiFetch } from '@/lib/api-fetch';
 
 export default function SettingsPage() {
   const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
@@ -31,8 +30,7 @@ export default function SettingsPage() {
     state: '',
     zip: '',
     receivingStationName: '',
-    qrzUsername: '',
-    qrzPassword: '',
+    lookupService: 'callook',
     nextMessageNumber: 1,
   });
   const [dispositionMethods, setDispositionMethods] = useState<string[]>(DEFAULT_DISPOSITION_METHODS);
@@ -57,8 +55,6 @@ export default function SettingsPage() {
     }
   }, [user, loading, emailVerified, router]);
 
-  const hasQrzCredentials = !!(profile?.qrzUsername && profile?.qrzPassword);
-
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -72,8 +68,7 @@ export default function SettingsPage() {
         state: profile.state || '',
         zip: profile.zip || '',
         receivingStationName: profile.receivingStationName || '',
-        qrzUsername: profile.qrzUsername || '',
-        qrzPassword: '',
+        lookupService: profile.lookupService || 'callook',
         nextMessageNumber: profile.nextMessageNumber ?? 1,
       });
       setDispositionMethods(profile.dispositionMethods ?? DEFAULT_DISPOSITION_METHODS);
@@ -82,7 +77,7 @@ export default function SettingsPage() {
     }
   }, [profile]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -98,29 +93,6 @@ export default function SettingsPage() {
     setMessage(null);
 
     const dataToSave = { ...formData, dispositionMethods, receivedMethods, customTags };
-
-    if (dataToSave.qrzPassword && !isDesktop) {
-      try {
-        const token = await user.getIdToken();
-        const res = await apiFetch('/api/credentials', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ password: dataToSave.qrzPassword }),
-        });
-        if (!res.ok) throw new Error('Encryption failed');
-        const { encrypted } = await res.json();
-        dataToSave.qrzPassword = encrypted;
-      } catch {
-        setMessage({ type: 'error', text: 'Failed to encrypt QRZ password. Please try again.' });
-        setSaving(false);
-        return;
-      }
-    } else if (!dataToSave.qrzPassword) {
-      delete dataToSave.qrzPassword;
-    }
 
     const success = await updateUserProfile(user.uid, dataToSave);
 
@@ -369,39 +341,24 @@ export default function SettingsPage() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4">QRZ.com Credentials (Optional)</h2>
+            <h2 className="text-lg font-semibold mb-4">Callsign Lookup</h2>
             <p className="text-sm text-slate-600 mb-4">
-              If you have a QRZ.com account, enter your credentials to automatically look up operator names and locations. Without credentials, you can enter this information manually.
+              When a station checks in, NetLogger automatically looks up their name and location using a free, no-account-required lookup service. Choose which one to use.
             </p>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  QRZ Username
-                </label>
-                <input
-                  type="text"
-                  name="qrzUsername"
-                  value={formData.qrzUsername}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="Your QRZ username"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  QRZ Password
-                </label>
-                <input
-                  type="password"
-                  name="qrzPassword"
-                  value={formData.qrzPassword}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder={hasQrzCredentials ? 'Password saved (leave blank to keep)' : 'Your QRZ password'}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Lookup Service
+              </label>
+              <select
+                name="lookupService"
+                value={formData.lookupService}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="callook">Callook.info</option>
+                <option value="hamdb">HamDB.org</option>
+              </select>
             </div>
           </div>
 

@@ -10,7 +10,7 @@ export function isCallAreaDigit(part: string): boolean {
 
 /**
  * Strips a trailing call-area digit, e.g. "W1AW/2" -> "W1AW". Station identity
- * -- QRZ/callook lookups, nicknames, notes, and check-in history -- stays keyed
+ * -- callsign lookups, nicknames, notes, and check-in history -- stays keyed
  * to the underlying station regardless of which call area was used to sign in.
  */
 export function getBaseCallsign(callsign: string): string {

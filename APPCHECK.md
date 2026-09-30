@@ -23,12 +23,11 @@ App Check is enforced at two levels:
 |---|---|---|
 | Sessions, check-ins, radiograms | Firestore (Firebase Console) | Fails — Firestore rejects all reads/writes |
 | Net report generation | Firestore (Firebase Console) | Fails — cannot read session data |
-| QRZ callsign lookups | API route | Fails with HTTP 401 |
+| Callsign lookups (Callook/HamDB) | API route | Fails with HTTP 401 |
 | Login/signup page banner | API route | Banner not displayed |
 | Page header message | API route | Message not displayed |
 | About page content | API route | Content not displayed |
 | Privacy policy | API route | Content not displayed |
-| QRZ credential encryption | API route | Fails with HTTP 401 |
 
 Without a valid App Check token the app cannot read or write any data.
 

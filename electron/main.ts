@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import * as http from 'http';
 import { spawn, ChildProcess } from 'child_process';
@@ -99,67 +99,6 @@ async function createWindow(url: string): Promise<void> {
     mainWindow = null;
   });
 }
-
-// QRZ lookup IPC handler — runs in main process to avoid CORS
-ipcMain.handle('qrz-lookup', async (_event, callsign: string, username: string, password: string) => {
-  try {
-    const QRZ_API_URL = 'https://xmldata.qrz.com/xml/current/';
-
-    const fetchXml = (url: string): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const mod = require('https');
-        mod.get(url, (res: http.IncomingMessage) => {
-          let data = '';
-          res.on('data', (chunk: string) => { data += chunk; });
-          res.on('end', () => resolve(data));
-        }).on('error', reject);
-      });
-    };
-
-    const parseXMLValue = (xml: string, tag: string): string => {
-      const regex = new RegExp(`<${tag}>([^<]*)</${tag}>`);
-      const match = xml.match(regex);
-      return match ? match[1] : '';
-    };
-
-    // Get QRZ session
-    const sessionParams = new URLSearchParams({ username, password, agent: 'NetLogger/1.0' });
-    const sessionXml = await fetchXml(`${QRZ_API_URL}?${sessionParams.toString()}`);
-
-    const sessionError = parseXMLValue(sessionXml, 'Error');
-    if (sessionError) {
-      return { error: sessionError };
-    }
-
-    const sessionKey = parseXMLValue(sessionXml, 'Key');
-    if (!sessionKey) {
-      return { error: 'No session key returned from QRZ' };
-    }
-
-    // Look up callsign
-    const lookupParams = new URLSearchParams({ s: sessionKey, callsign: callsign.toUpperCase() });
-    const lookupXml = await fetchXml(`${QRZ_API_URL}?${lookupParams.toString()}`);
-
-    const lookupError = parseXMLValue(lookupXml, 'Error');
-    if (lookupError) {
-      return { callsign: callsign.toUpperCase(), error: lookupError };
-    }
-
-    return {
-      callsign: parseXMLValue(lookupXml, 'call') || callsign.toUpperCase(),
-      firstName: parseXMLValue(lookupXml, 'fname'),
-      lastName: parseXMLValue(lookupXml, 'name'),
-      nickname: parseXMLValue(lookupXml, 'nickname'),
-      city: parseXMLValue(lookupXml, 'addr2'),
-      state: parseXMLValue(lookupXml, 'state'),
-      country: parseXMLValue(lookupXml, 'country'),
-    };
-  } catch (err) {
-    console.error('QRZ IPC error:', err);
-    return { error: String(err) };
-  }
-});
 
 app.on('ready', async () => {
   try {

@@ -47,7 +47,7 @@ On first read after the schema migration, `getSession`/`getAllSessions`/`getRece
 - **api-fetch.ts**: Client-side fetch wrapper that attaches App Check tokens to outgoing requests
 - **firebase.ts**: Client-side Firebase initialization (app, auth, Firestore, App Check). App Check is only initialized when `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is set.
 - **firebase-admin.ts**: Firebase Admin SDK initialization (uses `GOOGLE_APPLICATION_CREDENTIALS`); exports `getAdminApp()` and `getAdminAuth()`
-- **qrz.ts**: QRZ.com XML API client for operator lookups
+- **callsignLookup.ts**: Client for the free, no-auth Callook.info and HamDB.org callsign lookup services (`lookupCallsign(service, callsign)`), normalized into a common `CallsignLookupResult` shape
 - **content.ts**: Content loader with local override (`content/local/` → `content/default/` fallback). `readContent(filename)` for plain text/markdown. `readContentWithType(basename)` tries `.html` then `.md` and returns `{ content, type }` — used by all content API routes so operators can supply HTML instead of Markdown.
 
 ### Tag System
@@ -63,9 +63,8 @@ The `isStatusTag()` and `getTagLabel()` utilities in `types/index.ts` differenti
 
 All API routes (except `/api/health`) are protected by Firebase App Check. Authenticated routes additionally verify Firebase ID tokens. Client code must use `apiFetch()` from `lib/api-fetch.ts` instead of `fetch()` for all API calls so the App Check token is attached.
 
-- **app/api/qrz/route.ts**: QRZ.com callsign lookups (App Check + auth)
+- **app/api/lookup/route.ts**: Operator name/location lookups via Callook.info or HamDB.org, selected by the `service` query param (App Check only, no auth or credentials needed)
 - **app/api/callook/route.ts**: callook.info license grant-date lookups for newly licensed ham detection (App Check only)
-- **app/api/credentials/route.ts**: Password encryption (App Check + auth)
 - **app/api/login-banner/route.ts**: Serves markdown banner for login/signup pages (App Check only)
 - **app/api/login-background/route.ts**: Serves login background image (App Check only)
 - **app/api/header-message/route.ts**: Serves markdown message for page headers (App Check only)
@@ -85,7 +84,7 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 - **app/stations/page.tsx**: Station memory list with sortable columns (callsign, name, nickname, location, note, last seen, check-in count). "Add Station" button opens a modal to manually create a station (all fields except lastSeen; duplicate callsigns are rejected). Row hover reveals Edit and Delete buttons.
 - **app/settings/page.tsx**: User profile settings including `receivingStationName` (printed in the RECEIVED AT section of radiogram PDFs, distinct from the operator's first name used for signatures)
 - **components/SessionSummary.tsx**: Displays session metadata (Net Name, Date, Start/End, NC/ANC, station/traffic counts) with an inline Edit modal
-- **components/CheckInForm.tsx**: Single-line check-in input; supports callsign search (`?` prefix), tag parsing, and QRZ lookups; includes the Walt Whitman easter egg for callsign P0ET
+- **components/CheckInForm.tsx**: Single-line check-in input; supports callsign search (`?` prefix), tag parsing, and callsign lookups; includes the Walt Whitman easter egg for callsign P0ET
 - **components/CheckInList.tsx**: Scrollable list of checked-in stations; auto-scrolls to bottom on new check-in
 - **components/Checklist.tsx**: Traffic and announcements checklist
 - **components/RadiogramList.tsx**: List of radiograms with inline RadiogramForm for creating and editing; passes `userProfile` through for print support
@@ -120,8 +119,6 @@ NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN    # Register in Firebase Console → App Check
 
 In `NODE_ENV === 'development'`, App Check debug mode is **auto-enabled** even without this variable — the SDK logs an auto-generated UUID to the browser console on first run. Copy that UUID, register it in Firebase Console → App Check → Manage debug tokens, and subsequent runs work without any env var. Set `NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN` to pin a specific token (e.g., for a shared team token). See `APPCHECK.md` for full details.
 
-QRZ credentials are stored per-user in Firestore, not in environment variables.
-
 App Check is enforced at two levels: **Firestore** (via Firebase Console enforcement) rejects all direct client SDK reads and writes without a valid token, and all **server-side API routes** (except `/api/health`) call `verifyAppCheck` and return HTTP 401 without a valid token. If `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is absent, App Check is not initialized and the app will be non-functional. See `APPCHECK.md` for details on running without App Check.
 
 ### Server-Side Authentication & App Check
@@ -150,7 +147,7 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 - **`Station`**: includes `grantDate?: string | null` (ISO date from callook.info; `null` = checked but no date found; `undefined` = not yet checked). Used by `isNewHam()` to flag stations licensed within the past month.
 - **`Radiogram`**: includes `addressPhone?: string` (legacy — phone is now an address line; kept so old documents still display/print), `sessionId?: string` (set when created during a session; absent for standalone radiograms), and `sessionNetName?: string` (denormalized net name for display without a session join)
 - **`NetSession`**: uses `radiogramIds: string[]` (list of associated radiogram document IDs) instead of an embedded `radiograms: Radiogram[]` array
-- **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures)
+- **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures) and `lookupService?: LookupService` (`'callook'` | `'hamdb'`; defaults to `'callook'` for new users when unset)
 
 ## TypeScript
 

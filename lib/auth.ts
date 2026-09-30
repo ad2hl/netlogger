@@ -213,8 +213,7 @@ export async function signInWithGoogle(): Promise<{ user: User | null; error?: s
         name: user.displayName?.split(' ')[0] || '',
         location: '',
         netManagerCall: '',
-        qrzUsername: '',
-        qrzPassword: '',
+        lookupService: 'callook',
         dispositionMethods: DEFAULT_DISPOSITION_METHODS,
       };
       await withAuthRetry(() => setDoc(userDocRef, defaultProfile), 'setDoc users/{uid}');
@@ -315,8 +314,7 @@ export async function signUpWithEmail(
         name: '',
         location: '',
         netManagerCall: '',
-        qrzUsername: '',
-        qrzPassword: '',
+        lookupService: 'callook',
         dispositionMethods: DEFAULT_DISPOSITION_METHODS,
       };
       await setDoc(userDocRef, defaultProfile);

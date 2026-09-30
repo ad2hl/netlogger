@@ -14,11 +14,9 @@ These fields populate the **This Radio Message Was Received At** section of the 
 - **Name** — the receiving station operator's name.
 - **Phone / Address / City / State / ZIP** — contact and location for the receiving station.
 
-## QRZ.com Credentials (Optional)
+## Callsign Lookup
 
-Enter your QRZ.com username and password to enable automatic callsign lookups when stations check in. Without credentials, you can enter operator names and locations manually in the check-in list.
-
-Passwords are encrypted before storage. Leave the password field blank to keep the existing saved password.
+Choose which free lookup service — Callook.info or HamDB.org — NetLogger uses to automatically look up operator names and locations when stations check in. No account or credentials are required for either service.
 
 ## Sent Methods
 

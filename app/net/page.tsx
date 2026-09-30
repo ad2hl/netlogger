@@ -179,59 +179,28 @@ function NetPage() {
       if (!user || !profile) return null;
 
       // A trailing /<digit> (e.g. W1AW/2) is a call-area designator, not part of
-      // the station's identity — QRZ, callook, and station memory all key off the
-      // base callsign regardless of which call area was used to check in (issue #283).
+      // the station's identity — callsign lookups, callook, and station memory all
+      // key off the base callsign regardless of which call area was used to check
+      // in (issue #283).
       const baseCallsign = getBaseCallsign(callsign.toUpperCase());
 
       const cachedStation = await getStation(user.uid, baseCallsign);
 
       let station: Station | null = null;
 
-      if (cachedStation && (cachedStation.city || !profile.qrzUsername || !profile.qrzPassword)) {
+      if (cachedStation && cachedStation.city) {
         station = cachedStation;
-      } else if (!profile.qrzUsername || !profile.qrzPassword) {
-        station = {
-          callsign: baseCallsign,
-          firstName: null,
-          nickname: null,
-          city: null,
-          state: null,
-          note: null,
-          lastSeen: null as any,
-        };
-        await saveStation(user.uid, station);
       } else {
         try {
-          let data: Record<string, string>;
-
-          if (typeof window !== 'undefined' && (window as any).electron) {
-            // Desktop mode: QRZ lookup via Electron IPC (bypasses CORS)
-            data = await (window as any).electron.lookupQrz(
-              baseCallsign,
-              profile.qrzUsername,
-              profile.qrzPassword
-            );
-          } else {
-            const token = await user.getIdToken();
-            const response = await apiFetch('/api/qrz', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                callsign: baseCallsign,
-                username: profile.qrzUsername,
-                password: profile.qrzPassword,
-              }),
-            });
-            data = await response.json();
-          }
+          const service = profile.lookupService || 'callook';
+          const data = await (
+            await apiFetch(`/api/lookup?callsign=${encodeURIComponent(baseCallsign)}&service=${service}`)
+          ).json();
 
           if (data.error) {
-            console.error('QRZ lookup error:', data.error);
-            // Don't create a new empty station record when QRZ has no data —
-            // it would permanently block future lookups once the callsign appears in QRZ.
+            console.error('Callsign lookup error:', data.error);
+            // Don't create a new empty station record when the lookup has no data —
+            // it would permanently block future lookups once the callsign is found.
             station = cachedStation ?? null;
           } else {
             station = {
@@ -246,7 +215,7 @@ function NetPage() {
             await saveStation(user.uid, station);
           }
         } catch (error) {
-          console.error('QRZ lookup failed:', error);
+          console.error('Callsign lookup failed:', error);
           return null;
         }
       }

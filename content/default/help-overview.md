@@ -15,7 +15,7 @@ AD2HL Net Logger is an amateur radio net logging application for net control ope
 - **Sessions** — View and manage all past and current net sessions.
 - **Radiograms** — Browse radiograms across all sessions.
 - **Manage users** — View and edit station memory (callsigns, names, locations, notes).
-- **Settings** — Configure your callsign, profile, QRZ credentials, and disposition methods.
+- **Settings** — Configure your callsign, profile, callsign lookup service, and disposition methods.
 
 ## Check-In Tags
 
