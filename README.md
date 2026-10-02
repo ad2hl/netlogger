@@ -94,10 +94,6 @@ AppCheck debug token: '<uuid>'. You will need to safelist it in the Firebase con
 ```
 Copy that UUID and register it in Firebase Console → App Check → Manage debug tokens. On all subsequent runs the same token is reused automatically.
 
-To pin a specific token (e.g., a shared team token), add it to `.env.local`:
-```
-NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN=your-registered-uuid
-```
 See `APPCHECK.md` for full details.
 
 For server-side API routes on non-Google-Cloud hosts, provide a service account:

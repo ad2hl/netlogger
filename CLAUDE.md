@@ -112,12 +112,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID
 NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY
 ```
 
-Optional for local development:
-```
-NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN    # Register in Firebase Console → App Check → Manage debug tokens
-```
-
-In `NODE_ENV === 'development'`, App Check debug mode is **auto-enabled** even without this variable — the SDK logs an auto-generated UUID to the browser console on first run. Copy that UUID, register it in Firebase Console → App Check → Manage debug tokens, and subsequent runs work without any env var. Set `NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN` to pin a specific token (e.g., for a shared team token). See `APPCHECK.md` for full details.
+In `NODE_ENV === 'development'`, App Check debug mode is **auto-enabled** — the SDK logs an auto-generated UUID to the browser console on first run. Copy that UUID, register it in Firebase Console → App Check → Manage debug tokens, and subsequent runs work without any env var. See `APPCHECK.md` for full details.
 
 App Check is enforced at two levels: **Firestore** (via Firebase Console enforcement) rejects all direct client SDK reads and writes without a valid token, and all **server-side API routes** (except `/api/health`) call `verifyAppCheck` and return HTTP 401 without a valid token. If `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is absent, App Check is not initialized and the app will be non-functional. See `APPCHECK.md` for details on running without App Check.
 

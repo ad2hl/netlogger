@@ -51,17 +51,6 @@ local `.env.local`.
 That's it. On every subsequent `npm run dev` the same UUID is auto-generated (it is stable
 for the browser/origin) and App Check works without any env vars.
 
-### Pinning the token (optional)
-
-If you prefer an explicit, portable token (e.g. shared across team members or CI), add it
-to `.env.local` and restart the dev server:
-
-```
-NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN=<your-registered-uuid>
-```
-
-The app will use this token instead of auto-generating one.
-
 > **Do not ship a debug token to production.** Debug mode is only active when
 > `NODE_ENV === 'development'` (i.e. `npm run dev`). Production builds (`npm run build`)
 > require a real reCAPTCHA site key.

@@ -28,7 +28,7 @@ function ensureInitialized() {
     db = getFirestore(app);
 
     if (process.env.NODE_ENV === 'development') {
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
 
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
@@ -41,14 +41,14 @@ function ensureInitialized() {
       // so without this, the first Firestore call after a fast Google sign-in can race
       // against the token fetch and fail. Errors are ignored — the SDK will retry.
       getToken(appCheck, false).catch(() => {});
-    } else if (debugValue) {
+    } else if (process.env.NODE_ENV === 'development') {
       // No reCAPTCHA site key, but debug mode is active. Initialize App Check with a
       // CustomProvider — the FIREBASE_APPCHECK_DEBUG_TOKEN set above intercepts all token
       // requests before the provider is invoked, so the provider never actually runs.
       appCheck = initializeAppCheck(app, {
         provider: new CustomProvider({
           getToken: () => Promise.resolve({
-            token: typeof debugValue === 'string' ? debugValue : '',
+            token: '',
             expireTimeMillis: Date.now() + 3600 * 1000,
           }),
         }),
