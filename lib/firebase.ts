@@ -16,25 +16,19 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let appCheck: AppCheck;
-
 function ensureInitialized() {
   if (typeof window === 'undefined') return;
+
   if (!app || !auth || !db) {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+    app = !getApps().length
+      ? initializeApp(firebaseConfig)
+      : getApps()[0];
+
     auth = getAuth(app);
     db = getFirestore(app);
 
-    const debugToken = process.env.NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN;
-
-    // In development, fall back to `true` so Firebase auto-generates a debug token and logs it:
-    //   "AppCheck debug token: '<uuid>'. You will need to safelist it in the Firebase console..."
-    // Copy that UUID, register it in Firebase Console → App Check → Apps → Manage debug tokens,
-    // then optionally pin it via NEXT_PUBLIC_APPCHECK_DEBUG_TOKEN in .env.local.
-    const debugValue: string | boolean | undefined =
-      debugToken || (process.env.NODE_ENV === 'development' ? true : undefined);
-
-    if (debugValue) {
-      (self as unknown as Record<string, unknown>).FIREBASE_APPCHECK_DEBUG_TOKEN = debugValue;
+    if (process.env.NODE_ENV === 'development') {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
 
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY;
