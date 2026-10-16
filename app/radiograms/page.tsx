@@ -258,7 +258,7 @@ export default function RadiogramsPage() {
     const withMeta = splitRadiograms.map((r) => ({ ...r, savedAt: Timestamp.now() }));
     const success = await splitBookRadiogram(user.uid, book.id, withMeta);
     if (success) {
-      setRadiograms((prev) => [...withMeta, ...prev.filter((r) => r.id !== book.id)]);
+      setRadiograms((prev) => [...withMeta, ...prev]);
     }
   };
 

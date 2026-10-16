@@ -559,13 +559,9 @@ class DexieDB implements NetLoggerDB {
           savedAt: now,
         }));
         await getDb().radiograms.bulkPut(stored);
-        await getDb().radiograms.delete(bookId);
         if (book.sessionId) {
           await getDb().sessions.where('id').equals(book.sessionId).modify((s) => {
-            s.radiogramIds = [
-              ...(s.radiogramIds || []).filter((id) => id !== bookId),
-              ...newRadiograms.map((r) => r.id),
-            ];
+            s.radiogramIds = [...(s.radiogramIds || []), ...newRadiograms.map((r) => r.id)];
           });
         }
       });

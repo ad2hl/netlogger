@@ -401,20 +401,9 @@ class FirebaseDB implements NetLoggerDB {
         const radRef = doc(db, 'users', uid, 'radiograms', radiogram.id);
         batch.set(radRef, { ...radiogram, createdAt: now, savedAt: now });
       }
-      batch.delete(bookRef);
       if (book.sessionId) {
-        // arrayUnion and arrayRemove can't both apply to one field in one update,
-        // so compute the final array locally
         const sessionRef = doc(db, 'users', uid, 'sessions', book.sessionId);
-        const sessionSnap = await getDoc(sessionRef);
-        if (sessionSnap.exists()) {
-          const currentIds: string[] = sessionSnap.data().radiogramIds ?? [];
-          const radiogramIds = [
-            ...currentIds.filter((id) => id !== bookId),
-            ...newRadiograms.map((r) => r.id),
-          ];
-          batch.update(sessionRef, { radiogramIds });
-        }
+        batch.update(sessionRef, { radiogramIds: arrayUnion(...newRadiograms.map((r) => r.id)) });
       }
       await batch.commit();
       return true;

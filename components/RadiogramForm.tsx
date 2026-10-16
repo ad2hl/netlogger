@@ -465,6 +465,8 @@ export default function RadiogramForm({
   const handleSplitConfirm = async () => {
     if (!existingRadiogram || !onSplit) return;
     const book = buildRadiogram(existingRadiogram.id);
+    // The book is kept after splitting, so persist any unsaved edits first
+    await onSave(book);
     await onSplit(book, explodeBook(book));
     setShowSplitConfirm(false);
     onClose();
@@ -1138,7 +1140,7 @@ export default function RadiogramForm({
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
             <h3 className="text-base font-semibold text-slate-900 mb-2">Split Book</h3>
             <p className="text-sm text-slate-700 mb-2">
-              This will create {bookEntryCount} individual radiogram{bookEntryCount === 1 ? '' : 's'} and delete the book. This cannot be undone.
+              This will create {bookEntryCount} individual radiogram{bookEntryCount === 1 ? '' : 's'} for onward handling. The book itself is kept.
             </p>
             {(formData.bookEntries ?? []).some(e => !isBookEntryEmpty(e) && !e.number.trim()) && (
               <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mb-2">
