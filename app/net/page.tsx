@@ -563,7 +563,7 @@ function NetPage() {
 
     const success = await splitBookRadiogram(user.uid, book.id, withMeta);
     if (success) {
-      setRadiograms((prev) => [...prev.filter((r) => r.id !== book.id), ...withMeta]);
+      setRadiograms((prev) => [...prev, ...withMeta]);
     }
   };
 
