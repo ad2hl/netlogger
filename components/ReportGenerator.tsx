@@ -152,6 +152,7 @@ export default function ReportGenerator({
       userLocation: profile.location,
       addresseeCallsign: profile.netManagerCall || '',
       messageNumber: messageNumber || undefined,
+      utc: profile.timeZone === 'utc',
     });
   }, [session, profile, messageNumber]);
 

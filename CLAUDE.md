@@ -48,6 +48,7 @@ On first read after the schema migration, `getSession`/`getAllSessions`/`getRece
 - **firebase.ts**: Client-side Firebase initialization (app, auth, Firestore, App Check). App Check is only initialized when `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE_SITE_KEY` is set.
 - **firebase-admin.ts**: Firebase Admin SDK initialization (uses `GOOGLE_APPLICATION_CREDENTIALS`); exports `getAdminApp()` and `getAdminAuth()`
 - **callsignLookup.ts**: Client for the free, no-auth Callook.info and HamDB.org callsign lookup services (`lookupCallsign(service, callsign)`), normalized into a common `CallsignLookupResult` shape
+- **time.ts**: All dates/times are stored in UTC (issue #292); the user's Settings choice (`UserProfile.timeZone`, `'local'` default or `'utc'`) only affects entry and display. Helpers convert between stored and displayed forms at the UI edge: `sessionToDisplay`/`sessionToStored` (session `date` is a Timestamp at midnight UTC of the UTC start date; `startTime`/`endTime` are UTC `"HH:MM"`), `radiogramTimesToDisplay`/`radiogramTimesToStored` (Received/Sent date+time), plus `nowParts`, `formatTimeString` (`"1024Z"` in UTC mode) and `formatPrintTime` (printed times get a trailing `Z` in UTC mode). Radiogram objects passed between components and to the print functions are always in stored (UTC) form; only form state holds displayed values. The preamble Time Filed/Date are message content and are never converted. `lib/useUtc.ts` exposes the setting as a hook.
 - **content.ts**: Content loader with local override (`content/local/` → `content/default/` fallback). `readContent(filename)` for plain text/markdown. `readContentWithType(basename)` tries `.html` then `.md` and returns `{ content, type }` — used by all content API routes so operators can supply HTML instead of Markdown.
 
 ### Tag System
@@ -84,6 +85,7 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 - **app/stations/page.tsx**: Station memory list with sortable columns (callsign, name, nickname, location, note, last seen, check-in count). "Add Station" button opens a modal to manually create a station (all fields except lastSeen; duplicate callsigns are rejected). Row hover reveals Edit and Delete buttons.
 - **app/settings/page.tsx**: User profile settings including `receivingStationName` (printed in the RECEIVED AT section of radiogram PDFs, distinct from the operator's first name used for signatures)
 - **components/SessionSummary.tsx**: Displays session metadata (Net Name, Date, Start/End, NC/ANC, station/traffic counts) with an inline Edit modal
+- **components/TimeInput.tsx**: Time entry field — the native time picker in local mode; a 24-hour `HHMM` text field followed by "Z" (no AM/PM) in UTC mode. Value is always `"HH:MM"`.
 - **components/CheckInForm.tsx**: Single-line check-in input; supports callsign search (`?` prefix), tag parsing, and callsign lookups; includes the Walt Whitman easter egg for callsign P0ET
 - **components/CheckInList.tsx**: Scrollable list of checked-in stations; auto-scrolls to bottom on new check-in
 - **components/Checklist.tsx**: Traffic and announcements checklist
@@ -142,7 +144,7 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 - **`Station`**: includes `grantDate?: string | null` (ISO date from callook.info; `null` = checked but no date found; `undefined` = not yet checked). Used by `isNewHam()` to flag stations licensed within the past month.
 - **`Radiogram`**: includes `addressPhone?: string` (legacy — phone is now an address line; kept so old documents still display/print), `sessionId?: string` (set when created during a session; absent for standalone radiograms), and `sessionNetName?: string` (denormalized net name for display without a session join)
 - **`NetSession`**: uses `radiogramIds: string[]` (list of associated radiogram document IDs) instead of an embedded `radiograms: Radiogram[]` array
-- **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures) and `lookupService?: LookupService` (`'callook'` | `'hamdb'`; defaults to `'callook'` for new users when unset)
+- **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures) `lookupService?: LookupService` (`'callook'` | `'hamdb'`; defaults to `'callook'` for new users when unset), and `timeZone?: TimeZoneMode` (`'local'` | `'utc'`; defaults to `'local'`)
 
 ## TypeScript
 

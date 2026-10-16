@@ -5,6 +5,9 @@ import { Radiogram, NetReport, UserProfile, DEFAULT_DISPOSITION_METHODS } from '
 import { formatRadiogramAsText } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
 import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
+import { useUtc } from '@/lib/useUtc';
+import { radiogramTimesToDisplay, radiogramTimesToStored, formatTimeString } from '@/lib/time';
+import TimeInput from '@/components/TimeInput';
 
 interface DispositionFields {
   dispositionMethod: string;
@@ -212,8 +215,9 @@ function RadiogramFormView({ fields, receivedSection, sentSection }: {
   );
 }
 
-function EditableDisposition({ disposition, onChange, onSave, onCancel, dispositionMethods }: {
+function EditableDisposition({ disposition, onChange, onSave, onCancel, dispositionMethods, utc }: {
   disposition: DispositionFields;
+  utc: boolean;
   onChange: (d: DispositionFields) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -258,10 +262,10 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600 mb-1">Time</label>
-          <input
-            type="time"
+          <TimeInput
+            utc={utc}
             value={disposition.dispositionTime}
-            onChange={(e) => onChange({ ...disposition, dispositionTime: e.target.value })}
+            onChange={(v) => onChange({ ...disposition, dispositionTime: v })}
             className={inputClass}
           />
         </div>
@@ -284,7 +288,7 @@ function EditableDisposition({ disposition, onChange, onSave, onCancel, disposit
   );
 }
 
-function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }) {
+function ReadOnlyDisposition({ disposition, utc }: { disposition: DispositionFields; utc: boolean }) {
   return (
     <div className="border-t pt-3">
       <h3 className="text-sm font-semibold text-slate-700 mb-1">Sent</h3>
@@ -292,13 +296,13 @@ function ReadOnlyDisposition({ disposition }: { disposition: DispositionFields }
         <ReadOnlyField label="Method" value={disposition.dispositionMethod} />
         <ReadOnlyField label="To" value={disposition.dispositionDestination} />
         <ReadOnlyField label="Date" value={disposition.dispositionDate} />
-        <ReadOnlyField label="Time" value={disposition.dispositionTime} />
+        <ReadOnlyField label="Time" value={formatTimeString(disposition.dispositionTime, utc)} />
       </div>
     </div>
   );
 }
 
-function ReadOnlyReceived({ method, from, date, time }: { method: string; from: string; date: string; time: string }) {
+function ReadOnlyReceived({ method, from, date, time, utc }: { method: string; from: string; date: string; time: string; utc: boolean }) {
   return (
     <div className="border-t pt-3">
       <h3 className="text-sm font-semibold text-slate-700 mb-1">Received</h3>
@@ -306,7 +310,7 @@ function ReadOnlyReceived({ method, from, date, time }: { method: string; from: 
         <ReadOnlyField label="Method" value={method} />
         <ReadOnlyField label="From" value={from} />
         <ReadOnlyField label="Date" value={date} />
-        <ReadOnlyField label="Time" value={time} />
+        <ReadOnlyField label="Time" value={formatTimeString(time, utc)} />
       </div>
     </div>
   );
@@ -314,6 +318,7 @@ function ReadOnlyReceived({ method, from, date, time }: { method: string; from: 
 
 export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpdateDisposition, dispositionMethods, userProfile }: ReadOnlyRadiogramProps) {
   const [copied, setCopied] = useState(false);
+  const utc = useUtc();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -321,7 +326,10 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const initDisposition = (): DispositionFields => {
+  // Disposition state holds displayed-zone values; stored values are UTC
+  const initDisposition = (): DispositionFields => radiogramTimesToDisplay(storedDisposition(), utc);
+
+  const storedDisposition = (): DispositionFields => {
     if (radiogram) {
       return {
         dispositionMethod: radiogram.dispositionMethod || '',
@@ -345,7 +353,7 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
 
   const handleSaveDisposition = async () => {
     if (onUpdateDisposition) {
-      await onUpdateDisposition(disposition);
+      await onUpdateDisposition(radiogramTimesToStored(disposition, utc));
     }
     onClose();
   };
@@ -450,15 +458,17 @@ export default function ReadOnlyRadiogram({ radiogram, netReport, onClose, onUpd
   }
 
   const sentSection = onUpdateDisposition
-    ? <EditableDisposition disposition={disposition} onChange={setDisposition} onSave={handleSaveDisposition} onCancel={onClose} dispositionMethods={dispositionMethods} />
-    : <ReadOnlyDisposition disposition={disposition} />;
+    ? <EditableDisposition disposition={disposition} onChange={setDisposition} onSave={handleSaveDisposition} onCancel={onClose} dispositionMethods={dispositionMethods} utc={utc} />
+    : <ReadOnlyDisposition disposition={disposition} utc={utc} />;
 
-  const receivedSection = radiogram
+  const shownReceived = radiogram ? radiogramTimesToDisplay(radiogram, utc) : undefined;
+  const receivedSection = shownReceived
     ? <ReadOnlyReceived
-        method={radiogram.receivedMethod || ''}
-        from={radiogram.receivedDestination || ''}
-        date={radiogram.receivedDate || ''}
-        time={radiogram.receivedTime || ''}
+        method={shownReceived.receivedMethod || ''}
+        from={shownReceived.receivedDestination || ''}
+        date={shownReceived.receivedDate || ''}
+        time={shownReceived.receivedTime || ''}
+        utc={utc}
       />
     : undefined;
 

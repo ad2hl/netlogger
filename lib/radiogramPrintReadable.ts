@@ -8,6 +8,7 @@
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import { Radiogram, UserProfile } from '@/types';
 import { isBookEntryEmpty } from '@/lib/radiogram';
+import { formatPrintTime, radiogramTimesToDisplay } from '@/lib/time';
 
 // ── Page geometry (72 pt = 1 inch) ──────────────────────────────────────────
 const PW = 612;  // 8.5"
@@ -290,21 +291,24 @@ function renderBookContent(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
   renderRelayAndReceivedAt(ctx, rad, up);
 }
 
-function renderRelayAndReceivedAt(ctx: Ctx, rad: Radiogram, up?: UserProfile): void {
+function renderRelayAndReceivedAt(ctx: Ctx, storedRad: Radiogram, up?: UserProfile): void {
   const { rf, bf } = ctx;
+  // Received/sent times are stored in UTC; print them in the user's chosen zone
+  const utc = up?.timeZone === 'utc';
+  const rad = radiogramTimesToDisplay(storedRad, utc);
 
   // RECEIVED / SENT — relay chain
   const recParts: string[] = [];
   if (rad.receivedMethod)      recParts.push(`Via: ${rad.receivedMethod}`);
   if (rad.receivedDestination) recParts.push(`From: ${rad.receivedDestination}`);
   if (rad.receivedDate)        recParts.push(`Date: ${rad.receivedDate}`);
-  if (rad.receivedTime)        recParts.push(`Time: ${rad.receivedTime}`);
+  if (rad.receivedTime)        recParts.push(`Time: ${formatPrintTime(rad.receivedTime, utc)}`);
 
   const sentParts: string[] = [];
   if (rad.dispositionMethod)      sentParts.push(`Via: ${rad.dispositionMethod}`);
   if (rad.dispositionDestination) sentParts.push(`To: ${rad.dispositionDestination}`);
   if (rad.dispositionDate)        sentParts.push(`Date: ${rad.dispositionDate}`);
-  if (rad.dispositionTime)        sentParts.push(`Time: ${rad.dispositionTime}`);
+  if (rad.dispositionTime)        sentParts.push(`Time: ${formatPrintTime(rad.dispositionTime, utc)}`);
 
   if (recParts.length > 0 || sentParts.length > 0) {
     gap(ctx);

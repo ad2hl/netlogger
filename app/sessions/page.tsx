@@ -8,7 +8,9 @@ import { useAuth } from '@/components/AuthProvider';
 import { getAllSessions, deleteSession, createSession, updateSession } from '@/lib/firestore';
 import NavMenu from '@/components/NavMenu';
 import { NetSession } from '@/types';
-import { Timestamp } from 'firebase/firestore';
+import { useUtc } from '@/lib/useUtc';
+import { nowParts, sessionToDisplay, sessionToStored, sessionStart, formatDateString, formatTimeString } from '@/lib/time';
+import TimeInput from '@/components/TimeInput';
 import HeaderBanner from '@/components/HeaderBanner';
 
 type SortColumn = 'date' | 'startTime' | 'endTime' | 'netName' | 'ncs' | 'ancs' | 'duration' | 'stations' | 'trafficReported' | 'trafficCleared';
@@ -33,9 +35,9 @@ function computeDurationMinutes(session: NetSession): number {
     return endMinutes >= startMinutes ? endMinutes - startMinutes : (1440 - startMinutes) + endMinutes;
   }
 
-  // Active session: compute from start to now
+  // Active session: compute from start to now (start time is stored in UTC)
   const now = new Date();
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const nowMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
   return nowMinutes >= startMinutes ? nowMinutes - startMinutes : (1440 - startMinutes) + nowMinutes;
 }
 
@@ -57,6 +59,7 @@ export default function SessionsPage() {
 function SessionsContent() {
   const { user, loading, emailVerified } = useAuth();
   const router = useRouter();
+  const utc = useUtc();
   const searchParams = useSearchParams();
   const openOnLoad = searchParams.get('new') === '1';
   const isWelcome = searchParams.get('welcome') === '1';
@@ -85,11 +88,9 @@ function SessionsContent() {
         setSessions(s);
         setFetching(false);
         if (openOnLoad) {
-          const now = new Date();
-          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
           setNewNetName(s[0]?.netName || '');
-          setNewDate(todayStr);
-          setNewStartTime(s[0]?.startTime || '');
+          setNewDate(nowParts(utc).date);
+          setNewStartTime(s[0] ? sessionToDisplay(s[0], utc).startTime : '');
           setShowNewSessionModal(true);
         } else if (isWelcome && !localStorage.getItem('netlogger:hideGettingStarted')) {
           setShowGettingStarted(true);
@@ -106,20 +107,16 @@ function SessionsContent() {
       let cmp = 0;
       switch (sortColumn) {
         case 'date':
-          cmp = a.date.toDate().getTime() - b.date.toDate().getTime();
-          if (cmp === 0) cmp = a.startTime.localeCompare(b.startTime);
+          cmp = sessionStart(a).getTime() - sessionStart(b).getTime();
           if (cmp === 0) cmp = a.netName.localeCompare(b.netName);
           // For date, desc means newest first for both date and startTime
           return sortDirection === 'asc' ? cmp : -cmp;
         case 'startTime':
-          cmp = a.startTime.localeCompare(b.startTime);
+          cmp = sessionToDisplay(a, utc).startTime.localeCompare(sessionToDisplay(b, utc).startTime);
           break;
-        case 'endTime': {
-          const aEnd = a.endTime || '';
-          const bEnd = b.endTime || '';
-          cmp = aEnd.localeCompare(bEnd);
+        case 'endTime':
+          cmp = sessionToDisplay(a, utc).endTime.localeCompare(sessionToDisplay(b, utc).endTime);
           break;
-        }
         case 'netName':
           cmp = a.netName.localeCompare(b.netName);
           break;
@@ -145,7 +142,7 @@ function SessionsContent() {
       return sortDirection === 'asc' ? cmp : -cmp;
     });
     return sorted;
-  }, [sessions, sortColumn, sortDirection]);
+  }, [sessions, sortColumn, sortDirection, utc]);
 
   const handleSort = (column: SortColumn) => {
     if (column === sortColumn) {
@@ -171,11 +168,9 @@ function SessionsContent() {
   };
 
   const openNewSessionModal = () => {
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     setNewNetName(sessions[0]?.netName || '');
-    setNewDate(todayStr);
-    setNewStartTime(sessions[0]?.startTime || '');
+    setNewDate(nowParts(utc).date);
+    setNewStartTime(sessions[0] ? sessionToDisplay(sessions[0], utc).startTime : '');
     setShowNewSessionModal(true);
   };
 
@@ -192,8 +187,7 @@ function SessionsContent() {
     if (!user) return;
     const active = sessions.find((s) => !s.endTime);
     if (active?.id) {
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const timeStr = nowParts(true).time;
       await updateSession(user.uid, active.id, { endTime: timeStr });
       setSessions((prev) => prev.map((s) => s.id === active.id ? { ...s, endTime: timeStr } : s));
     }
@@ -204,13 +198,9 @@ function SessionsContent() {
   const handleCreateNewSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const [year, month, day] = newDate.split('-').map(Number);
-    const localDate = new Date(year, month - 1, day);
     const sessionId = await createSession(user.uid, {
       netName: newNetName,
-      date: Timestamp.fromDate(localDate),
-      startTime: newStartTime,
-      endTime: null,
+      ...sessionToStored({ date: newDate, startTime: newStartTime }, utc),
       trafficReported: 0,
       trafficCleared: 0,
       checkIns: [],
@@ -325,18 +315,20 @@ function SessionsContent() {
                 </tr>
               </thead>
               <tbody>
-                {sortedSessions.map((s) => (
+                {sortedSessions.map((s) => {
+                  const shown = sessionToDisplay(s, utc);
+                  return (
                   <tr
                     key={s.id}
                     className="border-b hover:bg-slate-50 cursor-pointer"
                     onClick={() => router.push(`/net?session=${s.id}`)}
                   >
                     <td className="py-2 pr-4 whitespace-nowrap">
-                      {s.date.toDate().toLocaleDateString()}
+                      {formatDateString(shown.date)}
                     </td>
-                    <td className="py-2 pr-4 whitespace-nowrap">{s.startTime}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">{formatTimeString(shown.startTime, utc)}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">
-                      {s.endTime || 'Active'}
+                      {s.endTime ? formatTimeString(shown.endTime, utc) : 'Active'}
                     </td>
                     <td className="py-2 pr-4">{s.netName}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{getNCS(s)}</td>
@@ -359,7 +351,8 @@ function SessionsContent() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -372,7 +365,7 @@ function SessionsContent() {
             <h2 className="text-lg font-semibold text-gray-900 mb-3">Delete Session?</h2>
             <p className="text-gray-600 mb-6">
               This will permanently delete the session <strong>{deleteTarget.netName}</strong> from{' '}
-              <strong>{deleteTarget.date.toDate().toLocaleDateString()}</strong> at <strong>{deleteTarget.startTime}</strong>, including all check-ins and reports. Radiograms from this session will be preserved.
+              <strong>{formatDateString(sessionToDisplay(deleteTarget, utc).date)}</strong> at <strong>{formatTimeString(sessionToDisplay(deleteTarget, utc).startTime, utc)}</strong>, including all check-ins and reports. Radiograms from this session will be preserved.
             </p>
             <div className="flex justify-end gap-3">
               <button
@@ -507,10 +500,10 @@ function SessionsContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
-                <input
-                  type="time"
+                <TimeInput
+                  utc={utc}
                   value={newStartTime}
-                  onChange={(e) => setNewStartTime(e.target.value)}
+                  onChange={setNewStartTime}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   required
                 />
