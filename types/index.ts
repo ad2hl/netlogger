@@ -11,12 +11,16 @@ export interface CustomTag {
 
 export type LookupService = 'callook' | 'hamdb';
 
+// How dates and times are entered and displayed; storage is always UTC (issue #292)
+export type TimeZoneMode = 'local' | 'utc';
+
 export interface UserProfile {
   callsign: string;
   name: string;
   location: string;
   netManagerCall: string;
   lookupService?: LookupService;
+  timeZone?: TimeZoneMode;  // defaults to 'local'
   phone?: string;
   streetAddress?: string;
   city?: string;
@@ -49,15 +53,18 @@ export function isNewHam(grantDate: string | null | undefined): boolean {
   return grant >= oneMonthAgo;
 }
 
-export function formatLastSeen(lastSeen: Timestamp | null): string | null {
+export function formatLastSeen(lastSeen: Timestamp | null, utc = false): string | null {
   if (!lastSeen) return null;
 
   const now = new Date();
   const then = lastSeen.toDate();
 
-  // Calculate calendar days difference (not 24-hour periods)
-  const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const thenDate = new Date(then.getFullYear(), then.getMonth(), then.getDate());
+  // Calculate calendar days difference (not 24-hour periods) in the displayed zone
+  const calendarDay = (d: Date) => utc
+    ? new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+    : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const nowDate = calendarDay(now);
+  const thenDate = calendarDay(then);
   const diffDays = Math.floor((nowDate.getTime() - thenDate.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {

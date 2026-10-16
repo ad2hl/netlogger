@@ -3,16 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { NetSession } from '@/types';
+import { useUtc } from '@/lib/useUtc';
+import { sessionToDisplay, sessionToStored, formatDateString, formatTimeString } from '@/lib/time';
+import TimeInput from '@/components/TimeInput';
 
 interface SessionSummaryProps {
   netName: string;
-  date: Date;
+  date: Timestamp;          // stored (UTC) session date
   stationCount: number;
   reported: number;
   cleared: number;
   onReportedChange: (value: number) => void;
   onClearedChange: (value: number) => void;
-  startTime: string | null;
+  startTime: string;        // stored (UTC) "HH:MM"
   endTime: string | null;
   ncCallsign: string | null;
   ancCallsigns: string[];
@@ -23,8 +26,8 @@ function formatDuration(startTime: string | null, endTime: string | null): strin
   if (!startTime || !endTime) return '—';
   const [sh, sm] = startTime.split(':').map(Number);
   const [eh, em] = endTime.split(':').map(Number);
-  const minutes = (eh * 60 + em) - (sh * 60 + sm);
-  if (minutes < 0) return '—';
+  let minutes = (eh * 60 + em) - (sh * 60 + sm);
+  if (minutes < 0) minutes += 24 * 60;  // net ran past midnight
   if (minutes < 60) return `${minutes}m`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -45,6 +48,10 @@ export default function SessionSummary({
   ancCallsigns,
   onUpdateSession,
 }: SessionSummaryProps) {
+  const utc = useUtc();
+  const shown = sessionToDisplay({ date, startTime, endTime }, utc);
+  const shownDate = formatDateString(shown.date, { month: 'long', day: 'numeric', year: 'numeric' }, 'en-US');
+  const shownDateNumeric = formatDateString(shown.date, { month: '2-digit', day: '2-digit', year: 'numeric' }, 'en-US');
   const [showEditModal, setShowEditModal] = useState(false);
   const [editNetName, setEditNetName] = useState('');
   const [editDate, setEditDate] = useState('');
@@ -60,23 +67,22 @@ export default function SessionSummary({
 
   const openEditModal = () => {
     setEditNetName(netName);
-    setEditDate(date.toISOString().split('T')[0]);
-    setEditStartTime(startTime || '');
-    setEditEndTime(endTime || '');
+    setEditDate(shown.date);
+    setEditStartTime(shown.startTime);
+    setEditEndTime(shown.endTime);
     setShowEditModal(true);
   };
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const [year, month, day] = editDate.split('-').map(Number);
-    const localDate = new Date(year, month - 1, day);
+    const stored = sessionToStored({ date: editDate, startTime: editStartTime, endTime: editEndTime }, utc);
     const updates: Partial<NetSession> = {
       netName: editNetName,
-      date: Timestamp.fromDate(localDate),
-      startTime: editStartTime,
+      date: stored.date,
+      startTime: stored.startTime,
     };
     if (endTime !== null) {
-      updates.endTime = editEndTime || null;
+      updates.endTime = stored.endTime;
     }
     onUpdateSession(updates);
     setShowEditModal(false);
@@ -103,17 +109,17 @@ export default function SessionSummary({
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">Date</span>
             <span className="text-base font-mono font-semibold text-right">
-                <span className="block">{date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                <span className="block text-sm font-normal text-slate-500">{date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>
+                <span className="block">{shownDate}</span>
+                <span className="block text-sm font-normal text-slate-500">{shownDateNumeric}</span>
               </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">Start</span>
-            <span className="text-base font-mono font-semibold">{startTime || '—'}</span>
+            <span className="text-base font-mono font-semibold">{shown.startTime ? formatTimeString(shown.startTime, utc) : '—'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-slate-600">End</span>
-            <span className="text-base font-mono font-semibold">{endTime || '—'}</span>
+            <span className="text-base font-mono font-semibold">{shown.endTime ? formatTimeString(shown.endTime, utc) : '—'}</span>
           </div>
         </div>
 
@@ -226,10 +232,10 @@ export default function SessionSummary({
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
-                <input
-                  type="time"
+                <TimeInput
+                  utc={utc}
                   value={editStartTime}
-                  onChange={(e) => setEditStartTime(e.target.value)}
+                  onChange={setEditStartTime}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   required
                 />
@@ -237,10 +243,10 @@ export default function SessionSummary({
               {endTime !== null && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">End Time</label>
-                  <input
-                    type="time"
+                  <TimeInput
+                    utc={utc}
                     value={editEndTime}
-                    onChange={(e) => setEditEndTime(e.target.value)}
+                    onChange={setEditEndTime}
                     className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   />
                 </div>

@@ -9,6 +9,8 @@ import { getAllStations, getAllSessions, updateStationFields, deleteStation, sav
 import { Timestamp } from 'firebase/firestore';
 import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
+import { useUtc } from '@/lib/useUtc';
+import { formatDate } from '@/lib/time';
 
 interface StationRow {
   callsign: string;
@@ -19,7 +21,6 @@ interface StationRow {
   location: string;
   note: string;
   lastSeen: Date | null;
-  lastSeenDisplay: string;
   checkIns: number;
 }
 
@@ -28,6 +29,7 @@ type SortColumn = 'callsign' | 'firstName' | 'nickname' | 'location' | 'note' | 
 export default function StationsPage() {
   const { user, loading, emailVerified } = useAuth();
   const router = useRouter();
+  const utc = useUtc();
   const [rows, setRows] = useState<StationRow[]>([]);
   const [fetching, setFetching] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('callsign');
@@ -78,7 +80,6 @@ export default function StationsPage() {
         location: [s.city, s.state].filter(Boolean).join(', '),
         note: s.note || '',
         lastSeen: s.lastSeen ? s.lastSeen.toDate() : null,
-        lastSeenDisplay: s.lastSeen ? s.lastSeen.toDate().toLocaleDateString() : '',
         checkIns: countMap.get(s.callsign.toUpperCase()) || 0,
       })));
       setFetching(false);
@@ -150,7 +151,6 @@ export default function StationsPage() {
         location,
         note: station.note || '',
         lastSeen: null,
-        lastSeenDisplay: '',
         checkIns: 0,
       }]);
       setIsAddOpen(false);
@@ -339,7 +339,7 @@ export default function StationsPage() {
                     <td className="py-2 pr-4 whitespace-nowrap">{row.nickname}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">{row.location}</td>
                     <td className="py-2 pr-4 italic text-slate-500">{row.note}</td>
-                    <td className="py-2 pr-4 whitespace-nowrap">{row.lastSeenDisplay}</td>
+                    <td className="py-2 pr-4 whitespace-nowrap">{row.lastSeen ? formatDate(row.lastSeen, utc) : ''}</td>
                     <td className="py-2 pr-4 text-right">{row.checkIns || ''}</td>
                     <td className="py-2">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">

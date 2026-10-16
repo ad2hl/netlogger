@@ -1,5 +1,6 @@
 import { PDFDocument, PDFFont, StandardFonts } from 'pdf-lib';
 import { Radiogram, UserProfile } from '@/types';
+import { formatPrintTime, radiogramTimesToDisplay } from '@/lib/time';
 
 const WORDS_PER_FORM = 25;
 
@@ -14,10 +15,6 @@ function formatPrintDate(dateStr: string | undefined): string {
   return dateStr;
 }
 
-function formatPrintTime(timeStr: string | undefined): string {
-  if (!timeStr) return '';
-  return timeStr.replace(':', '');
-}
 
 function setField(
   form: ReturnType<PDFDocument['getForm']>,
@@ -131,7 +128,10 @@ function fillHalf(
   }
 }
 
-export async function printRadiogram(radiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
+export async function printRadiogram(storedRadiogram: Radiogram, userProfile?: UserProfile): Promise<void> {
+  // Received/sent times are stored in UTC; print them in the user's chosen zone
+  const utc = userProfile?.timeZone === 'utc';
+  const radiogram = radiogramTimesToDisplay(storedRadiogram, utc);
   const words = radiogram.textWords.filter(w => w.length > 0);
 
   // Address lines map 1:1 onto the form's four TO fields; the fourth is unlabeled
@@ -180,10 +180,10 @@ export async function printRadiogram(radiogram: Radiogram, userProfile?: UserPro
   const dispositionData = {
     receivedFrom: radiogram.receivedDestination,
     dateReceived: formatPrintDate(radiogram.receivedDate),
-    timeReceived: formatPrintTime(radiogram.receivedTime),
+    timeReceived: formatPrintTime(radiogram.receivedTime, utc),
     sentTo: radiogram.dispositionDestination,
     dateSent: formatPrintDate(radiogram.dispositionDate),
-    timeSent: formatPrintTime(radiogram.dispositionTime),
+    timeSent: formatPrintTime(radiogram.dispositionTime, utc),
   };
 
   // Split words into 25-word chunks, one chunk per form half

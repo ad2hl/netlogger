@@ -10,13 +10,16 @@ import { signOut } from '@/lib/auth';
 import { apiFetch } from '@/lib/api-fetch';
 import ContentRenderer from '@/components/ContentRenderer';
 import { NetSession } from '@/types';
-import { Timestamp } from 'firebase/firestore';
+import { useUtc } from '@/lib/useUtc';
+import { nowParts, sessionToDisplay, sessionToStored, formatDateString, formatTimeString } from '@/lib/time';
+import TimeInput from '@/components/TimeInput';
 
 const linkClass = 'block w-full text-left rounded-lg py-3 px-5 hover:bg-slate-50 transition-colors font-medium border border-slate-300 text-slate-700';
 
 export default function HomePage() {
   const { user, loading, emailVerified } = useAuth();
   const router = useRouter();
+  const utc = useUtc();
   const [bgUrl, setBgUrl] = useState<string | null>(null);
   const [activeSession, setActiveSession] = useState<NetSession | null | undefined>(undefined);
   const [showNewSessionModal, setShowNewSessionModal] = useState(false);
@@ -85,11 +88,9 @@ export default function HomePage() {
   };
 
   const openNewSessionModal = () => {
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     setNewNetName(activeSession?.netName || '');
-    setNewDate(todayStr);
-    setNewStartTime(activeSession?.startTime || '');
+    setNewDate(nowParts(utc).date);
+    setNewStartTime(activeSession ? sessionToDisplay(activeSession, utc).startTime : '');
     setShowNewSessionModal(true);
   };
 
@@ -110,17 +111,11 @@ export default function HomePage() {
     e.preventDefault();
     if (!user) return;
     if (activeSession?.id) {
-      const now = new Date();
-      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      await updateSession(user.uid, activeSession.id, { endTime: timeStr });
+      await updateSession(user.uid, activeSession.id, { endTime: nowParts(true).time });
     }
-    const [year, month, day] = newDate.split('-').map(Number);
-    const localDate = new Date(year, month - 1, day);
     const sessionId = await createSession(user.uid, {
       netName: newNetName,
-      date: Timestamp.fromDate(localDate),
-      startTime: newStartTime,
-      endTime: null,
+      ...sessionToStored({ date: newDate, startTime: newStartTime }, utc),
       trafficReported: 0,
       trafficCleared: 0,
       checkIns: [],
@@ -142,11 +137,9 @@ export default function HomePage() {
 
   if (loading || !user) return null;
 
-  const activeSessionDate = activeSession?.date instanceof Timestamp
-    ? activeSession.date.toDate().toLocaleDateString()
-    : activeSession?.date
-      ? (activeSession.date as Timestamp).toDate?.()?.toLocaleDateString() ?? ''
-      : '';
+  const activeSessionDate = activeSession?.date
+    ? formatDateString(sessionToDisplay(activeSession, utc).date)
+    : '';
 
   const resumeHref = activeSession?.id ? `/net?session=${activeSession.id}` : undefined;
 
@@ -171,7 +164,7 @@ export default function HomePage() {
             <Link href={resumeHref} className={linkClass}>
               <span>Resume most recent net session</span>
               <span className="block text-sm font-normal text-slate-500 mt-0.5">
-                {activeSession!.netName} &mdash; {activeSessionDate} {activeSession!.startTime}
+                {activeSession!.netName} &mdash; {activeSessionDate} {formatTimeString(sessionToDisplay(activeSession!, utc).startTime, utc)}
               </span>
             </Link>
           ) : (
@@ -298,10 +291,10 @@ export default function HomePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
-                <input
-                  type="time"
+                <TimeInput
+                  utc={utc}
                   value={newStartTime}
-                  onChange={(e) => setNewStartTime(e.target.value)}
+                  onChange={setNewStartTime}
                   className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
                   required
                 />

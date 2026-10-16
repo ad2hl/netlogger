@@ -31,6 +31,7 @@ export default function SettingsPage() {
     zip: '',
     receivingStationName: '',
     lookupService: 'callook',
+    timeZone: 'local',
     nextMessageNumber: 1,
   });
   const [dispositionMethods, setDispositionMethods] = useState<string[]>(DEFAULT_DISPOSITION_METHODS);
@@ -69,6 +70,7 @@ export default function SettingsPage() {
         zip: profile.zip || '',
         receivingStationName: profile.receivingStationName || '',
         lookupService: profile.lookupService || 'callook',
+        timeZone: profile.timeZone || 'local',
         nextMessageNumber: profile.nextMessageNumber ?? 1,
       });
       setDispositionMethods(profile.dispositionMethods ?? DEFAULT_DISPOSITION_METHODS);
@@ -358,6 +360,28 @@ export default function SettingsPage() {
               >
                 <option value="callook">Callook.info</option>
                 <option value="hamdb">HamDB.org</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4">Dates &amp; Times</h2>
+            <p className="text-sm text-slate-600 mb-4">
+              Choose whether dates and times are entered and displayed in your local time zone or in UTC. UTC times use a 24-hour clock and are printed with a trailing &ldquo;Z&rdquo; (e.g., 1024Z).
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Time Zone
+              </label>
+              <select
+                name="timeZone"
+                value={formData.timeZone}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="local">Local</option>
+                <option value="utc">UTC</option>
               </select>
             </div>
           </div>

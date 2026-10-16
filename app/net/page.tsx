@@ -31,6 +31,7 @@ import {
 import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
+import { nowParts, sessionStart } from '@/lib/time';
 import { getBaseCallsign } from '@/lib/callsign';
 import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
@@ -152,16 +153,12 @@ function NetPage() {
       addresseeCallsign: profile.netManagerCall || '',
       messageNumber,
       customTags: profile.customTags,
+      utc: profile.timeZone === 'utc',
     });
-
-    // Combine date and startTime into a single timestamp
-    const sessionDate = sess.date.toDate();
-    const [hours, minutes] = sess.startTime.split(':').map(Number);
-    sessionDate.setHours(hours, minutes, 0, 0);
 
     const report: NetReport = {
       netName: sess.netName,
-      startDateTime: Timestamp.fromDate(sessionDate),
+      startDateTime: Timestamp.fromDate(sessionStart(sess)),
       radiogram: radiogram.text,
       savedAt: Timestamp.now(),
       parts: radiogram.parts,
@@ -741,9 +738,7 @@ function NetPage() {
 
   const handleEndSession = async () => {
     if (!session?.id || session.endTime) return;
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    await handleUpdateSession({ endTime: timeStr });
+    await handleUpdateSession({ endTime: nowParts(true).time });
   };
 
   if (loading) {
@@ -820,7 +815,7 @@ function NetPage() {
               <div className="space-y-2">
                 <SessionSummary
                   netName={session.netName}
-                  date={session.date.toDate()}
+                  date={session.date}
                   stationCount={session.checkIns.length}
                   reported={session.trafficReported}
                   cleared={session.trafficCleared}

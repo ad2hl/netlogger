@@ -1,5 +1,6 @@
 import { BookEntry, CheckIn, NetSession, CustomTag, Radiogram, isStatusTag } from '@/types';
 import { isCallAreaDigit } from '@/lib/callsign';
+import { sessionToDisplay } from '@/lib/time';
 
 export function generateRadiogramId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -13,6 +14,7 @@ interface RadiogramData {
   addresseeCallsign: string;
   messageNumber?: string;
   customTags?: CustomTag[];
+  utc?: boolean;  // date the report in UTC rather than local time
 }
 
 function getCallsignPrefix(callsign: string): string {
@@ -105,13 +107,10 @@ function formatWordsPerLine(words: string[], wordsPerLine: number = 5): string {
   return lines.join('\n');
 }
 
-function getMonthName(date: Date): string {
-  const months = [
-    'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-    'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
-  ];
-  return months[date.getMonth()];
-}
+const MONTHS = [
+  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+];
 
 function calculateElapsedTime(startTime: string, endTime: string): string {
   const [startHour, startMin] = startTime.split(':').map(Number);
@@ -142,9 +141,9 @@ export interface RadiogramResult {
 export function generateRadiogram(data: RadiogramData): RadiogramResult {
   const { session, userCallsign, userName, userLocation, addresseeCallsign, messageNumber } = data;
 
-  const sessionDate = session.date.toDate();
-  const dayOfMonth = sessionDate.getDate();
-  const month = getMonthName(sessionDate);
+  const [, monthNum, dayNum] = sessionToDisplay(session, !!data.utc).date.split('-').map(Number);
+  const dayOfMonth = dayNum;
+  const month = MONTHS[monthNum - 1];
 
   const statusOnlyTags = new Set(
     (data.customTags ?? []).filter(ct => ct.inReport === false).map(ct => ct.acronym)

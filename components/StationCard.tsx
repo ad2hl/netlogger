@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { CheckIn, Station, CustomTag, getTagLabel, formatLastSeen, URGENT_TAGS, isNewHam } from '@/types';
+import { useUtc } from '@/lib/useUtc';
 
 
 interface StationCardProps {
@@ -33,6 +34,7 @@ export default function StationCard({
   customTags = [],
   sessionActive = true,
 }: StationCardProps) {
+  const utc = useUtc();
   const [editingField, setEditingField] = useState<'callsign' | 'name' | 'note' | 'location' | null>(null);
   const [callsign, setCallsign] = useState(checkIn.callsign);
   const [nickname, setNickname] = useState(station?.nickname || '');
@@ -40,7 +42,7 @@ export default function StationCard({
   const [editLocation, setEditLocation] = useState('');
 
   const displayName = station?.nickname || station?.firstName || '';
-  const lastSeenText = station?.lastSeen ? formatLastSeen(station.lastSeen) : null;
+  const lastSeenText = station?.lastSeen ? formatLastSeen(station.lastSeen, utc) : null;
   const location = [station?.city, station?.state].filter(Boolean).join(', ');
 
   const handleSaveCallsign = () => {

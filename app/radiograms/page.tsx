@@ -21,6 +21,7 @@ import ReadOnlyRadiogram from '@/components/ReadOnlyRadiogram';
 import RadiogramForm from '@/components/RadiogramForm';
 import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
+import { formatDate, formatTime } from '@/lib/time';
 
 interface RadiogramListItem {
   type: 'Radiogram' | 'Book' | 'Net Report';
@@ -38,18 +39,17 @@ interface RadiogramListItem {
 
 type SortColumn = 'date' | 'netName' | 'type' | 'number' | 'stationOfOrigin' | 'addressee' | 'disposition';
 
-function formatDisplayDate(date: Date): string {
-  return date.toLocaleDateString() + ' ' +
-    date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function formatDisplayDate(date: Date, utc: boolean): string {
+  return formatDate(date, utc) + ' ' + formatTime(date, utc);
 }
 
-function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramListItem[] {
+function buildItems(radiograms: Radiogram[], sessions: NetSession[], utc: boolean): RadiogramListItem[] {
   const items: RadiogramListItem[] = [];
 
   // User-created radiograms from the independent collection
   for (const radiogram of radiograms) {
     const itemDate = (radiogram.createdAt ?? radiogram.savedAt)?.toDate() ?? new Date();
-    const displayDate = formatDisplayDate(itemDate);
+    const displayDate = formatDisplayDate(itemDate, utc);
 
     items.push({
       type: radiogram.isBook ? 'Book' : 'Radiogram',
@@ -72,7 +72,7 @@ function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramL
       const reportDate = report.savedAt
         ? report.savedAt.toDate()
         : report.startDateTime.toDate();
-      const displayDate = formatDisplayDate(reportDate);
+      const displayDate = formatDisplayDate(reportDate, utc);
 
       let number: string;
       let stationOfOrigin: string;
@@ -114,6 +114,7 @@ function buildItems(radiograms: Radiogram[], sessions: NetSession[]): RadiogramL
 export default function RadiogramsPage() {
   const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
   const router = useRouter();
+  const utc = profile?.timeZone === 'utc';
   const [radiograms, setRadiograms] = useState<Radiogram[]>([]);
   const [sessions, setSessions] = useState<NetSession[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -144,7 +145,7 @@ export default function RadiogramsPage() {
     }
   }, [user]);
 
-  const items = useMemo(() => buildItems(radiograms, sessions), [radiograms, sessions]);
+  const items = useMemo(() => buildItems(radiograms, sessions, utc), [radiograms, sessions, utc]);
 
   const sortedItems = useMemo(() => {
     const sorted = [...items];

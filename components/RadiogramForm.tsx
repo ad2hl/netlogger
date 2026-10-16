@@ -5,6 +5,9 @@ import { BookEntry, Radiogram, UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT
 import { explodeBook, formatRadiogramAsText, generateRadiogramId, isBookEntryEmpty, parseDtnRadiogram } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
 import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
+import { useUtc } from '@/lib/useUtc';
+import { radiogramTimesToDisplay, radiogramTimesToStored } from '@/lib/time';
+import TimeInput from '@/components/TimeInput';
 
 interface RadiogramFormProps {
   isOpen: boolean;
@@ -93,6 +96,7 @@ export default function RadiogramForm({
   onAssignNumbers,
   onSplit,
 }: RadiogramFormProps) {
+  const utc = useUtc();
   const sentMethods = dispositionMethods ?? DEFAULT_DISPOSITION_METHODS;
   const rcvdMethods = receivedMethods ?? DEFAULT_RECEIVED_METHODS;
   const createEmptyWords = (lines: number) => Array(lines * WORDS_PER_LINE).fill('');
@@ -147,8 +151,9 @@ export default function RadiogramForm({
       while (textWords.length < minWords) {
         textWords.push('');
       }
+      // Form state holds received/sent times in the displayed zone; stored values are UTC
       setFormData({
-        ...rest,
+        ...radiogramTimesToDisplay(rest, utc),
         textWords,
         // Legacy radiograms stored the phone separately; fold it into the address
         // as an additional line (the separate field was removed — issue #258)
@@ -292,7 +297,7 @@ export default function RadiogramForm({
   };
 
   const buildRadiogram = (id: string): Radiogram => ({
-    ...formData,
+    ...radiogramTimesToStored(formData, utc),
     textWords: trimTrailingEmpty(formData.textWords),
     isBook: !!formData.isBook,
     bookEntries: formData.isBook ? trimTrailingEmptyEntries(formData.bookEntries ?? []) : [],
@@ -921,10 +926,10 @@ export default function RadiogramForm({
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Time</label>
-                <input
-                  type="time"
+                <TimeInput
+                  utc={utc}
                   value={formData.receivedTime || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, receivedTime: e.target.value }))}
+                  onChange={(v) => setFormData(prev => ({ ...prev, receivedTime: v }))}
                   className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
                 />
               </div>
@@ -969,10 +974,10 @@ export default function RadiogramForm({
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Time</label>
-                <input
-                  type="time"
+                <TimeInput
+                  utc={utc}
                   value={formData.dispositionTime || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dispositionTime: e.target.value }))}
+                  onChange={(v) => setFormData(prev => ({ ...prev, dispositionTime: v }))}
                   className="w-full px-2 border border-slate-300 rounded text-sm h-[30px]"
                 />
               </div>
