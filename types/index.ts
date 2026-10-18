@@ -170,6 +170,9 @@ export interface Radiogram {
   isBook?: boolean;
   bookEntries?: BookEntry[];
   bookVariable?: string;    // on a split-out radiogram: unresolved variable parts carried from its book entry
+  // Received/sent times are known to be UTC (issue #292): set when created, or by
+  // scripts/migrate_to_utc.py after converting a radiogram saved in local time
+  timesUtc?: boolean;
 }
 
 // Traffic item for the checklist (e.g., KM2I -> WM2C)
