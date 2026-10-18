@@ -100,6 +100,7 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 
 - **scripts/import_stations.py**: Import station callsigns/nicknames from CSV into Firestore
 - **scripts/update_lastseen.py**: Backfill station `lastSeen` from historical session data
+- **scripts/migrate_to_utc.py**: One-shot conversion of a user's Firestore session and radiogram dates/times from local time to UTC (issue #292); `<uid> --tz <IANA zone> [--dry-run]`. Times already ending in `Z` are left alone. Idempotent and safe to re-run: sessions whose `date` is midnight UTC and radiograms with `timesUtc: true` are skipped, and each document's conversion and marker are written together. Run it soon after deploying, before pre-migration records are edited in the app
 
 ## Firebase Configuration
 
@@ -142,7 +143,7 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 ## Key Types (types/index.ts)
 
 - **`Station`**: includes `grantDate?: string | null` (ISO date from callook.info; `null` = checked but no date found; `undefined` = not yet checked). Used by `isNewHam()` to flag stations licensed within the past month.
-- **`Radiogram`**: includes `addressPhone?: string` (legacy — phone is now an address line; kept so old documents still display/print), `sessionId?: string` (set when created during a session; absent for standalone radiograms), and `sessionNetName?: string` (denormalized net name for display without a session join)
+- **`Radiogram`**: includes `addressPhone?: string` (legacy — phone is now an address line; kept so old documents still display/print), `sessionId?: string` (set when created during a session; absent for standalone radiograms), `sessionNetName?: string` (denormalized net name for display without a session join), and `timesUtc?: boolean` (Received/Sent times are known to be UTC; set by `addRadiogram`/`splitBookRadiogram` in the Firebase backend and by `scripts/migrate_to_utc.py`)
 - **`NetSession`**: uses `radiogramIds: string[]` (list of associated radiogram document IDs) instead of an embedded `radiograms: Radiogram[]` array
 - **`UserProfile`**: includes `receivingStationName?: string` (for RECEIVED AT on printed radiograms, separate from `name` used for signatures) `lookupService?: LookupService` (`'callook'` | `'hamdb'`; defaults to `'callook'` for new users when unset), and `timeZone?: TimeZoneMode` (`'local'` | `'utc'`; defaults to `'local'`)
 

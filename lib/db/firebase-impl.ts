@@ -331,7 +331,8 @@ class FirebaseDB implements NetLoggerDB {
       const batch = writeBatch(db);
       const radRef = doc(db, 'users', uid, 'radiograms', radiogram.id);
       const now = Timestamp.now();
-      batch.set(radRef, { ...radiogram, createdAt: now, savedAt: now });
+      // timesUtc marks the received/sent times as already UTC for scripts/migrate_to_utc.py
+      batch.set(radRef, { ...radiogram, createdAt: now, savedAt: now, timesUtc: true });
       if (radiogram.sessionId) {
         const sessionRef = doc(db, 'users', uid, 'sessions', radiogram.sessionId);
         batch.update(sessionRef, { radiogramIds: arrayUnion(radiogram.id) });
@@ -399,7 +400,7 @@ class FirebaseDB implements NetLoggerDB {
       const now = Timestamp.now();
       for (const radiogram of newRadiograms) {
         const radRef = doc(db, 'users', uid, 'radiograms', radiogram.id);
-        batch.set(radRef, { ...radiogram, createdAt: now, savedAt: now });
+        batch.set(radRef, { ...radiogram, createdAt: now, savedAt: now, timesUtc: true });
       }
       if (book.sessionId) {
         const sessionRef = doc(db, 'users', uid, 'sessions', book.sessionId);
