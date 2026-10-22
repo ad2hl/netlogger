@@ -449,7 +449,7 @@ const CHECKED_FIELDS: { key: keyof ImportedRadiogram; label: string }[] = [
 ];
 
 export interface InvalidCharsFinding {
-  label: string;     // e.g. "Addressee" or "Text word 7"
+  label: string;     // e.g. "Addressee" or "Text word group 7"
   value: string;     // the offending value
   chars: string[];   // the distinct invalid characters it contains
 }
@@ -470,7 +470,7 @@ export function findInvalidRadiogramChars(r: ImportedRadiogram): InvalidCharsFin
   }
   (r.textWords ?? []).forEach((word, i) => {
     const chars = invalidCharsIn(word);
-    if (chars.length > 0) findings.push({ label: `Text word ${i + 1}`, value: word, chars });
+    if (chars.length > 0) findings.push({ label: `Text word group ${i + 1}`, value: word, chars });
   });
   return findings;
 }
