@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { BookEntry, Radiogram, UserProfile, DEFAULT_DISPOSITION_METHODS, DEFAULT_RECEIVED_METHODS } from '@/types';
-import { explodeBook, formatRadiogramAsText, generateRadiogramId, isBookEntryEmpty, parseDtnRadiogram } from '@/lib/radiogram';
+import { explodeBook, findInvalidRadiogramChars, formatRadiogramAsText, generateRadiogramId, InvalidCharsFinding, isBookEntryEmpty, parseDtnRadiogram, stripInvalidRadiogramChars } from '@/lib/radiogram';
 import { printRadiogram } from '@/lib/radiogramPrint';
 import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
 import { useUtc } from '@/lib/useUtc';
@@ -139,6 +139,11 @@ export default function RadiogramForm({
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
+  // A parsed import held back because it contains invalid characters (issue #314)
+  const [pendingImport, setPendingImport] = useState<{
+    parsed: ReturnType<typeof parseDtnRadiogram>;
+    findings: InvalidCharsFinding[];
+  } | null>(null);
   const wordInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const signatureRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -360,21 +365,31 @@ export default function RadiogramForm({
     formData.textWords.every(w => !w) &&
     (formData.bookEntries ?? []).every(isBookEntryEmpty);
 
+  const applyImport = (parsed: ReturnType<typeof parseDtnRadiogram>) => {
+    const minWords = INITIAL_LINES * WORDS_PER_LINE;
+    const textWords = [...(parsed.textWords ?? [])];
+    while (textWords.length < minWords) textWords.push('');
+    setFormData(prev => ({
+      ...emptyForm,
+      netName: prev.netName,
+      ...parsed,
+      textWords,
+    }));
+    setPendingImport(null);
+    setShowImportDialog(false);
+    setImportText('');
+    setImportError('');
+  };
+
   const handleImportConfirm = () => {
     try {
       const parsed = parseDtnRadiogram(importText);
-      const minWords = INITIAL_LINES * WORDS_PER_LINE;
-      const textWords = [...(parsed.textWords ?? [])];
-      while (textWords.length < minWords) textWords.push('');
-      setFormData(prev => ({
-        ...emptyForm,
-        netName: prev.netName,
-        ...parsed,
-        textWords,
-      }));
-      setShowImportDialog(false);
-      setImportText('');
-      setImportError('');
+      const findings = findInvalidRadiogramChars(parsed);
+      if (findings.length > 0) {
+        setPendingImport({ parsed, findings });
+        return;
+      }
+      applyImport(parsed);
     } catch (e) {
       setImportError(e instanceof Error ? e.message : 'Failed to parse radiogram.');
     }
@@ -1084,6 +1099,50 @@ export default function RadiogramForm({
                 className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm disabled:opacity-50"
               >
                 Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingImport && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full mx-4">
+            <h3 className="text-base font-semibold text-slate-900 mb-2">Invalid Characters</h3>
+            <p className="text-sm text-slate-700 mb-3">
+              The imported radiogram contains characters that are not allowed in a radiogram. Only letters, numbers, and &ldquo;/&rdquo; may be used.
+            </p>
+            <ul className="text-sm text-slate-700 mb-4 max-h-48 overflow-y-auto border border-slate-200 rounded divide-y divide-slate-100">
+              {pendingImport.findings.map((f, i) => (
+                <li key={i} className="px-2 py-1">
+                  <span className="font-medium">{f.label}:</span>{' '}
+                  <span className="font-mono">{f.chars.map(c => `“${c}”`).join(' ')}</span>
+                  <span className="block font-mono text-xs text-slate-500 truncate">{f.value.replace(/\n/g, ' \u21B5 ')}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingImport(null)}
+                className="bg-slate-300 text-slate-700 py-2 px-4 rounded-md hover:bg-slate-400 text-sm"
+              >
+                Go Back
+              </button>
+              <button
+                type="button"
+                onClick={() => applyImport(pendingImport.parsed)}
+                className="bg-slate-500 text-white py-2 px-4 rounded-md hover:bg-slate-600 text-sm"
+              >
+                Import As-Is
+              </button>
+              <button
+                type="button"
+                onClick={() => applyImport(stripInvalidRadiogramChars(pendingImport.parsed))}
+                className="bg-cyan-700 text-white py-2 px-4 rounded-md hover:bg-cyan-900 text-sm"
+                autoFocus
+              >
+                Remove and Import
               </button>
             </div>
           </div>
