@@ -427,6 +427,72 @@ export function parseDtnRadiogram(raw: string): Partial<Omit<import('@/types').R
   };
 }
 
+// Radiogram fields may contain only A-Z, 0-9 and "/" (plus spaces and line
+// breaks between words) -- the same rule the form enforces on typed input.
+const INVALID_RADIOGRAM_CHARS = /[^A-Z0-9/\s]/g;
+
+type ImportedRadiogram = ReturnType<typeof parseDtnRadiogram>;
+
+const CHECKED_FIELDS: { key: keyof ImportedRadiogram; label: string }[] = [
+  { key: 'number', label: 'Number' },
+  { key: 'precedence', label: 'Precedence' },
+  { key: 'handlingInstructions', label: 'HX' },
+  { key: 'stationOfOrigin', label: 'Station of Origin' },
+  { key: 'check', label: 'Check' },
+  { key: 'placeOfOrigin', label: 'Place of Origin' },
+  { key: 'timeFiled', label: 'Time Filed' },
+  { key: 'date', label: 'Date' },
+  { key: 'address', label: 'Addressee' },
+  { key: 'addressOpNote', label: 'Addressee Op Note' },
+  { key: 'signature', label: 'Signature' },
+  { key: 'signatureOpNote', label: 'Signature Op Note' },
+];
+
+export interface InvalidCharsFinding {
+  label: string;     // e.g. "Addressee" or "Text word 7"
+  value: string;     // the offending value
+  chars: string[];   // the distinct invalid characters it contains
+}
+
+function invalidCharsIn(value: string): string[] {
+  return Array.from(new Set(value.match(INVALID_RADIOGRAM_CHARS) ?? []));
+}
+
+// List every field (and text word group) of an imported radiogram that
+// contains characters a radiogram may not contain (issue #314)
+export function findInvalidRadiogramChars(r: ImportedRadiogram): InvalidCharsFinding[] {
+  const findings: InvalidCharsFinding[] = [];
+  for (const { key, label } of CHECKED_FIELDS) {
+    const value = r[key];
+    if (typeof value !== 'string') continue;
+    const chars = invalidCharsIn(value);
+    if (chars.length > 0) findings.push({ label, value, chars });
+  }
+  (r.textWords ?? []).forEach((word, i) => {
+    const chars = invalidCharsIn(word);
+    if (chars.length > 0) findings.push({ label: `Text word ${i + 1}`, value: word, chars });
+  });
+  return findings;
+}
+
+// Remove the characters reported by findInvalidRadiogramChars. A text word
+// group made up only of invalid characters is dropped.
+export function stripInvalidRadiogramChars(r: ImportedRadiogram): ImportedRadiogram {
+  const result: ImportedRadiogram = { ...r };
+  for (const { key } of CHECKED_FIELDS) {
+    const value = r[key];
+    if (typeof value === 'string') {
+      (result as Record<string, unknown>)[key] = value.replace(INVALID_RADIOGRAM_CHARS, '');
+    }
+  }
+  if (r.textWords) {
+    result.textWords = r.textWords
+      .map(w => w.replace(INVALID_RADIOGRAM_CHARS, ''))
+      .filter(w => w.length > 0);
+  }
+  return result;
+}
+
 export function parseCallsignInput(input: string): {
   callsign: string;
   tags: string[];
