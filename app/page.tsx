@@ -151,7 +151,7 @@ function SignInPage() {
     const result = await sendPasswordReset(email);
     setSubmitting(false);
     if (result.success) {
-      setSuccess('Password reset email sent. Check your inbox.');
+      setSuccess('Password reset email sent. Check your inbox. If you don\'t see it within a few minutes, check your Spam or Junk folder.');
     } else if (result.error) {
       setError(result.error);
     }
@@ -164,7 +164,7 @@ function SignInPage() {
     const result = await resendVerificationEmail(user);
     setSubmitting(false);
     if (result.success) {
-      setSuccess('Verification email sent. Check your inbox.');
+      setSuccess('Verification email sent. Check your inbox. If you don\'t see it within a few minutes, check your Spam or Junk folder.');
     } else if (result.error) {
       setError(result.error);
     }
@@ -216,7 +216,7 @@ function SignInPage() {
             Please click the link in the email to verify your account.
           </p>
           <p className="text-slate-500 text-center text-sm mb-6">
-            If you don&apos;t see it, check your spam or junk folder.
+            If you don&apos;t see it within a few minutes, check your Spam or Junk folder.
           </p>
 
           {error && (
