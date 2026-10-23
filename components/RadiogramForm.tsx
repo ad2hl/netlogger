@@ -6,7 +6,7 @@ import { explodeBook, findInvalidRadiogramChars, formatRadiogramAsText, generate
 import { printRadiogram } from '@/lib/radiogramPrint';
 import { printRadiogramReadable } from '@/lib/radiogramPrintReadable';
 import { useUtc } from '@/lib/useUtc';
-import { radiogramTimesToDisplay, radiogramTimesToStored } from '@/lib/time';
+import { formatPreambleDate, formatPrintTime, nowParts, radiogramTimesToDisplay, radiogramTimesToStored } from '@/lib/time';
 import TimeInput from '@/components/TimeInput';
 
 interface RadiogramFormProps {
@@ -476,6 +476,17 @@ export default function RadiogramForm({
     });
   };
 
+  // Fill the preamble Date (and optionally Time Filed) with the current
+  // date/time in the zone chosen in Settings; the time gets a Z in UTC mode
+  const handleFillDateTime = (includeTime: boolean) => {
+    const now = nowParts(utc);
+    setFormData(prev => ({
+      ...prev,
+      date: formatPreambleDate(now.date),
+      ...(includeTime && { timeFiled: formatPrintTime(now.time, utc) }),
+    }));
+  };
+
   // In book mode, Assign Next fills the entries' numbers sequentially (N, N+1, ...)
   const assignBtnDisabled = formData.isBook
     ? (!onAssignNumbers || entriesNeedingNumbers === 0)
@@ -787,7 +798,7 @@ export default function RadiogramForm({
                   className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                 />
               </div>
-              <div className="col-span-6">
+              <div className="col-span-2">
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   Date
                 </label>
@@ -799,6 +810,22 @@ export default function RadiogramForm({
                   className="w-full px-2 py-1 border border-slate-300 rounded text-sm uppercase"
                   required
                 />
+              </div>
+              <div className="col-span-4 flex items-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleFillDateTime(false)}
+                  className="flex-1 px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300 rounded hover:bg-slate-200 whitespace-nowrap"
+                >
+                  Fill Date
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFillDateTime(true)}
+                  className="flex-1 px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-300 rounded hover:bg-slate-200 whitespace-nowrap"
+                >
+                  Fill Time &amp; Date
+                </button>
               </div>
             </div>
           </div>

@@ -186,6 +186,14 @@ export function formatPrintTime(time: string | undefined, utc: boolean): string 
   return utc && /^\d{4}$/.test(compact) ? `${compact}Z` : compact;
 }
 
+const MONTH_ABBREVS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+// "YYYY-MM-DD" → radiogram preamble date ("OCT 23")
+export function formatPreambleDate(date: string): string {
+  const d = parseDate(date);
+  return d ? `${MONTH_ABBREVS[d[1] - 1]} ${d[2]}` : '';
+}
+
 // Calendar date of an instant in the displayed zone, as "YYYY-MM-DD"
 export function dateStringOf(d: Date, utc: boolean): string {
   return partsOf(d, utc).date;
