@@ -72,7 +72,7 @@ All API routes (except `/api/health`) are protected by Firebase App Check. Authe
 - **app/api/about/route.ts**: Serves about page content (App Check only)
 - **app/api/privacy-policy/route.ts**: Serves full privacy policy (App Check only)
 - **app/api/privacy-policy-summary/route.ts**: Serves privacy policy summary (App Check only)
-- **app/api/help/route.ts**: Serves per-page help content (no App Check — public)
+- **app/api/help/route.ts**: Serves per-page help content (no App Check — public). `app/help/page.tsx` renders it with `<ContentRenderer toc />`, which turns on `remark-gfm` (tables) and `remark-toc` + `rehype-slug` for Markdown: a table of contents is generated under any heading named "Contents" or "Table of Contents" (issue #321). Other `ContentRenderer` uses render plain Markdown without these plugins.
 - **app/api/footer-credit/route.ts**: Serves optional footer credit text (no App Check — public)
 - **app/api/local-content/route.ts**: Generic local content file reader (App Check only)
 - **app/api/health/route.ts**: Health check endpoint (no protection — used by monitoring)
