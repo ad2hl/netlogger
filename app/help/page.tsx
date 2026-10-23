@@ -40,7 +40,7 @@ function HelpPage() {
         <p className="text-slate-500">Loading...</p>
       ) : (
         <div className="prose prose-slate prose-sm max-w-none">
-          <ContentRenderer content={content.content} type={content.type} />
+          <ContentRenderer content={content.content} type={content.type} toc />
         </div>
       )}
     </div>
