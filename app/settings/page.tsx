@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { changePassword } from '@/lib/auth';
 import { updateUserProfile } from '@/lib/firestore';
@@ -56,7 +55,10 @@ export default function SettingsPage() {
     }
   }, [user, loading, emailVerified, router]);
 
-  useEffect(() => {
+  // Load the form from the profile whenever it (re)loads
+  const [loadedProfile, setLoadedProfile] = useState<typeof profile>(null);
+  if (profile !== loadedProfile) {
+    setLoadedProfile(profile);
     if (profile) {
       setFormData({
         callsign: profile.callsign || '',
@@ -77,7 +79,7 @@ export default function SettingsPage() {
       setReceivedMethods(profile.receivedMethods ?? DEFAULT_RECEIVED_METHODS);
       setCustomTags(profile.customTags ?? []);
     }
-  }, [profile]);
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

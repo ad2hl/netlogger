@@ -19,10 +19,7 @@ function HelpPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!page) {
-      setError(true);
-      return;
-    }
+    if (!page) return;
     fetch(`/api/help?page=${encodeURIComponent(page)}`)
       .then((res) => {
         if (!res.ok) { setError(true); return null; }
@@ -37,7 +34,7 @@ function HelpPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
-      {error ? (
+      {error || !page ? (
         <p className="text-slate-500">Help content not available.</p>
       ) : content === null ? (
         <p className="text-slate-500">Loading...</p>

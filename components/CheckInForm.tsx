@@ -45,9 +45,11 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
   }, [disabled, isSubmitting]);
 
   // Reset selection when search results change
-  useEffect(() => {
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery);
+  if (searchQuery !== prevSearchQuery) {
+    setPrevSearchQuery(searchQuery);
     setSelectedIndex(0);
-  }, [searchQuery]);
+  }
 
   // Handle click outside to cancel search mode
   useEffect(() => {
@@ -278,6 +280,8 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
             </svg>
           </button>
+          {/* Remote one-off easter-egg image; next/image would need a remotePatterns entry */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={WHITMAN_IMG}
             alt="Walt Whitman"

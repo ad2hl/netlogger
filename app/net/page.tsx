@@ -207,7 +207,7 @@ function NetPage() {
               city: data.city || null,
               state: data.state || null,
               note: cachedStation?.note || null,
-              lastSeen: null as any,
+              lastSeen: Timestamp.now(),
             };
             await saveStation(user.uid, station);
           }
