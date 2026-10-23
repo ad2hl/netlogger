@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "electron:compile": "tsc -p electron/tsconfig.json",
     "electron:dev": "cross-env NEXT_PUBLIC_DESKTOP_MODE=true concurrently \"next dev\" \"wait-on http://localhost:3000 && cross-env NEXT_PUBLIC_DESKTOP_MODE=true ELECTRON_DEV=1 electron electron/dist/main.js\"",
     "electron:build": "cross-env NEXT_PUBLIC_DESKTOP_MODE=true next build && npm run electron:compile && electron-builder"

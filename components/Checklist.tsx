@@ -35,10 +35,16 @@ export default function Checklist({
   const [newDestination, setNewDestination] = useState('');
   const destinationInputRef = useRef<HTMLInputElement>(null);
 
+  // Clear the destination when addingTrafficFor changes to a station
+  const [prevAddingTrafficFor, setPrevAddingTrafficFor] = useState(addingTrafficFor);
+  if (addingTrafficFor !== prevAddingTrafficFor) {
+    setPrevAddingTrafficFor(addingTrafficFor);
+    if (addingTrafficFor) setNewDestination('');
+  }
+
   // Focus destination input when addingTrafficFor changes to a station
   useEffect(() => {
     if (addingTrafficFor) {
-      setNewDestination('');
       // Use setTimeout to ensure the input is rendered before focusing
       setTimeout(() => destinationInputRef.current?.focus(), 0);
     }

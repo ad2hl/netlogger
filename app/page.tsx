@@ -18,7 +18,7 @@ import { apiFetch } from '@/lib/api-fetch';
 import Image from 'next/image';
 
 type Tab = 'signin' | 'signup';
-type View = 'auth' | 'forgot' | 'verify';
+type View = 'auth' | 'forgot';
 
 const signupDisabled = process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true';
 
@@ -44,7 +44,6 @@ const GoogleIcon = () => (
 );
 
 export default function Home() {
-  const { user, loading, emailVerified, refreshUser } = useAuth();
   const router = useRouter();
 
   // Desktop mode: no sign-in needed — redirect immediately
@@ -54,9 +53,12 @@ export default function Home() {
     }
   }, [router]);
 
-  if (isDesktop) {
-    return null;
-  }
+  return isDesktop ? null : <SignInPage />;
+}
+
+function SignInPage() {
+  const { user, loading, emailVerified, refreshUser } = useAuth();
+  const router = useRouter();
 
   const [tab, setTab] = useState<Tab>('signin');
   const [view, setView] = useState<View>('auth');
@@ -94,9 +96,6 @@ export default function Home() {
   useEffect(() => {
     if (!loading && user && emailVerified) {
       router.push('/home');
-    }
-    if (!loading && user && !emailVerified) {
-      setView('verify');
     }
   }, [user, loading, emailVerified, router]);
 
@@ -204,8 +203,8 @@ export default function Home() {
     );
   }
 
-  // Email verification screen
-  if (view === 'verify' && user) {
+  // Email verification screen: signed in but not yet verified
+  if (user && !emailVerified) {
     return (
       <div className="flex-1 flex items-center justify-center relative" style={bgStyle}>
         {bgUrl && <div className="absolute inset-0 bg-black/40" />}

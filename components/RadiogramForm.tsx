@@ -147,12 +147,15 @@ export default function RadiogramForm({
   const wordInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const signatureRef = useRef<HTMLTextAreaElement | null>(null);
 
-  useEffect(() => {
+  // Load the form whenever it opens or the radiogram being edited changes
+  const [loaded, setLoaded] = useState<{ radiogram: typeof existingRadiogram; isOpen: boolean } | null>(null);
+  if (!loaded || loaded.radiogram !== existingRadiogram || loaded.isOpen !== isOpen) {
+    setLoaded({ radiogram: existingRadiogram, isOpen });
     if (existingRadiogram) {
       const { id, ...rest } = existingRadiogram;
       // Ensure textWords has at least INITIAL_LINES worth of words
       const minWords = INITIAL_LINES * WORDS_PER_LINE;
-      const textWords = rest.textWords || [];
+      const textWords = [...(rest.textWords || [])];
       while (textWords.length < minWords) {
         textWords.push('');
       }
@@ -174,7 +177,7 @@ export default function RadiogramForm({
       setFormData({ ...emptyForm, netName: netName || '' });
     }
     setExpandedVariables(new Set());
-  }, [existingRadiogram, isOpen]);
+  }
 
   // Calculate word count from textWords for comparison with check
   const wordCount = formData.textWords.filter(w => w.length > 0).length;

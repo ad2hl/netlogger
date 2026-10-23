@@ -155,7 +155,7 @@ UI uses cyan-700 for primary actions, sky shades for backgrounds/hover states, a
 
 ## ESLint
 
-`npm run lint` currently fails due to an incompatibility between ESLint 9.x (installed) and Next.js 15's `next lint` command, which passes options removed in ESLint 9. This is a pre-existing issue unrelated to application code. Use `npx tsc --noEmit` for type checking and `npm run build` to validate the codebase.
+`npm run lint` runs `eslint .` directly (not the deprecated `next lint`) with the flat config in `eslint.config.mjs`, which extends `eslint-config-next/core-web-vitals` and `eslint-config-next/typescript`. Names prefixed with `_` and rest-sibling destructuring are exempt from `no-unused-vars`. The React hooks rules include `set-state-in-effect`: to reset state when a prop changes, compare against the previous value during render (see `RadiogramForm`, `Checklist`) rather than calling `setState` in an effect.
 
 ## ChunkLoadError Handling
 
