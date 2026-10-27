@@ -7,7 +7,7 @@ AD2HL Net Logger is an amateur radio net logging application for net control ope
 1. **Create a new net session** — Start a new session for your net. Enter the net name, date, and start time.
 2. **Log check-ins** — As stations check in, type their callsign (with optional tags like `/T`, `/A`, `/NC`) and press Enter.
 3. **Manage traffic** — Use the checklist to track traffic items and announcements.
-4. **Create radiograms** — Use the Radiograms section to create and print ARRL-format radiograms.
+4. **Create radiograms** — Use the Radiograms page to create and print ARRL-format radiograms. During a net, right-click **Radiograms** in the menu and open it in a new tab or window.
 5. **End the session** — Enter an end time in the Session Summary panel when the net closes.
 
 ## Pages
