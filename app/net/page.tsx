@@ -21,14 +21,11 @@ import {
   getStations,
   getAllStations,
   saveReport,
-  addRadiogram,
   updateRadiogram,
-  deleteRadiogram,
   getRadiogramsBySession,
-  splitBookRadiogram,
   updateUserProfile,
 } from '@/lib/firestore';
-import { NetSession, CheckIn, Station, NetReport, Radiogram, TrafficItem } from '@/types';
+import { NetSession, CheckIn, Station, NetReport, TrafficItem } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
 import { nowParts, sessionStart } from '@/lib/time';
@@ -38,7 +35,6 @@ import NavMenu from '@/components/NavMenu';
 import CheckInForm from '@/components/CheckInForm';
 import CheckInList from '@/components/CheckInList';
 import SessionSummary from '@/components/SessionSummary';
-import RadiogramList from '@/components/RadiogramList';
 import Checklist from '@/components/Checklist';
 import ReportGenerator from '@/components/ReportGenerator';
 import { apiFetch } from '@/lib/api-fetch';
@@ -59,7 +55,6 @@ function NetPage() {
   const sessionIdParam = searchParams.get('session');
 
   const [session, setSession] = useState<NetSession | null>(null);
-  const [radiograms, setRadiograms] = useState<Radiogram[]>([]);
   const [stations, setStations] = useState<Map<string, Station>>(new Map());
   const [allStations, setAllStations] = useState<Station[]>([]);
   const [isLookingUp, setIsLookingUp] = useState(false);
@@ -98,10 +93,6 @@ function NetPage() {
       if (loadedSession) {
         setSession(loadedSession);
 
-        // Load radiograms for this session from the independent collection
-        const sessionRadiograms = await getRadiogramsBySession(user.uid, loadedSession.id!);
-        setRadiograms(sessionRadiograms);
-
         // Load stations for all checked-in callsigns
         const callsigns = loadedSession.checkIns.map((c) => c.callsign);
         if (callsigns.length > 0) {
@@ -128,10 +119,10 @@ function NetPage() {
       // When netName changes, propagate to all session radiograms' denormalized sessionNetName
       if (updates.netName && updates.netName !== session.netName) {
         const newNetName = updates.netName;
+        const sessionRadiograms = await getRadiogramsBySession(user.uid, session.id);
         await Promise.all(
-          radiograms.map((r) => updateRadiogram(user.uid, r.id, { sessionNetName: newNetName }))
+          sessionRadiograms.map((r) => updateRadiogram(user.uid, r.id, { sessionNetName: newNetName }))
         );
-        setRadiograms((prev) => prev.map((r) => ({ ...r, sessionNetName: newNetName })));
       }
 
       // Auto-save report when net ends
@@ -539,63 +530,6 @@ function NetPage() {
     return String(nextNum);
   };
 
-  const handleAssignMessageNumbers = async (count: number): Promise<string[]> => {
-    const nextNum = profile?.nextMessageNumber ?? 1;
-    if (user) {
-      await updateUserProfile(user.uid, { nextMessageNumber: nextNum + count });
-      await refreshProfile();
-    }
-    return Array.from({ length: count }, (_, i) => String(nextNum + i));
-  };
-
-  const handleSplitRadiogram = async (book: Radiogram, splitRadiograms: Radiogram[]) => {
-    if (!user || !session?.id) return;
-
-    const withMeta = splitRadiograms.map((r) => ({
-      ...r,
-      savedAt: Timestamp.now(),
-      sessionNetName: session.netName,
-      sessionId: session.id,
-    }));
-
-    const success = await splitBookRadiogram(user.uid, book.id, withMeta);
-    if (success) {
-      setRadiograms((prev) => [...prev, ...withMeta]);
-    }
-  };
-
-  const handleSaveRadiogram = async (radiogram: Radiogram) => {
-    if (!user || !session?.id) return;
-
-    const radiogramWithMeta: Radiogram = {
-      ...radiogram,
-      savedAt: Timestamp.now(),
-      sessionNetName: session.netName,
-      sessionId: session.id,
-    };
-
-    const isExisting = radiograms.some((r) => r.id === radiogram.id);
-    if (isExisting) {
-      const success = await updateRadiogram(user.uid, radiogram.id, radiogramWithMeta);
-      if (success) {
-        setRadiograms((prev) => prev.map((r) => r.id === radiogram.id ? radiogramWithMeta : r));
-      }
-    } else {
-      const success = await addRadiogram(user.uid, radiogramWithMeta);
-      if (success) {
-        setRadiograms((prev) => [...prev, radiogramWithMeta]);
-      }
-    }
-  };
-
-  const handleDeleteRadiogram = async (id: string) => {
-    if (!user) return;
-    const success = await deleteRadiogram(user.uid, id);
-    if (success) {
-      setRadiograms((prev) => prev.filter((r) => r.id !== id));
-    }
-  };
-
   const handleAddTrafficItem = async (fromCallsign: string, toDestination: string) => {
     if (!user || !session?.id) return;
 
@@ -857,18 +791,6 @@ function NetPage() {
                 addingTrafficFor={addingTrafficFor}
                 onAddingTrafficForChange={setAddingTrafficFor}
                 onTrafficEntryDone={handleTrafficEntryDone}
-              />
-              <RadiogramList
-                radiograms={radiograms}
-                onSave={handleSaveRadiogram}
-                onDelete={handleDeleteRadiogram}
-                netName={session.netName}
-                dispositionMethods={profile?.dispositionMethods}
-                receivedMethods={profile?.receivedMethods}
-                userProfile={profile ?? undefined}
-                onAssignNumber={handleAssignMessageNumber}
-                onAssignNumbers={handleAssignMessageNumbers}
-                onSplit={handleSplitRadiogram}
               />
             </div>
           )}
