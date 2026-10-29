@@ -33,15 +33,23 @@
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.2.1",
     "cross-env": "^7.0.3",
-    "electron": "^41.2.1",
+    "electron": "^45.1.0",
     "electron-builder": "^26.8.1",
-    "firebase-tools": "^15.15.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.4",
+    "firebase-tools": "^15.15.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.3",
     "wait-on": "^8.0.5"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "^1.14.6"
+    },
+    "next": {
+      "postcss": "^8.5.32"
+    }
   },
   "build": {
     "appId": "net.ad2hl.netlogger-desktop",
