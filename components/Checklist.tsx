@@ -11,6 +11,7 @@ interface ChecklistProps {
   onAddTrafficItem: (fromCallsign: string, toDestination: string) => void;
   onToggleTrafficItem: (id: string) => void;
   onDeleteTrafficItem: (id: string) => void;
+  onEditTrafficItem: (id: string, toDestination: string) => void;
   onToggleAnnouncement: (callsign: string) => void;
   onToggleSecure: (callsign: string) => void;
   addingTrafficFor: string | null;
@@ -26,6 +27,7 @@ export default function Checklist({
   onAddTrafficItem,
   onToggleTrafficItem,
   onDeleteTrafficItem,
+  onEditTrafficItem,
   onToggleAnnouncement,
   onToggleSecure,
   addingTrafficFor,
@@ -34,6 +36,8 @@ export default function Checklist({
 }: ChecklistProps) {
   const [newDestination, setNewDestination] = useState('');
   const destinationInputRef = useRef<HTMLInputElement>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editDestination, setEditDestination] = useState('');
 
   // Clear the destination when addingTrafficFor changes to a station
   const [prevAddingTrafficFor, setPrevAddingTrafficFor] = useState(addingTrafficFor);
@@ -128,6 +132,24 @@ export default function Checklist({
     }
   };
 
+  const startEdit = (item: TrafficItem) => {
+    setEditingItemId(item.id);
+    setEditDestination(item.toDestination);
+  };
+
+  const cancelEdit = () => {
+    setEditingItemId(null);
+    setEditDestination('');
+  };
+
+  const commitEdit = (item: TrafficItem) => {
+    const value = editDestination.trim().toUpperCase();
+    if (value && value !== item.toDestination) {
+      onEditTrafficItem(item.id, value);
+    }
+    cancelEdit();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent, callsign: string) => {
     if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
@@ -198,7 +220,28 @@ export default function Checklist({
 
                   {items.length > 0 && (
                     <div className="ml-4 mt-1 space-y-1">
-                      {items.map(item => (
+                      {items.map(item => editingItemId === item.id ? (
+                        <div key={item.id} className="flex items-center gap-2">
+                          <span className="font-mono">{item.fromCallsign}</span>
+                          <span className="text-slate-500">→</span>
+                          <input
+                            type="text"
+                            value={editDestination}
+                            onChange={(e) => setEditDestination(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                commitEdit(item);
+                              } else if (e.key === 'Escape') {
+                                cancelEdit();
+                              }
+                            }}
+                            onBlur={() => commitEdit(item)}
+                            className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm uppercase"
+                            autoFocus
+                          />
+                        </div>
+                      ) : (
                         <div key={item.id} className="flex items-center gap-2 group">
                           <label className="flex items-center gap-2 cursor-pointer flex-1">
                             <input
@@ -213,6 +256,13 @@ export default function Checklist({
                               <span className="font-mono">{item.toDestination}</span>
                             </span>
                           </label>
+                          <button
+                            onClick={() => startEdit(item)}
+                            className="text-cyan-700 hover:text-cyan-900 text-xs opacity-0 group-hover:opacity-100"
+                            title="Edit"
+                          >
+                            ✎
+                          </button>
                           <button
                             onClick={() => onDeleteTrafficItem(item.id)}
                             className="text-red-500 hover:text-red-700 text-xs opacity-0 group-hover:opacity-100"

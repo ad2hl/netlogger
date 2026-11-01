@@ -25,7 +25,7 @@ import {
   getRadiogramsBySession,
   updateUserProfile,
 } from '@/lib/firestore';
-import { NetSession, CheckIn, Station, NetReport, TrafficItem } from '@/types';
+import { NetSession, CheckIn, Station, NetReport, TrafficItem, getTrafficItemCount } from '@/types';
 import { Timestamp } from 'firebase/firestore';
 import { generateRadiogram } from '@/lib/radiogram';
 import { nowParts, sessionStart } from '@/lib/time';
@@ -542,7 +542,7 @@ function NetPage() {
 
     const currentItems = session.trafficItems || [];
     const updatedItems = [...currentItems, newItem];
-    const updatedReported = session.trafficReported + 1;
+    const updatedReported = session.trafficReported + getTrafficItemCount(newItem);
 
     const success = await updateSession(user.uid, session.id, {
       trafficItems: updatedItems,
@@ -566,9 +566,10 @@ function NetPage() {
     const updatedItems = currentItems.map((i) =>
       i.id === id ? { ...i, checked: !i.checked } : i
     );
+    const count = getTrafficItemCount(item);
     const updatedCleared = item.checked
-      ? session.trafficCleared - 1
-      : session.trafficCleared + 1;
+      ? session.trafficCleared - count
+      : session.trafficCleared + count;
 
     const success = await updateSession(user.uid, session.id, {
       trafficItems: updatedItems,
@@ -590,9 +591,38 @@ function NetPage() {
     if (!item) return;
 
     const updatedItems = currentItems.filter((i) => i.id !== id);
-    const updatedReported = session.trafficReported - 1;
+    const count = getTrafficItemCount(item);
+    const updatedReported = session.trafficReported - count;
     const updatedCleared = item.checked
-      ? session.trafficCleared - 1
+      ? session.trafficCleared - count
+      : session.trafficCleared;
+
+    const success = await updateSession(user.uid, session.id, {
+      trafficItems: updatedItems,
+      trafficReported: updatedReported,
+      trafficCleared: updatedCleared,
+    });
+
+    if (success) {
+      setSession((prev) =>
+        prev ? { ...prev, trafficItems: updatedItems, trafficReported: updatedReported, trafficCleared: updatedCleared } : null
+      );
+    }
+  };
+
+  const handleEditTrafficItem = async (id: string, toDestination: string) => {
+    if (!user || !session?.id) return;
+
+    const currentItems = session.trafficItems || [];
+    const item = currentItems.find((i) => i.id === id);
+    if (!item) return;
+
+    const updatedItem = { ...item, toDestination: toDestination.toUpperCase() };
+    const delta = getTrafficItemCount(updatedItem) - getTrafficItemCount(item);
+    const updatedItems = currentItems.map((i) => (i.id === id ? updatedItem : i));
+    const updatedReported = session.trafficReported + delta;
+    const updatedCleared = item.checked
+      ? session.trafficCleared + delta
       : session.trafficCleared;
 
     const success = await updateSession(user.uid, session.id, {
@@ -786,6 +816,7 @@ function NetPage() {
                 onAddTrafficItem={handleAddTrafficItem}
                 onToggleTrafficItem={handleToggleTrafficItem}
                 onDeleteTrafficItem={handleDeleteTrafficItem}
+                onEditTrafficItem={handleEditTrafficItem}
                 onToggleAnnouncement={handleToggleAnnouncement}
                 onToggleSecure={handleToggleSecure}
                 addingTrafficFor={addingTrafficFor}
