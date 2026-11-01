@@ -183,6 +183,15 @@ export interface TrafficItem {
   checked: boolean;
 }
 
+// Number of messages a traffic item represents (issue #299): the first number in
+// the destination not adjacent to a letter (e.g. "WM2C 2", "3 WM2C", "WM2C (4)"),
+// or 1 if there is none. Digits inside a callsign ("WM2C") don't count.
+export function getTrafficItemCount(item: Pick<TrafficItem, 'toDestination'>): number {
+  const match = item.toDestination.match(/(?<![A-Za-z\d])\d+(?![A-Za-z\d])/);
+  const count = match ? parseInt(match[0], 10) : 1;
+  return count > 0 ? count : 1;
+}
+
 export interface NetSession {
   id?: string;
   netName: string;
