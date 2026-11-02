@@ -40,4 +40,11 @@ export interface NetLoggerDB {
   // Profile
   getUserProfile(uid: string): Promise<UserProfile | null>;
   updateUserProfile(uid: string, profile: Partial<UserProfile>): Promise<boolean>;
+
+  // Data import (issue #331) — write records exactly as given, preserving their
+  // timestamps, instead of stamping them with the current time
+  replaceUserProfile(uid: string, profile: UserProfile): Promise<boolean>;
+  importStation(uid: string, station: Station): Promise<boolean>;
+  // Writes the radiogram document only; the caller sets the session's radiogramIds
+  importRadiogram(uid: string, radiogram: Radiogram): Promise<boolean>;
 }

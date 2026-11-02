@@ -38,7 +38,11 @@ Electron stores the IndexedDB files in its user-data directory, inside a
 
 The IndexedDB files are managed by Chromium's storage layer and are not
 human-readable. To back up your data, copy the entire user-data directory to
-a safe location.
+a safe location, or use **Settings → Export & Import Data → Export Data** to
+save everything to a readable JSON text file. The same file can be imported
+into the web version (and a web export into the desktop app) with
+**Import Data**; importing replaces settings, adds sessions and radiograms,
+and adds or updates stations, but never deletes anything.
 
 ### What Is Stored
 

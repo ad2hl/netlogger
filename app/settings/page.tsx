@@ -13,6 +13,7 @@ const isDesktop = process.env.NEXT_PUBLIC_DESKTOP_MODE === 'true';
 const FIXED_TAG_ACRONYMS = new Set(Object.keys(SPECIAL_TAGS));
 import HeaderBanner from '@/components/HeaderBanner';
 import NavMenu from '@/components/NavMenu';
+import DataTransfer from '@/components/DataTransfer';
 
 export default function SettingsPage() {
   const { user, profile, loading, emailVerified, refreshProfile } = useAuth();
@@ -688,6 +689,12 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
+        )}
+
+        {user && (
+          <div className="mt-6">
+            <DataTransfer uid={user.uid} onImported={refreshProfile} />
+          </div>
         )}
       </main>
     </div>

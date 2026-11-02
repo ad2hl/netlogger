@@ -462,6 +462,37 @@ class FirebaseDB implements NetLoggerDB {
       return false;
     }
   }
+
+  async replaceUserProfile(uid: string, profile: UserProfile): Promise<boolean> {
+    try {
+      await setDoc(doc(getFirebaseDb(), 'users', uid), profile);
+      return true;
+    } catch (error) {
+      console.error('Error replacing user profile:', error);
+      return false;
+    }
+  }
+
+  async importStation(uid: string, station: Station): Promise<boolean> {
+    try {
+      const baseCallsign = getBaseCallsign(station.callsign.toUpperCase());
+      await setDoc(doc(getFirebaseDb(), 'users', uid, 'stations', baseCallsign), { ...station, callsign: baseCallsign });
+      return true;
+    } catch (error) {
+      console.error('Error importing station:', error);
+      return false;
+    }
+  }
+
+  async importRadiogram(uid: string, radiogram: Radiogram): Promise<boolean> {
+    try {
+      await setDoc(doc(getFirebaseDb(), 'users', uid, 'radiograms', radiogram.id), radiogram);
+      return true;
+    } catch (error) {
+      console.error('Error importing radiogram:', error);
+      return false;
+    }
+  }
 }
 
 export const firebaseDb = new FirebaseDB();

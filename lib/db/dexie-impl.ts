@@ -13,6 +13,7 @@ interface StoredStation {
   state: string | null;
   note: string | null;
   lastSeen: string; // ISO string
+  grantDate?: string | null;
 }
 
 interface StoredSession {
@@ -629,6 +630,46 @@ class DexieDB implements NetLoggerDB {
       return true;
     } catch (error) {
       console.error('Error updating user profile:', error);
+      return false;
+    }
+  }
+
+  async replaceUserProfile(_uid: string, profile: UserProfile): Promise<boolean> {
+    try {
+      await getDb().profile.put({ ...profile, id: 'local-user' });
+      return true;
+    } catch (error) {
+      console.error('Error replacing user profile:', error);
+      return false;
+    }
+  }
+
+  async importStation(_uid: string, station: Station): Promise<boolean> {
+    try {
+      const stored: StoredStation = {
+        ...station,
+        callsign: getBaseCallsign(station.callsign.toUpperCase()),
+        lastSeen: toIso(station.lastSeen),
+      };
+      await getDb().stations.put(stored);
+      return true;
+    } catch (error) {
+      console.error('Error importing station:', error);
+      return false;
+    }
+  }
+
+  async importRadiogram(_uid: string, radiogram: Radiogram): Promise<boolean> {
+    try {
+      const stored: StoredRadiogram = {
+        ...radiogram,
+        createdAt: radiogram.createdAt ? toIso(radiogram.createdAt) : undefined,
+        savedAt: toIso(radiogram.savedAt),
+      };
+      await getDb().radiograms.put(stored);
+      return true;
+    } catch (error) {
+      console.error('Error importing radiogram:', error);
       return false;
     }
   }
