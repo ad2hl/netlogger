@@ -179,6 +179,8 @@ export default function HomePage() {
 
           <Link href="/stations" className={linkClass}>Manage stations</Link>
 
+          <Link href="/settings" className={linkClass}>Change settings</Link>
+
           <a
             href="/help?page=overview"
             target="_blank"
