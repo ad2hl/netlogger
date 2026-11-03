@@ -4,13 +4,15 @@
 // Export writes the settings profile, stations, sessions and radiograms with all
 // timestamps as ISO 8601 strings, so the file can be read and edited by hand.
 //
-// Import never deletes anything:
+// By default import never deletes anything:
 //   - settings are replaced by the file's settings
 //   - sessions and radiograms are always added as new records with new IDs (an
 //     imported session identical to an existing one becomes a second session);
 //     session ↔ radiogram links are re-pointed at the new IDs
 //   - stations are added, or merged into an existing station with the same
 //     callsign (the file's non-empty fields win; the later lastSeen is kept)
+// With { replaceExisting: true } all existing stations, sessions and radiograms
+// are deleted first, so restoring a backup doesn't create duplicates.
 import { Timestamp } from 'firebase/firestore';
 import { db } from './db/index';
 import { getBaseCallsign } from './callsign';
@@ -49,7 +51,12 @@ export interface ImportSummary {
   source?: string;
 }
 
+export interface ImportOptions {
+  replaceExisting?: boolean;
+}
+
 export interface ImportResult {
+  existingDeleted: boolean;
   settingsReplaced: boolean;
   stationsAdded: number;
   stationsUpdated: number;
@@ -271,8 +278,9 @@ async function runAll(tasks: (() => Promise<boolean>)[], concurrency = 20): Prom
   return failures;
 }
 
-export async function importDatabase(uid: string, file: ExportFile): Promise<ImportResult> {
+export async function importDatabase(uid: string, file: ExportFile, options: ImportOptions = {}): Promise<ImportResult> {
   const result: ImportResult = {
+    existingDeleted: false,
     settingsReplaced: false,
     stationsAdded: 0,
     stationsUpdated: 0,
@@ -280,6 +288,15 @@ export async function importDatabase(uid: string, file: ExportFile): Promise<Imp
     radiogramsAdded: 0,
     failures: 0,
   };
+
+  if (options.replaceExisting) {
+    // Stop before importing anything if the delete fails, rather than mixing
+    // a partially deleted database with the imported data
+    if (!(await db.deleteAllData(uid))) {
+      throw new Error('Deleting the existing data failed, so nothing was imported. Some existing data may already have been deleted; import the file again to restore it.');
+    }
+    result.existingDeleted = true;
+  }
 
   // Settings
   if (file.settings) {

@@ -42,7 +42,10 @@ a safe location, or use **Settings → Export & Import Data → Export Data** to
 save everything to a readable JSON text file. The same file can be imported
 into the web version (and a web export into the desktop app) with
 **Import Data**; importing replaces settings, adds sessions and radiograms,
-and adds or updates stations, but never deletes anything.
+and adds or updates stations. It deletes nothing unless you tick
+**Delete all existing data first**, which clears all stations, sessions and
+radiograms before importing, so a backup can be restored without creating
+duplicates.
 
 ### What Is Stored
 

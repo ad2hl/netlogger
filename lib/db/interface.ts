@@ -47,4 +47,7 @@ export interface NetLoggerDB {
   importStation(uid: string, station: Station): Promise<boolean>;
   // Writes the radiogram document only; the caller sets the session's radiogramIds
   importRadiogram(uid: string, radiogram: Radiogram): Promise<boolean>;
+  // Deletes every station, session and radiogram (not the settings profile),
+  // for restoring a backup over existing data
+  deleteAllData(uid: string): Promise<boolean>;
 }

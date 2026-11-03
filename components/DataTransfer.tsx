@@ -23,6 +23,7 @@ export default function DataTransfer({ uid, onImported }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<'export' | 'import' | null>(null);
   const [pending, setPending] = useState<{ name: string; file: ExportFile } | null>(null);
+  const [replaceExisting, setReplaceExisting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleExport = async () => {
@@ -52,6 +53,7 @@ export default function DataTransfer({ uid, onImported }: Props) {
     setMessage(null);
     try {
       setPending({ name: chosen.name, file: parseExportFile(await chosen.text()) });
+      setReplaceExisting(false);
     } catch (error) {
       setMessage({ type: 'error', text: (error as Error).message });
     }
@@ -62,9 +64,10 @@ export default function DataTransfer({ uid, onImported }: Props) {
     setBusy('import');
     setMessage(null);
     try {
-      const r = await importDatabase(uid, pending.file);
+      const r = await importDatabase(uid, pending.file, { replaceExisting });
       await onImported();
       const parts = [
+        r.existingDeleted ? 'existing stations, sessions and radiograms deleted' : null,
         r.settingsReplaced ? 'settings replaced' : null,
         `${plural(r.sessionsAdded, 'session')} added`,
         `${plural(r.radiogramsAdded, 'radiogram')} added`,
@@ -77,7 +80,7 @@ export default function DataTransfer({ uid, onImported }: Props) {
         : { type: 'success', text });
     } catch (error) {
       console.error('Error importing data:', error);
-      setMessage({ type: 'error', text: 'Import failed. Please try again.' });
+      setMessage({ type: 'error', text: (error as Error).message || 'Import failed. Please try again.' });
     }
     setPending(null);
     setBusy(null);
@@ -92,7 +95,8 @@ export default function DataTransfer({ uid, onImported }: Props) {
         Export saves all of your settings, stations, sessions and radiograms to a text (JSON) file.
         Import loads such a file, for example to copy your data between the web and desktop versions of NetLogger.
         Importing replaces your settings, adds the file&rsquo;s sessions and radiograms, and adds or updates stations.
-        It never deletes anything &mdash; sessions and radiograms already here are kept, even if the file contains copies of them.
+        By default it deletes nothing, so sessions and radiograms already here are kept even if the file contains copies of them.
+        To restore a backup without creating duplicates, choose &ldquo;Delete all existing data first&rdquo; when importing.
       </p>
 
       <div className="flex gap-2 flex-wrap">
@@ -131,19 +135,42 @@ export default function DataTransfer({ uid, onImported }: Props) {
             </p>
           )}
           <ul className="list-disc ml-5 mb-3 space-y-0.5">
+            {replaceExisting && (
+              <li className="text-red-700 font-medium">All existing stations, sessions and radiograms will be deleted</li>
+            )}
             <li>{summary.hasSettings ? 'Your settings will be replaced' : 'No settings (your settings are kept)'}</li>
             <li>{plural(summary.sessions, 'session')} will be added</li>
             <li>{plural(summary.radiograms, 'radiogram')} will be added</li>
-            <li>{plural(summary.stations, 'station')} will be added or updated</li>
+            <li>{plural(summary.stations, 'station')} will be {replaceExisting ? 'added' : 'added or updated'}</li>
           </ul>
+          <label className="flex items-center gap-2 mb-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={replaceExisting}
+              onChange={(e) => setReplaceExisting(e.target.checked)}
+              disabled={busy !== null}
+              className="rounded"
+            />
+            Delete all existing data first (restore a backup)
+          </label>
+          {replaceExisting && (
+            <p className="mb-3 p-3 rounded-md bg-red-50 text-red-800">
+              This permanently deletes every station, session and radiogram you have now and cannot be undone.
+              If you might want them back,{' '}
+              <button type="button" onClick={handleExport} disabled={busy !== null} className="underline font-medium disabled:opacity-50">
+                export your current data
+              </button>{' '}
+              before importing.
+            </p>
+          )}
           <div className="flex gap-2">
             <button
               type="button"
               onClick={handleImport}
               disabled={busy !== null}
-              className="bg-cyan-700 text-white px-4 py-2 rounded-md hover:bg-cyan-900 text-sm disabled:opacity-50"
+              className={`${replaceExisting ? 'bg-red-700 hover:bg-red-900' : 'bg-cyan-700 hover:bg-cyan-900'} text-white px-4 py-2 rounded-md text-sm disabled:opacity-50`}
             >
-              {busy === 'import' ? 'Importing...' : 'Import'}
+              {busy === 'import' ? 'Importing...' : replaceExisting ? 'Delete and Import' : 'Import'}
             </button>
             <button
               type="button"

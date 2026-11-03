@@ -673,6 +673,19 @@ class DexieDB implements NetLoggerDB {
       return false;
     }
   }
+
+  async deleteAllData(_uid: string): Promise<boolean> {
+    try {
+      const d = getDb();
+      await d.transaction('rw', [d.stations, d.sessions, d.radiograms], async () => {
+        await Promise.all([d.stations.clear(), d.sessions.clear(), d.radiograms.clear()]);
+      });
+      return true;
+    } catch (error) {
+      console.error('Error deleting all data:', error);
+      return false;
+    }
+  }
 }
 
 export const dexieDb = new DexieDB();

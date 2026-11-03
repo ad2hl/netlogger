@@ -493,6 +493,25 @@ class FirebaseDB implements NetLoggerDB {
       return false;
     }
   }
+
+  async deleteAllData(uid: string): Promise<boolean> {
+    try {
+      const db = getFirebaseDb();
+      for (const name of ['radiograms', 'sessions', 'stations']) {
+        const snap = await getDocs(collection(db, 'users', uid, name));
+        // Firestore batches are limited to 500 writes
+        for (let i = 0; i < snap.docs.length; i += 500) {
+          const batch = writeBatch(db);
+          snap.docs.slice(i, i + 500).forEach((d) => batch.delete(d.ref));
+          await batch.commit();
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error('Error deleting all data:', error);
+      return false;
+    }
+  }
 }
 
 export const firebaseDb = new FirebaseDB();
