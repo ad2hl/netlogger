@@ -18,6 +18,19 @@ These fields populate the **This Radio Message Was Received At** section of the 
 
 Choose which free lookup service — Callook.info or HamDB.org — NetLogger uses to automatically look up operator names and locations when stations check in. No account or credentials are required for either service.
 
+## Dates & Times
+
+Choose whether dates and times are entered and displayed in your **Local** time zone or in **UTC**. NetLogger always stores times in UTC, so you can switch at any time and your existing sessions and radiograms keep the correct times.
+
+- **Local** — times use your computer's time zone and its usual clock format.
+- **UTC** — times use a 24-hour clock and are shown and printed with a trailing "Z" (e.g., 1024Z). Time fields become a four-digit HHMM box instead of a time picker.
+
+The preamble **Time Filed** and **Date** of a radiogram are part of the message itself and are never converted.
+
+## Message Numbering
+
+**Next Message Number** is the number filled in when you click **Assign Next** on a radiogram form. Each time you use it, the number goes up by one. For a book, Assign Next numbers the entries in sequence. Change the value here to start a new series or to match your log.
+
 ## Sent Methods
 
 Customize the list of methods shown in the Sent dropdown on radiogram forms (e.g., Phone, Email, Radio). Use the text fields to edit existing entries, or type a new method and click **Add**.
@@ -25,6 +38,16 @@ Customize the list of methods shown in the Sent dropdown on radiogram forms (e.g
 ## Received Methods
 
 Customize the list of methods shown in the Received dropdown on radiogram forms. Same editing controls as Sent Methods.
+
+## Quick Tag Buttons
+
+Add buttons for liaison nets or other tags you use often. They appear in the check-in bar next to NC, ANC, T and A, and clicking one adds that tag to the station you're checking in.
+
+- **Acronym** — the tag itself (e.g., OC), up to 8 characters. The built-in tags NC, ANC, T, A, S and IO can't be redefined.
+- **Label** — the description shown when you hover over the button or tag (e.g., Orange County Net).
+- **In report** — when checked, the tag is shown with the station's callsign in the net report, as for a liaison. Uncheck it for tags that only mark a station's status during the net.
+
+Type an acronym and label and click **Add**, edit existing tags in place, or click **Remove** to delete one.
 
 ## Saving
 
