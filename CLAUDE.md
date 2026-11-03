@@ -38,7 +38,8 @@ On first read after the schema migration, `getSession`/`getAllSessions`/`getRece
 
 ### Key Libraries (lib/)
 
-- **firestore.ts**: All database CRUD operations for stations, sessions, check-ins, and radiograms
+- **firestore.ts**: Thin wrapper that re-exports the database CRUD operations for stations, sessions, check-ins, radiograms and the profile from `lib/db/`
+- **db/**: `interface.ts` defines `NetLoggerDB`, implemented by `firebase-impl.ts` (Firestore, web) and `dexie-impl.ts` (IndexedDB via Dexie, desktop app; see `DESKTOP.md`). `index.ts` picks one at build time from `NEXT_PUBLIC_DESKTOP_MODE`. Besides the normal CRUD methods it has import-only methods (`replaceUserProfile`, `importStation`, `importRadiogram`, `deleteAllData`) used by `dataTransfer.ts`
 - **radiogram.ts**: Complex callsign compression algorithm for ARRL format reports. Orders output as NC → ANC → Liaisons → Regular stations. Compresses callsigns by prefix (e.g., W1AW, W1XYZ → W1AW, XYZ)
 - **radiogramPrint.ts**: Fills the official ARRL radiogram PDF form (`public/radiogram-form.pdf`) with radiogram data using pdf-lib and opens the result in a new browser tab. Font sizes: 11pt for message words, 10pt for address, 9pt for preamble/signature/disposition. Simple 1:1 address line mapping (line 1 → Name/Call, line 2 → Address, line 3 → City/State/ZIP, line 4 → unlabeled extra line, typically phone or email; the underlying PDF field is still named "Recipient Phone" but the TELEPHONE NUMBER legend was removed from the form).
 - **auth.ts**: Firebase authentication functions

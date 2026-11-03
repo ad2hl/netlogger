@@ -23,7 +23,9 @@ A web-based amateur radio net logging application for net control operators.
 - **Net Report**: Generates a formatted radiogram report with callsign compression
 - **Session History**: Browse and review past net sessions in a sortable table
 - **Radiogram History**: Cross-session radiogram and net report list, sortable by date, net name, type, and disposition
+- **Export & Import**: Save all of your settings, stations, sessions and radiograms to a readable JSON text file, and load it again, to back up your data or move it between the web and desktop versions. Import adds to your existing data by default, or can delete it first to restore a backup.
 - **Firebase Backend**: Persistent storage with Google authentication and App Check security
+- **Desktop App**: An optional standalone Electron version that runs offline and stores data locally, with no Firebase account or sign-in (see [DESKTOP.md](DESKTOP.md))
 
 ## Availability
 
@@ -118,7 +120,10 @@ Open http://localhost:3000
    - Net manager callsign (report addressee)
    - Receiving station name (printed in the RECEIVED AT section of radiogram forms)
    - Callsign lookup service (Callook.info or HamDB.org)
+   - Local or UTC dates and times
+   - Next message number for **Assign Next** on radiogram forms
    - Custom sent/received disposition methods (optional)
+   - Quick tag buttons for liaison nets and other tags you use often (optional)
 3. Start a new net session with name, date, and start time
 4. Check in stations by typing a callsign with tags (e.g., `W1AW/NC/T`)
 5. Click station names, locations, or notes to edit them inline
@@ -126,6 +131,7 @@ Open http://localhost:3000
 7. Create radiograms as needed — the Check field shows a green ✓ or red ✗ indicating whether the entered count matches the actual word count; use **Print** to fill and open the official ARRL radiogram PDF
 8. Click **End Session**, then **Show Report** to view and copy the generated radiogram report
 9. Browse past sessions and radiograms from the **Sessions** and **Radiograms** pages
+10. Use **Settings → Export & Import Data** to back up your data or copy it between the web and desktop versions
 
 ## Docker Deployment
 
