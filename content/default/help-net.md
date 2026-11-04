@@ -1,28 +1,30 @@
 # Net Logging Help
 
+## Contents
+
 ## Overview
 
-The net logging page is your main workspace during an active net session. It shows the check-in list on the left and session details, traffic, and radiograms on the right.
+The Session page is your main workspace during an active net session. It shows the check-in list on the left and session details, traffic and other net business on the right.
 
-## Checking In Stations
+## Checking in stations
 
-Type a callsign in the check-in field and press Enter. You can add tags after the callsign:
+To check in a station, enter its callsign in the Station field and press Enter. Yes, it really is that simple.
 
-- `/NC` — Net Control
-- `/ANC` — Alternate Net Control
-- `/T` — Has traffic
-- `/A` — Has announcement
-- `/S` — Secure traffic
-- `/IO` — In-and-out
-- `/M` — Mobile
-- `/P` — Portable
-- `/OC`, `/HVN`, etc. — Liaison tags
+What happens when you press Enter is the following:
 
-Example: `W1AW /T /M`
+- The callsign is added to the list of checked in stations.
+- The callsign is looked up in the list of stations you have checked in during previous nets.
+- If the station is found, the licensee's first name, location and a note (if any) are added to the list entry.
+- If you have never checked in the station before, the name and location are obtained from Callook.info or HamDB.org.
+- The count of checked in stations is incremented.
 
-Prefix a callsign with `?` to search your station memory without checking in (e.g., `?W1AW`).
+## What if you didn't hear the callsign clearly?
 
-The operator's name and location are looked up automatically on first check-in, using the free lookup service configured in Settings.
+Put a `?` before all or part of a callsign to search the list of stations you checked in previously for a match. For example, if you heard only the last part of W1AW's call, you could enter `?AW` and if W1AW had checked in previously you would see the callsign in a list of search results. Clicking on the callsign, or cursoring down to it and pressing Enter, moves it to the Station field. You can then press Enter to check in the station.
+
+## What if you made a mistake entering the callsign?
+
+
 
 ## Check-In List
 
