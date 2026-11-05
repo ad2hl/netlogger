@@ -33,6 +33,6 @@ AD2HL Net Logger is an amateur radio net logging application for net control ope
 
 ## Tips
 
-- Press `?` before a callsign in the check-in field to search existing stations.
+- Type `?` after all or part of a callsign in the check-in field to search existing stations.
 - The net report generates an ARRL-format radiogram with callsign compression.
 - Radiograms can be printed to PDF using the Print button.

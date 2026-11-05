@@ -20,7 +20,7 @@ What happens when you press Enter is the following:
 
 ## What if you didn't hear the callsign clearly?
 
-Put a `?` before all or part of a callsign to search the list of stations you checked in previously for a match. For example, if you heard only the last part of W1AW's call, you could enter `?AW` and if W1AW had checked in previously you would see the callsign in a list of search results. Clicking on the callsign, or cursoring down to it and pressing Enter, moves it to the Station field. You can then press Enter to check in the station.
+Put a `?` after all or part of a callsign to search the list of stations you checked in previously for a match. For example, if you heard only the last part of W1AW's call, you could enter `AW?` and if W1AW had checked in previously you would see the callsign in a list of search results. Clicking on the callsign, or cursoring down to it and pressing Enter, moves it to the Station field. You can then press Enter to check in the station.
 
 ## What if you made a mistake entering the callsign?
 
