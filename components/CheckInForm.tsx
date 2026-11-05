@@ -28,8 +28,9 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
 
   useImperativeHandle(ref, () => inputRef.current!);
 
-  const isSearchMode = input.startsWith('?');
-  const searchQuery = isSearchMode ? input.slice(1) : '';
+  // A trailing ? turns the input into a station search, e.g. "AW?" (issue #333)
+  const isSearchMode = input.endsWith('?');
+  const searchQuery = isSearchMode ? input.slice(0, -1) : '';
   const searchResults = isSearchMode ? searchStations(allStations, searchQuery) : [];
 
   const { callsign: enteredCallsign, tags: enteredTags } = parseCallsignInput(input);
@@ -185,7 +186,7 @@ const CheckInForm = forwardRef<HTMLInputElement, CheckInFormProps>(function Chec
               }}
               onKeyDown={handleKeyDown}
               className="w-[20ch] px-2 py-1 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-sm"
-              placeholder="? to search"
+              placeholder="CALL? to search"
               disabled={disabled || isSubmitting}
               autoComplete="off"
               autoCapitalize="characters"
