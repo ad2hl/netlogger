@@ -4,7 +4,7 @@ A web-based amateur radio net logging application for net control operators.
 
 ## Features
 
-- **Station Check-ins**: Log stations with callsign and optional tags
+- **Station Check-ins**: Log stations with callsign and optional tags; type part of a callsign followed by `?` (e.g. `AW?`) to search remembered stations
 - **Tag System**:
   - `/NC` - Net Control
   - `/ANC` - Alternate Net Control
@@ -65,7 +65,7 @@ firebase deploy --only firestore:rules
 ### Installation
 
 ```bash
-git clone https://github.com/rd914/netlogger.git
+git clone https://github.com/ad2hl/netlogger.git
 cd netlogger
 npm install
 ```
@@ -114,8 +114,8 @@ Open http://localhost:3000
 
 ## Usage
 
-1. Sign in with Google — you are taken directly to any active session, or prompted to start a new one
-2. Go to **Settings** to configure:
+1. Sign in with Google — the home menu lets you create a new net session, resume the most recent one, manage sessions, radiograms and stations, change settings, or get help
+2. Go to **Settings** (**Change settings** on the home menu) to configure:
    - Your callsign, name, and location
    - Net manager callsign (report addressee)
    - Receiving station name (printed in the RECEIVED AT section of radiogram forms)
@@ -125,7 +125,7 @@ Open http://localhost:3000
    - Custom sent/received disposition methods (optional)
    - Quick tag buttons for liaison nets and other tags you use often (optional)
 3. Start a new net session with name, date, and start time
-4. Check in stations by typing a callsign with tags (e.g., `W1AW/NC/T`)
+4. Check in stations by typing a callsign with tags (e.g., `W1AW/NC/T`), or end a partial callsign with `?` (e.g., `AW?`) to search your stations
 5. Click station names, locations, or notes to edit them inline
 6. Use the traffic checklist to track announcements and traffic per station
 7. Create radiograms as needed — the Check field shows a green ✓ or red ✗ indicating whether the entered count matches the actual word count; use **Print** to fill and open the official ARRL radiogram PDF
