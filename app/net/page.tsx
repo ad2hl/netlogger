@@ -12,9 +12,6 @@ import {
   updateCheckInTags,
   getStation,
   saveStation,
-  updateStationNickname,
-  updateStationLocation,
-  updateStationNote,
   updateStationFields,
   getActiveSession,
   getSession,
@@ -368,66 +365,66 @@ function NetPage() {
     }
   };
 
-  const handleUpdateNickname = async (
+  // Edits made from a check-in row. A station only has a stored record if the
+  // callsign lookup found it, so a station the lookup service doesn't know about
+  // (non-US calls, new or unlisted licenses) has nothing to update — create the
+  // record on first edit instead (issue #337).
+  const updateCheckInStation = async (
     callsign: string,
-    nickname: string | null
+    fields: Partial<Pick<Station, 'nickname' | 'note' | 'city' | 'state'>>
   ) => {
     if (!user) return;
 
-    const success = await updateStationNickname(user.uid, callsign, nickname);
+    const baseCallsign = getBaseCallsign(callsign.toUpperCase());
+    const existing = await getStation(user.uid, baseCallsign);
+
+    let updated: Station;
+    let success: boolean;
+    if (existing) {
+      updated = { ...existing, ...fields };
+      success = await updateStationFields(user.uid, baseCallsign, fields);
+    } else {
+      updated = {
+        callsign: baseCallsign,
+        firstName: null,
+        nickname: null,
+        city: null,
+        state: null,
+        note: null,
+        lastSeen: Timestamp.now(),
+        ...fields,
+      };
+      success = await saveStation(user.uid, updated);
+    }
 
     if (success) {
       setStations((prev) => {
         const newMap = new Map(prev);
-        const station = newMap.get(callsign.toUpperCase());
-        if (station) {
-          newMap.set(callsign.toUpperCase(), { ...station, nickname });
-        }
+        const key = callsign.toUpperCase();
+        newMap.set(key, { ...(newMap.get(key) ?? updated), ...fields });
         return newMap;
+      });
+      setAllStations((prev) => {
+        const index = prev.findIndex((s) => s.callsign.toUpperCase() === baseCallsign);
+        if (index < 0) return [updated, ...prev];
+        const next = [...prev];
+        next[index] = { ...next[index], ...fields };
+        return next;
       });
     }
   };
 
-  const handleUpdateNote = async (
-    callsign: string,
-    note: string | null
-  ) => {
-    if (!user) return;
+  const handleUpdateNickname = (callsign: string, nickname: string | null) =>
+    updateCheckInStation(callsign, { nickname });
 
-    const success = await updateStationNote(user.uid, callsign, note);
+  const handleUpdateNote = (callsign: string, note: string | null) =>
+    updateCheckInStation(callsign, { note });
 
-    if (success) {
-      setStations((prev) => {
-        const newMap = new Map(prev);
-        const station = newMap.get(callsign.toUpperCase());
-        if (station) {
-          newMap.set(callsign.toUpperCase(), { ...station, note });
-        }
-        return newMap;
-      });
-    }
-  };
-
-  const handleUpdateLocation = async (
+  const handleUpdateLocation = (
     callsign: string,
     city: string | null,
     state: string | null
-  ) => {
-    if (!user) return;
-
-    const success = await updateStationLocation(user.uid, callsign, city, state);
-
-    if (success) {
-      setStations((prev) => {
-        const newMap = new Map(prev);
-        const station = newMap.get(callsign.toUpperCase());
-        if (station) {
-          newMap.set(callsign.toUpperCase(), { ...station, city, state });
-        }
-        return newMap;
-      });
-    }
-  };
+  ) => updateCheckInStation(callsign, { city, state });
 
   const handleUpdateCallsign = async (oldCallsign: string, newCallsign: string) => {
     if (!user || !session?.id) return;
